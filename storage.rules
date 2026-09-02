@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Tenant asset directory: /orgs/{orgId}/...
+    match /orgs/{orgId}/{allPaths=**} {
+      // Public assets (logos, menus, card photos) are readable publicly
+      allow read: if true;
+      // Uploads require authentication and reasonable size limit (25MB max)
+      allow write: if isSignedIn() && request.resource.size < 25 * 1024 * 1024;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

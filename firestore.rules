@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.isGlobalSuperAdmin == true ||
+        request.auth.token.email == 'anasyoussef797@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOrgMember(orgId) {
+      return isSignedIn() && (
+        isSuperAdmin() || 
+        exists(/databases/$(database)/documents/organizationMembers/$(orgId + '_' + request.auth.uid))
+      );
+    }
+
+    function getOrgMembership(orgId) {
+      return get(/databases/$(database)/documents/organizationMembers/$(orgId + '_' + request.auth.uid)).data;
+    }
+
+    function isOrgAdmin(orgId) {
+      return isSignedIn() && (
+        isSuperAdmin() || 
+        (isOrgMember(orgId) && getOrgMembership(orgId).role in ['org_admin', 'super_admin'])
+      );
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+      allow list: if isSuperAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    // Organization Documents
+    match /organizations/{orgId} {
+      allow get: if isOrgMember(orgId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isOrgAdmin(orgId);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Organization Membership & Permissions
+    match /organizationMembers/{memberId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        isOrgMember(resource.data.orgId)
+      );
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOrgMember(resource.data.orgId) && isOrgAdmin(resource.data.orgId))
+      );
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Client CRM Records
+    match /clients/{clientId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Dynamic QR Codes
+    match /qrCodes/{qrId} {
+      // Direct fast lookup allowed for active public codes
+      allow get: if resource.data.status == 'active' || isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Landing Pages & Bio Cards
+    match /pages/{pageId} {
+      allow get: if resource.data.status == 'published' || isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Smart Links
+    match /smartLinks/{linkId} {
+      allow get: if resource.data.status == 'active' || isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Campaigns
+    match /campaigns/{campaignId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Media Assets
+    match /mediaAssets/{assetId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Custom Domains
+    match /customDomains/{domainId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create: if isOrgAdmin(request.resource.data.orgId);
+      allow update: if isOrgAdmin(resource.data.orgId);
+      allow delete: if isOrgAdmin(resource.data.orgId);
+    }
+
+    // Pre-Aggregated Analytics Summaries (ReadOnly for users)
+    match /analyticsDailySummary/{summaryId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create, update, delete: if false; // Server-side function updates only
+    }
+
+    match /qrAnalyticsDaily/{qrSummaryId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isSignedIn();
+      allow create, update, delete: if false; // Server-side function updates only
+    }
+
+    // Raw Scan Buffer (Ephemeral 30-Day TTL)
+    match /rawScanBuffer/{scanId} {
+      allow get: if isOrgMember(resource.data.orgId);
+      allow list: if isOrgMember(resource.data.orgId);
+      allow create: if true; // Written directly by edge redirect worker
+      allow update, delete: if false;
+    }
+
+    // Audit Logs (Immutable Append-Only)
+    match /auditLogs/{logId} {
+      allow get: if isOrgAdmin(resource.data.orgId);
+      allow list: if isOrgAdmin(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update, delete: if false;
+    }
+  }
+}

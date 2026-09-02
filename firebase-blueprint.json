@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "Organization": {
+      "title": "Organization",
+      "description": "Tenant organization within the ESAIA multi-tenant platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 120 },
+        "slug": { "type": "string", "maxLength": 60, "pattern": "^[a-z0-9-]+$" },
+        "plan": { "type": "string", "enum": ["starter", "pro", "enterprise"] },
+        "maxClients": { "type": "number" },
+        "maxQrCodes": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "slug", "plan"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Global user identity document.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "isGlobalSuperAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["email", "displayName"]
+    },
+    "OrganizationMember": {
+      "title": "OrganizationMember",
+      "description": "Tenant membership mapping user to an organization with role and granular permissions.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["super_admin", "org_admin", "staff", "client_viewer"] },
+        "permissions": { "type": "array" },
+        "assignedClientIds": { "type": "array" },
+        "status": { "type": "string", "enum": ["active", "invited", "suspended"] },
+        "joinedAt": { "type": "string" }
+      },
+      "required": ["orgId", "userId", "userEmail", "role", "status"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Client or customer account managed within an organization.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "companyName": { "type": "string", "maxLength": 150 },
+        "contactPerson": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string", "maxLength": 40 },
+        "status": { "type": "string", "enum": ["active", "archived", "pending"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "companyName", "email", "status"]
+    },
+    "QrCode": {
+      "title": "QrCode",
+      "description": "Dynamic QR code configuration with vector styling and target resolution rules.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 120 },
+        "publicCode": { "type": "string", "maxLength": 40, "pattern": "^[a-zA-Z0-9_-]+$" },
+        "destinationType": { "type": "string" },
+        "destinationUrl": { "type": "string", "maxLength": 2048 },
+        "status": { "type": "string", "enum": ["active", "paused", "expired", "archived"] },
+        "totalScans": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "clientId", "name", "publicCode", "destinationType", "destinationUrl", "status"]
+    },
+    "Page": {
+      "title": "Page",
+      "description": "Visual block-based landing page, digital card, or digital restaurant menu.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "slug": { "type": "string", "maxLength": 60, "pattern": "^[a-z0-9-]+$" },
+        "pageType": { "type": "string", "enum": ["landing", "business_card", "menu", "product", "link_in_bio"] },
+        "status": { "type": "string", "enum": ["published", "draft", "archived"] },
+        "blocks": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "clientId", "title", "slug", "pageType", "status"]
+    },
+    "AnalyticsDailySummary": {
+      "title": "AnalyticsDailySummary",
+      "description": "Pre-aggregated daily scan statistics roll-up for low-cost dashboard querying.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "totalScans": { "type": "number" },
+        "uniqueScans": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "date", "totalScans"]
+    }
+  },
+  "firestore": {
+    "/organizations/{orgId}": {
+      "schema": "Organization",
+      "description": "Organization tenant root collection"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile directory"
+    },
+    "/organizationMembers/{memberId}": {
+      "schema": "OrganizationMember",
+      "description": "Multi-tenant role and permission bindings"
+    },
+    "/clients/{clientId}": {
+      "schema": "Client",
+      "description": "Client CRM directory"
+    },
+    "/qrCodes/{qrId}": {
+      "schema": "QrCode",
+      "description": "Dynamic QR code management registry"
+    },
+    "/pages/{pageId}": {
+      "schema": "Page",
+      "description": "Landing pages and digital card structures"
+    },
+    "/analyticsDailySummary/{summaryId}": {
+      "schema": "AnalyticsDailySummary",
+      "description": "Aggregated daily analytics counters"
+    }
+  }
+}

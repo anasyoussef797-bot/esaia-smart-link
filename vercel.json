@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/q/:slug",
+      "destination": "/api/redirect?type=qr&slug=:slug"
+    },
+    {
+      "source": "/go/:slug",
+      "destination": "/api/redirect?type=link&slug=:slug"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

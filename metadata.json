@@ -1,0 +1,6 @@
+{
+  "name": "ESAIA - Enterprise QR & Smart Link Platform",
+  "description": "Production-grade multi-tenant SaaS platform for dynamic QR codes, landing page builders, digital business cards, smart links, and scan analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
