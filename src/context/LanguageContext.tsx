@@ -17,6 +17,7 @@ interface LanguageContextValue {
   setLanguage: (lang: SupportedLanguage) => void;
   t: TranslationSchema;
   isRTL: boolean;
+  isRtl: boolean;
   supportedLanguages: LanguageInfo[];
   currentLanguageInfo: LanguageInfo;
 }
@@ -83,6 +84,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         setLanguage,
         t: translations[language] || translations.en,
         isRTL,
+        isRtl: isRTL,
         supportedLanguages: SUPPORTED_LANGUAGES,
         currentLanguageInfo
       }}

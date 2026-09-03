@@ -1,38 +1,39 @@
 /**
  * ESAIA - Digital Business Cards (vCard) Manager View
+ * Dedicated vCard fleet management with RFC 6350 .vcf generation,
+ * dynamic QR bindings, and Client CRM brand association.
  */
 
-import React from 'react';
-import { CreditCard, Plus, User, Phone, Mail, Globe, ExternalLink, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CreditCard, Plus, User, Phone, Mail, Globe, ExternalLink, Download, Sparkles, QrCode } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { useLanguage } from '../../context/LanguageContext';
+import { Page } from '../../types/page';
+import { pageService } from '../../services/firebase/pageService';
+import { downloadVCard } from '../../utils/vcard';
 
-export const CardsManagerPage: React.FC = () => {
+export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }> = ({ onNavigate }) => {
   const { t } = useLanguage();
-  const cards = [
-    {
-      id: 'card_1',
-      fullName: 'Tariq Al-Masri',
-      title: 'Managing Partner',
-      company: 'Apex Capital Partners',
-      slug: 'apex-tariq-vcard',
-      email: 'tariq@apexcap.ae',
-      phone: '+971 50 123 9988',
-      scans: 3190
-    },
-    {
-      id: 'card_2',
-      fullName: 'Karim Mansour',
-      title: 'Head of Ecosystem',
-      company: 'Impact Hub Cairo',
-      slug: 'karim-impact-vcard',
-      email: 'karim@impacthub.eg',
-      phone: '+20 100 123 4567',
-      scans: 1840
+  const [cards, setCards] = useState<Page[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCards() {
+      setLoading(true);
+      try {
+        const pages = await pageService.getPagesByOrg('org_esaia_main');
+        const vcardPages = pages.filter(p => p.pageType === 'business_card');
+        setCards(vcardPages);
+      } catch (err) {
+        console.error('Error loading vcards:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    loadCards();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -40,54 +41,129 @@ export const CardsManagerPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t.cardsModule.title}</h1>
           <p className="text-xs text-slate-400 mt-1">
-            {t.cardsModule.subtitle}
+            Manage executive contact profiles, NFC digital cards, and instant RFC 6350 .vcf downloads.
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />}>
+        <Button
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
+          onClick={() => onNavigate && onNavigate('/admin/pages')}
+        >
           {t.cardsModule.createCard}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {cards.map(card => (
-          <Card key={card.id} padding="md" className="flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-base shadow-md">
-                  {card.fullName.charAt(0)}
-                </div>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs font-mono">Loading Digital Cards...</p>
+        </div>
+      ) : cards.length === 0 ? (
+        <Card padding="lg" className="text-center py-16">
+          <CreditCard className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-white">No Digital Business Cards</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Create your first executive vCard in seconds.</p>
+          <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/pages')}>
+            Create vCard
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {cards.map(card => {
+            const vcardBlock = card.blocks.find(b => b.type === 'vcard_header')?.content || {};
+            return (
+              <Card key={card.id} padding="md" className="flex flex-col justify-between hover:border-slate-700 transition-colors">
                 <div>
-                  <h3 className="text-base font-semibold text-white tracking-tight">{card.fullName}</h3>
-                  <p className="text-xs text-slate-400">{card.title} • {card.company}</p>
-                </div>
-              </div>
+                  <div className="flex items-center gap-3">
+                    {vcardBlock.avatarUrl ? (
+                      <img
+                        src={vcardBlock.avatarUrl}
+                        alt={vcardBlock.fullName}
+                        className="w-12 h-12 rounded-full object-cover border border-slate-700 shadow-md"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-base shadow-md">
+                        {vcardBlock.fullName?.charAt(0) || card.title.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold text-white tracking-tight truncate">
+                        {vcardBlock.fullName || card.title}
+                      </h3>
+                      <p className="text-xs text-blue-400 truncate">{vcardBlock.jobTitle || 'Executive'}</p>
+                    </div>
+                  </div>
 
-              <div className="mt-4 space-y-1.5 text-xs text-slate-400">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{card.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{card.phone}</span>
-                </div>
-              </div>
-            </div>
+                  <p className="text-xs text-slate-400 mt-3 truncate font-medium">
+                    {vcardBlock.company || 'Enterprise Partner'}
+                  </p>
 
-            <div className="mt-5 pt-3 border-t border-[#1c2030] flex items-center justify-between">
-              <span className="text-xs font-medium text-blue-400">{card.scans} {t.cardsModule.vcardDownloads}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                rightIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                onClick={() => window.open(`/p/${card.slug}`, '_blank')}
-              >
-                {t.cardsModule.previewCard}
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+                  <div className="space-y-1.5 mt-4 text-xs text-slate-300">
+                    {vcardBlock.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="font-mono text-xs">{vcardBlock.phone}</span>
+                      </div>
+                    )}
+                    {vcardBlock.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">{vcardBlock.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-5 p-2.5 rounded-lg bg-[#0e1017] border border-[#1c2030] text-xs">
+                    <span className="text-slate-400 font-mono">/p/{card.slug}</span>
+                    <span className="text-blue-400 font-bold">{(card.viewCount || 0).toLocaleString()} views</span>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-[#1c2030] flex items-center justify-between gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Download className="w-3.5 h-3.5" />}
+                    onClick={() =>
+                      downloadVCard({
+                        fullName: vcardBlock.fullName || card.title,
+                        jobTitle: vcardBlock.jobTitle,
+                        company: vcardBlock.company,
+                        phone: vcardBlock.phone,
+                        email: vcardBlock.email,
+                        website: vcardBlock.website,
+                        address: vcardBlock.address
+                      })
+                    }
+                  >
+                    .vcf
+                  </Button>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                      onClick={() => window.open(`/p/${card.slug}`, '_blank')}
+                    >
+                      Preview
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                      onClick={() => onNavigate && onNavigate(`/admin/pages/builder/${card.id}`)}
+                    >
+                      Builder
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

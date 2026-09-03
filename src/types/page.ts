@@ -27,6 +27,110 @@ export type BlockType =
   | 'spacer'
   | 'business_hours';
 
+export type PageThemePreset = 'dark' | 'light' | 'beige' | 'custom';
+
+export interface VCardBlockContent {
+  fullName: string;
+  jobTitle?: string;
+  company?: string;
+  department?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+  bio?: string;
+  phone?: string;
+  workPhone?: string;
+  email?: string;
+  workEmail?: string;
+  website?: string;
+  address?: string;
+  whatsapp?: string;
+  pronouns?: string;
+  saveContactButtonText?: string;
+}
+
+export interface MenuItemBlockContent {
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  category: string;
+  imageUrl?: string;
+  dietaryBadges?: Array<'vegan' | 'vegetarian' | 'gluten_free' | 'halal' | 'spicy' | 'chef_special'>;
+  isSoldOut?: boolean;
+  calories?: number;
+  enableWhatsAppOrder?: boolean;
+}
+
+export interface MenuCategoryBlockContent {
+  name: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface HeroBlockContent {
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  coverUrl?: string;
+  avatarUrl?: string;
+  alignment?: 'center' | 'left';
+}
+
+export interface ButtonBlockContent {
+  label: string;
+  url: string;
+  subtext?: string;
+  variant?: 'primary' | 'secondary' | 'outline' | 'whatsapp';
+  icon?: string;
+  newTab?: boolean;
+}
+
+export interface WhatsAppBlockContent {
+  phoneNumber: string;
+  buttonText: string;
+  prefilledMessage?: string;
+}
+
+export interface PhoneBlockContent {
+  phoneNumber: string;
+  buttonText: string;
+  subtext?: string;
+}
+
+export interface SocialLinksBlockContent {
+  links: Array<{
+    platform: 'linkedin' | 'x' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'github' | 'whatsapp' | 'telegram' | 'website';
+    url: string;
+  }>;
+  style?: 'pills' | 'icons' | 'cards';
+}
+
+export interface BusinessHoursBlockContent {
+  title?: string;
+  days: Array<{
+    day: string;
+    open: string;
+    close: string;
+    isClosed?: boolean;
+  }>;
+  note?: string;
+}
+
+export interface MapLocationBlockContent {
+  address: string;
+  locationTitle?: string;
+  directionsUrl?: string;
+  embedQuery?: string;
+}
+
+export interface ContactFormBlockContent {
+  heading: string;
+  subtext?: string;
+  submitButtonText?: string;
+  successMessage?: string;
+  recipientEmail?: string;
+}
+
 export interface PageBlock {
   id: string;
   type: BlockType;
@@ -37,6 +141,7 @@ export interface PageBlock {
 }
 
 export interface PageThemeConfig {
+  preset?: PageThemePreset;
   palette: {
     background: string;
     cardBackground: string;

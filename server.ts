@@ -25,7 +25,32 @@ const qrMemoryCache = new Map<string, {
   targetEntityId: string | null;
   destinationType: string;
   cachedAt: number;
-}>();
+}>([
+  ['hub-wifi', { destinationUrl: '/p/hub-welcome', status: 'active', expiresAt: null, targetEntityId: 'page_hub_welcome', destinationType: 'page', cachedAt: Date.now() }],
+  ['nile-menu', { destinationUrl: '/p/nile-menu-2026', status: 'active', expiresAt: null, targetEntityId: 'page_nile_menu', destinationType: 'page', cachedAt: Date.now() }],
+  ['apex-vcard', { destinationUrl: '/p/apex-tariq-vcard', status: 'active', expiresAt: null, targetEntityId: 'page_apex_tariq', destinationType: 'page', cachedAt: Date.now() }],
+  ['cairo-conf', { destinationUrl: 'https://cairoconf2026.eg', status: 'active', expiresAt: null, targetEntityId: null, destinationType: 'url', cachedAt: Date.now() }],
+  ['hub-coworking', { destinationUrl: '/p/hub-welcome', status: 'paused', expiresAt: null, targetEntityId: 'page_hub_welcome', destinationType: 'page', cachedAt: Date.now() }],
+  ['nile-loyalty', { destinationUrl: '/p/nile-menu-2026', status: 'active', expiresAt: null, targetEntityId: 'page_nile_menu', destinationType: 'page', cachedAt: Date.now() }]
+]);
+
+// API: Update or invalidate server-side redirect cache immediately
+app.post('/api/qr/update-cache', (req: Request, res: Response) => {
+  const { publicCode, destinationUrl, destinationType, status, expiresAt, targetEntityId } = req.body;
+  if (!publicCode) {
+    res.status(400).json({ error: 'Missing publicCode' });
+    return;
+  }
+  qrMemoryCache.set(publicCode, {
+    destinationUrl: destinationUrl || 'https://esaia.app',
+    status: status || 'active',
+    expiresAt: expiresAt || null,
+    targetEntityId: targetEntityId || null,
+    destinationType: destinationType || 'url',
+    cachedAt: Date.now()
+  });
+  res.json({ success: true, publicCode, destinationUrl, status: status || 'active' });
+});
 
 // ==============================================================================
 // 1. Ultra-Fast Dynamic QR Redirect Engine (Server-Side: /q/:slug)
@@ -112,8 +137,8 @@ app.get('/q/:slug', async (req: Request, res: Response): Promise<void> => {
 
     // 4. Return Immediate 302 Redirect
     let destination = qr.destinationUrl;
-    if (qr.destinationType === 'page' && qr.targetEntityId) {
-      destination = `/p/${qr.targetEntityId}`;
+    if (qr.destinationType === 'page' && !destination.startsWith('http') && !destination.startsWith('/p/')) {
+      destination = `/p/${destination}`;
     }
 
     res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');

@@ -19,6 +19,7 @@ import { ClientsPage } from './pages/clients/ClientsPage';
 import { ClientDetailPage } from './pages/clients/ClientDetailPage';
 import { QrManagerPage } from './pages/qr/QrManagerPage';
 import { PagesManagerPage } from './pages/pages/PagesManagerPage';
+import { PageBuilderPage } from './pages/pages/PageBuilderPage';
 import { LinksManagerPage } from './pages/links/LinksManagerPage';
 import { CardsManagerPage } from './pages/cards/CardsManagerPage';
 import { MenusManagerPage } from './pages/menus/MenusManagerPage';
@@ -102,6 +103,18 @@ function AppRouter() {
       );
     }
     if (currentPath.startsWith('/admin/pages')) {
+      const builderMatch = currentPath.match(/^\/admin\/pages\/builder\/([^/?#]+)/);
+      if (builderMatch && builderMatch[1]) {
+        return (
+          <ProtectedRoute requiredPermission="pages:builder" onNavigate={navigate}>
+            <PageBuilderPage
+              pageId={builderMatch[1]}
+              onBack={() => navigate('/admin/pages')}
+              onNavigate={navigate}
+            />
+          </ProtectedRoute>
+        );
+      }
       return (
         <ProtectedRoute requiredPermission="pages:builder" onNavigate={navigate}>
           <PagesManagerPage onNavigate={navigate} />
@@ -118,14 +131,14 @@ function AppRouter() {
     if (currentPath.startsWith('/admin/cards')) {
       return (
         <ProtectedRoute requiredPermission="pages:builder" onNavigate={navigate}>
-          <CardsManagerPage />
+          <CardsManagerPage onNavigate={navigate} />
         </ProtectedRoute>
       );
     }
     if (currentPath.startsWith('/admin/menus')) {
       return (
         <ProtectedRoute requiredPermission="pages:builder" onNavigate={navigate}>
-          <MenusManagerPage />
+          <MenusManagerPage onNavigate={navigate} />
         </ProtectedRoute>
       );
     }

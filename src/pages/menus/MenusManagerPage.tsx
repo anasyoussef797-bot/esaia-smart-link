@@ -1,26 +1,38 @@
 /**
- * ESAIA - Digital Menus Manager View
+ * ESAIA - Interactive Digital Menus & Catalogs Manager View
+ * Full support for culinary and beverage items, dietary badges, WhatsApp ordering,
+ * and 1-click dynamic QR linking.
  */
 
-import React from 'react';
-import { UtensilsCrossed, Plus, Sparkles, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { UtensilsCrossed, Plus, Sparkles, ExternalLink, QrCode, Coffee, Eye } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { useLanguage } from '../../context/LanguageContext';
+import { Page } from '../../types/page';
+import { pageService } from '../../services/firebase/pageService';
 
-export const MenusManagerPage: React.FC = () => {
+export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }> = ({ onNavigate }) => {
   const { t } = useLanguage();
-  const menus = [
-    {
-      id: 'menu_1',
-      title: 'Nile Artisan - Main Specialty Coffee & Pastries',
-      slug: 'nile-menu-2026',
-      itemsCount: 38,
-      categories: ['Espresso Bar', 'Pour Over', 'Bakery', 'Matcha'],
-      scans: 6280
+  const [menus, setMenus] = useState<Page[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMenus() {
+      setLoading(true);
+      try {
+        const pages = await pageService.getPagesByOrg('org_esaia_main');
+        const menuPages = pages.filter(p => p.pageType === 'menu');
+        setMenus(menuPages);
+      } catch (err) {
+        console.error('Error loading menus:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    loadMenus();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -28,50 +40,99 @@ export const MenusManagerPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t.menusModule.title}</h1>
           <p className="text-xs text-slate-400 mt-1">
-            {t.menusModule.subtitle}
+            Table-side digital menus, dietary categorization, and WhatsApp contactless ordering.
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />}>
+        <Button
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
+          onClick={() => onNavigate && onNavigate('/admin/pages')}
+        >
           {t.menusModule.createMenu}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {menus.map(menu => (
-          <Card key={menu.id} padding="md" className="flex flex-col justify-between">
-            <div>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-base font-semibold text-white tracking-tight">{menu.title}</h3>
-                <Badge variant="success">{t.actions.active}</Badge>
-              </div>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs font-mono">Loading Digital Menus...</p>
+        </div>
+      ) : menus.length === 0 ? (
+        <Card padding="lg" className="text-center py-16">
+          <UtensilsCrossed className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-white">No Digital Menus Found</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Create your first contactless menu with WhatsApp ordering.</p>
+          <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/pages')}>
+            Create Menu
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {menus.map(menu => {
+            const categories = menu.blocks
+              .filter(b => b.type === 'menu_category')
+              .map(b => b.content.name)
+              .slice(0, 4);
+            const itemCount = menu.blocks.filter(b => b.type === 'menu_item').length;
 
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {menu.categories.map(cat => (
-                  <span key={cat} className="text-[10px] px-2 py-0.5 rounded-md bg-[#0e1017] text-slate-300 border border-[#1c2030]">
-                    {cat}
-                  </span>
-                ))}
-              </div>
+            return (
+              <Card key={menu.id} padding="md" className="flex flex-col justify-between hover:border-slate-700 transition-colors">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-base font-semibold text-white tracking-tight">{menu.title}</h3>
+                      <p className="text-xs font-mono text-blue-400 mt-1">/p/{menu.slug}</p>
+                    </div>
+                    <Badge variant="success">Active</Badge>
+                  </div>
 
-              <div className="flex items-center justify-between mt-5 p-2.5 rounded-lg bg-[#0e1017] border border-[#1c2030] text-xs">
-                <span className="text-slate-400">{menu.itemsCount} {t.menusModule.menuItems}</span>
-                <span className="text-blue-400 font-bold">{menu.scans.toLocaleString()} {t.menusModule.guestScans}</span>
-              </div>
-            </div>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {categories.length > 0 ? (
+                      categories.map((cat, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-[#0e1017] text-slate-300 border border-[#1c2030]"
+                        >
+                          {cat}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-slate-500">Specialty Menu</span>
+                    )}
+                  </div>
 
-            <div className="mt-5 pt-3 border-t border-[#1c2030] flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                rightIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                onClick={() => window.open(`/p/${menu.slug}`, '_blank')}
-              >
-                {t.menusModule.viewLiveMenu}
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+                  <div className="flex items-center justify-between mt-5 p-2.5 rounded-lg bg-[#0e1017] border border-[#1c2030] text-xs">
+                    <span className="text-slate-400">{itemCount} Menu Items</span>
+                    <div className="flex items-center gap-1.5 text-blue-400 font-bold">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{(menu.viewCount || 0).toLocaleString()} views</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-[#1c2030] flex items-center justify-between gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                    onClick={() => window.open(`/p/${menu.slug}`, '_blank')}
+                  >
+                    Preview
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                    onClick={() => onNavigate && onNavigate(`/admin/pages/builder/${menu.id}`)}
+                  >
+                    Builder
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
