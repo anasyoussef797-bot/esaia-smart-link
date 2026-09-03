@@ -3,7 +3,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { UserProfile, Organization, OrganizationMember, Permission, Role, ROLE_DEFAULT_PERMISSIONS } from '../types/auth';
+import { UserProfile, Organization, OrganizationMember, Permission, Role, ROLE_DEFAULT_PERMISSIONS, WhiteLabelBranding } from '../types/auth';
 import { authService } from '../services/firebase/authService';
 
 interface AuthContextValue {
@@ -18,6 +18,7 @@ interface AuthContextValue {
   isSuperAdmin: () => boolean;
   switchOrganization: (orgId: string) => void;
   createNewOrganization: (name: string, slug?: string, plan?: 'starter' | 'growth' | 'enterprise') => Promise<Organization>;
+  updateCurrentOrgBranding: (branding: WhiteLabelBranding) => Promise<void>;
   simulateRoleLogin: (role: Role, customEmail?: string) => void;
   logout: () => Promise<void>;
 }
@@ -251,6 +252,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateCurrentOrgBranding = async (branding: WhiteLabelBranding) => {
+    if (!currentOrg) return;
+    const updated: Organization = {
+      ...currentOrg,
+      branding,
+      updatedAt: new Date().toISOString()
+    };
+    setCurrentOrg(updated);
+    setAvailableOrgs(prev => prev.map(o => o.id === currentOrg.id ? updated : o));
+    try {
+      await authService.updateOrganizationBranding(currentOrg.id, branding);
+    } catch (e) {
+      console.warn('Failed to persist branding:', e);
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -278,6 +295,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isSuperAdmin,
         switchOrganization,
         createNewOrganization,
+        updateCurrentOrgBranding,
         simulateRoleLogin,
         logout
       }}

@@ -47,8 +47,14 @@ export const OrgSwitcher: React.FC = () => {
         className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#141722] [data-theme=light]:bg-white [data-theme=beige]:bg-white hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-50 [data-theme=beige]:hover:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] text-xs text-left rtl:text-right transition-colors cursor-pointer w-full max-w-[220px]"
         aria-label="Switch organization"
       >
-        <div className="w-6 h-6 rounded-md bg-blue-600/20 [data-theme=light]:bg-blue-100 [data-theme=beige]:bg-blue-100 border border-blue-500/30 [data-theme=light]:border-blue-300 [data-theme=beige]:border-blue-300 flex items-center justify-center text-blue-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-blue-800 shrink-0 font-bold text-[11px]">
-          {currentOrg?.name ? currentOrg.name.charAt(0).toUpperCase() : 'W'}
+        <div className="w-6 h-6 rounded-md bg-blue-600/20 [data-theme=light]:bg-blue-100 [data-theme=beige]:bg-blue-100 border border-blue-500/30 [data-theme=light]:border-blue-300 [data-theme=beige]:border-blue-300 flex items-center justify-center text-blue-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-blue-800 shrink-0 font-bold text-[11px] overflow-hidden">
+          {currentOrg?.branding?.logoUrl ? (
+            <img src={currentOrg.branding.logoUrl} alt={currentOrg.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          ) : currentOrg?.name ? (
+            currentOrg.name.charAt(0).toUpperCase()
+          ) : (
+            'W'
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-200 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] truncate">{currentOrg?.name || 'Workspace'}</p>

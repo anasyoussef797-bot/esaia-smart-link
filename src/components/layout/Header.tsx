@@ -7,6 +7,7 @@ import { Menu, Plus, LogOut } from 'lucide-react';
 import { OrgSwitcher } from './OrgSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -52,6 +53,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu, onNavigate }) 
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* In-App PWA Install Prompt */}
+          <PWAInstallButton compact />
+
           {/* Quick Create Action */}
           <Button
             id="quick-new-qr-btn"

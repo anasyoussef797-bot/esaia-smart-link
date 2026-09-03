@@ -25,7 +25,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from './config';
-import { UserProfile, Organization, OrganizationMember, Role, Permission, ROLE_DEFAULT_PERMISSIONS } from '../../types/auth';
+import { UserProfile, Organization, OrganizationMember, Role, Permission, ROLE_DEFAULT_PERMISSIONS, WhiteLabelBranding } from '../../types/auth';
 
 export const authService = {
   /**
@@ -409,6 +409,35 @@ export const authService = {
     }
 
     return newMember;
+  },
+
+  /**
+   * Fetch single organization by ID (including white-label branding)
+   */
+  async getOrganizationById(orgId: string): Promise<Organization | null> {
+    try {
+      const snap = await getDoc(doc(db, 'organizations', orgId));
+      if (snap.exists()) {
+        return { id: snap.id, ...snap.data() } as Organization;
+      }
+    } catch (e) {
+      console.warn('Error fetching organization by ID:', e);
+    }
+    return null;
+  },
+
+  /**
+   * Update organization white-label branding
+   */
+  async updateOrganizationBranding(orgId: string, branding: WhiteLabelBranding): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'organizations', orgId), {
+        branding,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.warn('Update organization branding local store:', e);
+    }
   },
 
   /**

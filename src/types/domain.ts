@@ -9,6 +9,7 @@ export interface DnsRecord {
   name: string;
   value: string;
   ttl?: number;
+  status?: 'matched' | 'unmatched' | 'pending';
 }
 
 export interface CustomDomain {
@@ -17,9 +18,13 @@ export interface CustomDomain {
   domain: string; // e.g., 'qr.brand.com'
   targetType: 'organization' | 'client' | 'page';
   targetId?: string;
+  targetName?: string;
   status: DomainStatus;
   dnsRecords: DnsRecord[];
   sslActive: boolean;
+  sslProvider?: string;
+  sslExpiresAt?: string;
+  isPrimary?: boolean;
   verifiedAt?: string | null;
   createdAt: string;
   updatedAt: string;

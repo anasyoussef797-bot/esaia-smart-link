@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="esaia-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="esaia-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+  <!-- Background with subtle corner radius -->
+  <rect width="512" height="512" rx="112" fill="#090b10" />
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#24293d" stroke-width="8" opacity="0.6" />
+  
+  <!-- Outer Corner QR Position Blocks -->
+  <!-- Top Left Finder -->
+  <rect x="96" y="96" width="112" height="112" rx="28" fill="url(#esaia-grad)" />
+  <rect x="120" y="120" width="64" height="64" rx="16" fill="#090b10" />
+  <rect x="136" y="136" width="32" height="32" rx="8" fill="url(#esaia-accent)" />
+
+  <!-- Top Right Finder -->
+  <rect x="304" y="96" width="112" height="112" rx="28" fill="url(#esaia-grad)" />
+  <rect x="328" y="120" width="64" height="64" rx="16" fill="#090b10" />
+  <rect x="344" y="136" width="32" height="32" rx="8" fill="url(#esaia-accent)" />
+
+  <!-- Bottom Left Finder -->
+  <rect x="96" y="304" width="112" height="112" rx="28" fill="url(#esaia-grad)" />
+  <rect x="120" y="328" width="64" height="64" rx="16" fill="#090b10" />
+  <rect x="136" y="344" width="32" height="32" rx="8" fill="url(#esaia-accent)" />
+
+  <!-- Center Dynamic Data Matrix & Pulse -->
+  <rect x="232" y="96" width="48" height="48" rx="12" fill="#60a5fa" />
+  <rect x="96" y="232" width="48" height="48" rx="12" fill="#3b82f6" />
+  <rect x="232" y="232" width="48" height="48" rx="12" fill="url(#esaia-accent)" />
+  <rect x="304" y="232" width="48" height="48" rx="12" fill="#3b82f6" />
+  <rect x="368" y="232" width="48" height="48" rx="12" fill="#60a5fa" />
+  
+  <rect x="232" y="304" width="48" height="48" rx="12" fill="#3b82f6" />
+  <rect x="304" y="304" width="48" height="48" rx="12" fill="url(#esaia-grad)" />
+  <rect x="368" y="304" width="48" height="48" rx="12" fill="#38bdf8" />
+  <rect x="232" y="368" width="48" height="48" rx="12" fill="url(#esaia-accent)" />
+  <rect x="304" y="368" width="48" height="48" rx="12" fill="#3b82f6" />
+  <rect x="368" y="368" width="48" height="48" rx="12" fill="url(#esaia-grad)" />
+</svg>

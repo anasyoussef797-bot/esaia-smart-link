@@ -31,6 +31,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Page, PageBlock, PageThemeConfig } from '../../types/page';
+import { WhiteLabelBranding } from '../../types/auth';
+import { authService } from '../../services/firebase/authService';
 import { pageService, DEFAULT_THEME_DARK, DEFAULT_THEME_LIGHT, DEFAULT_THEME_BEIGE } from '../../services/firebase/pageService';
 import { downloadVCard } from '../../utils/vcard';
 
@@ -40,6 +42,7 @@ export interface PublicPageRendererProps {
 
 export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) => {
   const [page, setPage] = useState<Page | null>(null);
+  const [branding, setBranding] = useState<WhiteLabelBranding | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeMenuCategory, setActiveMenuCategory] = useState<string>('all');
@@ -64,6 +67,14 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
             const arabicRegex = /[\u0600-\u06FF]/;
             if (arabicRegex.test(found.title) || arabicRegex.test(found.seo?.metaDescription || '')) {
               setIsRTL(true);
+            }
+            // Fetch organization white-label branding if present
+            if (found.orgId) {
+              authService.getOrganizationById(found.orgId).then(org => {
+                if (mounted && org?.branding) {
+                  setBranding(org.branding);
+                }
+              }).catch(() => {});
             }
           }
         }
@@ -902,15 +913,25 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
           })}
       </main>
 
-      {/* Powered by ESAIA Footer */}
+      {/* White-Label / Platform Footer */}
       <footer className="w-full max-w-md py-6 text-center text-xs space-y-1.5">
-        <div className="flex items-center justify-center gap-1.5 font-medium" style={{ color: p.textSecondary }}>
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>ESAIA Verified Enterprise Experience</span>
-        </div>
-        <p className="text-[10px] opacity-60" style={{ color: p.textSecondary }}>
-          Powered by ESAIA Smart Platform · SSL Encrypted · zero-tracking privacy
-        </p>
+        {branding?.footerText ? (
+          <p className="text-xs font-medium" style={{ color: p.textSecondary }}>
+            {branding.footerText}
+          </p>
+        ) : (
+          <div className="flex items-center justify-center gap-1.5 font-medium" style={{ color: p.textSecondary }}>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span>{branding?.platformName || 'ESAIA'} Verified Enterprise Experience</span>
+          </div>
+        )}
+
+        {/* Display badge only if not suppressed by white-label configuration */}
+        {branding?.poweredByBadge !== false && (
+          <p className="text-[10px] opacity-60" style={{ color: p.textSecondary }}>
+            Powered by {branding?.platformName || 'ESAIA Smart Platform'} · SSL Encrypted · zero-tracking privacy
+          </p>
+        )}
       </footer>
     </div>
   );

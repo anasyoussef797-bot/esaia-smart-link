@@ -5,6 +5,7 @@
 export type AuditAction =
   | 'user:login'
   | 'user:invite'
+  | 'user:role_change'
   | 'client:create'
   | 'client:update'
   | 'client:archive'
@@ -18,7 +19,9 @@ export type AuditAction =
   | 'page:delete'
   | 'data:export'
   | 'migration:import'
-  | 'domain:verify';
+  | 'domain:add'
+  | 'domain:verify'
+  | 'domain:delete';
 
 export type ResourceType = 'client' | 'qr' | 'page' | 'link' | 'domain' | 'user' | 'org' | 'system';
 
@@ -33,4 +36,5 @@ export interface AuditLog {
   metadata?: Record<string, any>;
   ipAddress?: string;
   timestamp: string;
+  status?: 'success' | 'warning' | 'failure';
 }

@@ -4,9 +4,10 @@
  * and integrates Vite middleware for development and static SPA serving for production.
  */
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import crypto from 'crypto';
+import dns from 'dns/promises';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 
@@ -16,6 +17,171 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// ==============================================================================
+// Security Headers Middleware
+// ==============================================================================
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+// ==============================================================================
+// Multi-Domain Routing & Custom CNAME Host Interceptor
+// ==============================================================================
+export interface DomainRouteTarget {
+  orgId: string;
+  targetType: 'organization' | 'page' | 'link';
+  targetId?: string;
+  status: 'active' | 'pending_dns' | 'ssl_issuing' | 'error';
+  targetName?: string;
+}
+
+const domainRoutingCache = new Map<string, DomainRouteTarget>([
+  ['qr.impacthub.eg', { orgId: 'org_impact_hub', targetType: 'organization', status: 'active', targetName: 'Impact Hub Cairo' }],
+  ['menu.nilecoffee.com', { orgId: 'org_impact_hub', targetType: 'page', targetId: 'page_nile_menu', status: 'active', targetName: 'Nile Coffee Roasters' }],
+  ['card.apextariq.com', { orgId: 'org_impact_hub', targetType: 'page', targetId: 'page_apex_tariq', status: 'active', targetName: 'Apex Tariq vCard' }]
+]);
+
+// Host Interception Middleware for Custom Domains
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const rawHost = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+  const hostname = rawHost.split(':')[0].toLowerCase();
+
+  // Skip system hosts and direct API routes
+  const isDefaultHost = 
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.run.app') ||
+    hostname.endsWith('.aistudio.dev') ||
+    hostname === 'esaia.app' ||
+    hostname === 'www.esaia.app';
+
+  if (!isDefaultHost) {
+    const route = domainRoutingCache.get(hostname);
+    if (route && route.status === 'active') {
+      // Attach resolved domain metadata to response locals
+      res.locals.customDomain = { hostname, ...route };
+
+      // Root path rewrite or redirect to target resource
+      if (req.path === '/' || req.path === '') {
+        if (route.targetType === 'page' && route.targetId) {
+          res.redirect(302, `/p/${route.targetId}`);
+          return;
+        }
+        if (route.targetType === 'organization') {
+          res.redirect(302, '/admin/overview');
+          return;
+        }
+      }
+    }
+  }
+
+  next();
+});
+
+// Endpoint to inspect or register custom domain routing dynamically
+app.post('/api/domains/register-route', (req: Request, res: Response) => {
+  const { domain, orgId, targetType, targetId, status } = req.body;
+  if (!domain || !orgId) {
+    res.status(400).json({ error: 'Domain and orgId are required' });
+    return;
+  }
+  const cleanDomain = domain.trim().toLowerCase();
+  domainRoutingCache.set(cleanDomain, {
+    orgId,
+    targetType: targetType || 'organization',
+    targetId: targetId || undefined,
+    status: status || 'active'
+  });
+  res.json({ success: true, domain: cleanDomain, route: domainRoutingCache.get(cleanDomain) });
+});
+
+// Endpoint to query current domain routing
+app.get('/api/domains/route-info', (req: Request, res: Response) => {
+  const domain = (req.query.domain as string)?.toLowerCase();
+  if (domain && domainRoutingCache.has(domain)) {
+    res.json({ found: true, domain, route: domainRoutingCache.get(domain) });
+    return;
+  }
+  res.json({
+    found: false,
+    allMappedDomains: Array.from(domainRoutingCache.keys())
+  });
+});
+
+// Real-time DNS Verification pipeline (CNAME and TXT)
+app.post('/api/domains/verify-dns', async (req: Request, res: Response) => {
+  const { domain, expectedCname, challengeTxt } = req.body;
+  if (!domain) {
+    res.status(400).json({ error: 'Domain is required' });
+    return;
+  }
+
+  const cleanDomain = domain.trim().toLowerCase();
+  let cnameMatched = false;
+  let txtMatched = false;
+  let cnameRecord = '';
+  let txtRecords: string[][] = [];
+
+  try {
+    try {
+      const cnames = await dns.resolveCname(cleanDomain);
+      cnameRecord = cnames[0] || '';
+      if (
+        cnameRecord.toLowerCase().includes('esaia.app') ||
+        (expectedCname && cnameRecord.toLowerCase().includes(expectedCname.toLowerCase()))
+      ) {
+        cnameMatched = true;
+      }
+    } catch {
+      // CNAME resolution failed or no record
+    }
+
+    try {
+      const challengeHost = `_esaia-challenge.${cleanDomain}`;
+      txtRecords = await dns.resolveTxt(challengeHost);
+      const flat = txtRecords.flat();
+      if (
+        flat.some(v => v.includes('esaia-verify') || (challengeTxt && v.includes(challengeTxt)))
+      ) {
+        txtMatched = true;
+      }
+    } catch {
+      // TXT challenge resolution failed or no record
+    }
+
+    const verified = cnameMatched || txtMatched;
+    if (verified && domainRoutingCache.has(cleanDomain)) {
+      const existing = domainRoutingCache.get(cleanDomain)!;
+      existing.status = 'active';
+    }
+
+    res.json({
+      domain: cleanDomain,
+      verified,
+      cnameMatched,
+      txtMatched,
+      cnameRecord: cnameRecord || null,
+      txtRecords: txtRecords.flat(),
+      sslReady: verified,
+      checkedAt: new Date().toISOString()
+    });
+  } catch (err: any) {
+    res.json({
+      domain: cleanDomain,
+      verified: false,
+      cnameMatched: false,
+      txtMatched: false,
+      error: err.message,
+      checkedAt: new Date().toISOString()
+    });
+  }
+});
 
 // In-memory memory cache for ultra-fast QR lookup (TTL: 60s)
 const qrMemoryCache = new Map<string, {
@@ -78,8 +244,11 @@ app.get('/q/:slug', async (req: Request, res: Response): Promise<void> => {
     // 1. Check in-memory fast cache first (< 1ms)
     let qr = qrMemoryCache.get(slug);
 
-    if (!qr || Date.now() - qr.cachedAt > 60000) {
-      // In standalone dev/demo or serverless proxy, fallback destination
+    if (qr) {
+      // Keep cached entry fresh
+      qr.cachedAt = Date.now();
+    } else {
+      // Fallback destination for unknown codes
       qr = {
         destinationUrl: 'https://esaia.app',
         status: 'active',
@@ -185,6 +354,39 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+
+  // 500 Error Handler Middleware
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('ESAIA Server Unhandled Exception:', err);
+    if (req.accepts('json') && !req.accepts('html')) {
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: err?.message || 'An unexpected error occurred on the enterprise server.',
+        code: 'INTERNAL_SERVER_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>500 - Server Error | ESAIA</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #090b10; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px;">
+            <div style="max-width: 460px; width: 100%; padding: 32px; border: 1px solid #24293d; border-radius: 16px; background: #12151f; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+              <div style="display: inline-block; padding: 8px 16px; background: rgba(244, 63, 94, 0.15); color: #f43f5e; border-radius: 9999px; font-weight: 700; font-size: 14px; margin-bottom: 16px;">
+                500 Server Error
+              </div>
+              <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 8px;">Service Temporarily Unavailable</h1>
+              <p style="color: #94a3b8; font-size: 14px; line-height: 1.5; margin: 0 0 24px;">An internal server exception was caught. The request has been recorded in the security audit logs.</p>
+              <a href="/admin/overview" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Return to Dashboard</a>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+  });
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`ESAIA Server running on http://0.0.0.0:${PORT}`);

@@ -117,6 +117,23 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+export interface WhiteLabelBranding {
+  platformName?: string;
+  tagline?: string;
+  logoLightUrl?: string | null;
+  logoDarkUrl?: string | null;
+  faviconUrl?: string | null;
+  accentColor?: string; // hex e.g. '#2563eb'
+  hidePoweredBy?: boolean;
+  footerCopyright?: string;
+  supportEmail?: string;
+  privacyPolicyUrl?: string;
+  termsOfServiceUrl?: string;
+  senderName?: string;
+  senderEmail?: string;
+  emailSignature?: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -126,6 +143,7 @@ export interface Organization {
   maxQrCodes: number;
   customDomains: string[];
   logoUrl?: string | null;
+  branding?: WhiteLabelBranding;
   createdAt: string;
   updatedAt: string;
 }

@@ -30,7 +30,11 @@ import { DomainsPage } from './pages/domains/DomainsPage';
 import { ImportPage } from './pages/import/ImportPage';
 import { AuditPage } from './pages/audit/AuditPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { DataExportPage } from './pages/settings/DataExportPage';
+import { WhiteLabelPage } from './pages/settings/WhiteLabelPage';
+import { NotFoundPage } from './pages/errors/NotFoundPage';
 import { PublicPageRenderer } from './pages/public/PublicPageRenderer';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -166,7 +170,7 @@ function AppRouter() {
     if (currentPath.startsWith('/admin/domains')) {
       return (
         <ProtectedRoute requiredPermission="domains:manage" onNavigate={navigate}>
-          <DomainsPage />
+          <DomainsPage onNavigate={navigate} />
         </ProtectedRoute>
       );
     }
@@ -184,18 +188,40 @@ function AppRouter() {
         </ProtectedRoute>
       );
     }
+    if (currentPath === '/admin/settings/white-label' || currentPath.startsWith('/admin/settings/white-label')) {
+      return (
+        <ProtectedRoute requiredPermission="org:manage" onNavigate={navigate}>
+          <WhiteLabelPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
+    if (currentPath === '/admin/settings/export' || currentPath.startsWith('/admin/settings/export')) {
+      return (
+        <ProtectedRoute requiredPermission="org:read" onNavigate={navigate}>
+          <DataExportPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
     if (currentPath.startsWith('/admin/settings')) {
       return (
         <ProtectedRoute requiredPermission="org:read" onNavigate={navigate}>
-          <SettingsPage />
+          <SettingsPage onNavigate={navigate} />
         </ProtectedRoute>
       );
     }
 
-    // Default fallback
+    if (currentPath === '/admin' || currentPath === '/admin/' || currentPath === '/admin/overview') {
+      return (
+        <ProtectedRoute onNavigate={navigate}>
+          <OverviewPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
+
+    // Unmatched /admin route -> Custom 404 Page
     return (
       <ProtectedRoute onNavigate={navigate}>
-        <OverviewPage onNavigate={navigate} />
+        <NotFoundPage requestedPath={currentPath} onNavigate={navigate} />
       </ProtectedRoute>
     );
   };
@@ -209,14 +235,16 @@ function AppRouter() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <NotificationProvider>
-          <AuthProvider>
-            <AppRouter />
-          </AuthProvider>
-        </NotificationProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <LanguageProvider>
+          <NotificationProvider>
+            <AuthProvider>
+              <AppRouter />
+            </AuthProvider>
+          </NotificationProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

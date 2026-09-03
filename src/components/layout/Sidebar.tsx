@@ -18,10 +18,12 @@ import {
   UploadCloud,
   ShieldCheck,
   Settings,
+  Download,
   X
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 export interface SidebarProps {
   currentPath: string;
@@ -37,6 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile
 }) => {
   const { t } = useLanguage();
+  const { currentOrg } = useAuth();
+  const brandName = currentOrg?.branding?.platformName || 'ESAIA';
 
   const navSections = [
     {
@@ -74,6 +78,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: t.sections.administration,
       items: [
         { id: 'audit', label: t.nav.audit, icon: <ShieldCheck className="w-4 h-4" />, path: '/admin/audit' },
+        { id: 'whitelabel', label: 'White-Labeling', icon: <Sparkles className="w-4 h-4" />, path: '/admin/settings/white-label' },
+        { id: 'export', label: 'Data Export', icon: <Download className="w-4 h-4" />, path: '/admin/settings/export' },
         { id: 'settings', label: t.nav.settings, icon: <Settings className="w-4 h-4" />, path: '/admin/settings' }
       ]
     }
@@ -98,15 +104,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Brand Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-[#1c2030] [data-theme=light]:border-[#edf2f7] [data-theme=beige]:border-[#eae4d9] shrink-0">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onNavigate('/admin/overview')}>
+          <div className="flex items-center gap-2.5 cursor-pointer max-w-[200px]" onClick={() => onNavigate('/admin/overview')}>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
               <QrCode className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="font-bold tracking-tight text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] text-base">
-                ESAIA
+            <div className="min-w-0">
+              <span className="font-bold tracking-tight text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] text-base truncate block">
+                {brandName}
               </span>
-              <span className="ml-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1a1e2d] [data-theme=light]:bg-blue-50 [data-theme=beige]:bg-[#eee9df] text-blue-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-blue-800 border border-blue-900/40 [data-theme=light]:border-blue-200 [data-theme=beige]:border-[#dfd7cb]">
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#1a1e2d] [data-theme=light]:bg-blue-50 [data-theme=beige]:bg-[#eee9df] text-blue-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-blue-800 border border-blue-900/40 [data-theme=light]:border-blue-200 [data-theme=beige]:border-[#dfd7cb]">
                 ENTERPRISE
               </span>
             </div>

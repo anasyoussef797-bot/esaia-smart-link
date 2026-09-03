@@ -16,7 +16,7 @@ import { exportService } from '../../services/firebase/exportService';
 import { useNotification } from '../../context/NotificationContext';
 import { OrganizationMember, Role, Permission, ROLE_DEFAULT_PERMISSIONS } from '../../types/auth';
 
-export const SettingsPage: React.FC = () => {
+export const SettingsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({ onNavigate }) => {
   const { currentOrg, isSuperAdmin, isOrgAdmin } = useAuth();
   const { showToast } = useNotification();
   const { t } = useLanguage();
@@ -190,22 +190,35 @@ export const SettingsPage: React.FC = () => {
               title={t.settingsModule.exportDatabase}
               description={t.settingsModule.exportDesc}
             />
-            <div className="p-4 rounded-xl bg-[#0e1017] border border-[#1c2030] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-white">Full Organization Backup (JSON)</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Includes all clients, QR codes, style vectors, and pages.
-                </p>
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">Full Organization Backup (JSON)</p>
+                  <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-0.5">
+                    Includes all clients, QR codes, style vectors, and pages.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {onNavigate && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onNavigate('/admin/settings/export')}
+                    >
+                      Advanced Export Center
+                    </Button>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    isLoading={isExporting}
+                    leftIcon={<Download className="w-4 h-4" />}
+                    onClick={handleExportJson}
+                  >
+                    {t.settingsModule.exportBtn}
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                isLoading={isExporting}
-                leftIcon={<Download className="w-4 h-4" />}
-                onClick={handleExportJson}
-              >
-                {t.settingsModule.exportBtn}
-              </Button>
             </div>
           </Card>
         </div>
