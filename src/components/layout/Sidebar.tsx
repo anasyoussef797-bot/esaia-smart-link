@@ -105,9 +105,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-[#1c2030] [data-theme=light]:border-[#edf2f7] [data-theme=beige]:border-[#eae4d9] shrink-0">
           <div className="flex items-center gap-2.5 cursor-pointer max-w-[200px]" onClick={() => onNavigate('/admin/overview')}>
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
-              <QrCode className="w-5 h-5 text-white" />
-            </div>
+            {currentOrg?.branding?.logoDarkUrl || currentOrg?.branding?.logoUrl ? (
+              <div className="w-8 h-8 rounded-xl bg-[#141722] [data-theme=light]:bg-slate-100 [data-theme=beige]:bg-[#eae4d9] border border-[#24293d] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                <img
+                  src={currentOrg.branding.logoDarkUrl || currentOrg.branding.logoUrl || ''}
+                  alt={brandName}
+                  className="max-w-full max-h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
+                <QrCode className="w-5 h-5 text-white" />
+              </div>
+            )}
             <div className="min-w-0">
               <span className="font-bold tracking-tight text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] text-base truncate block">
                 {brandName}

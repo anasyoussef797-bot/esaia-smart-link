@@ -264,6 +264,30 @@ export const SettingsPage: React.FC<{ onNavigate?: (path: string) => void }> = (
               </li>
             </ul>
           </Card>
+
+          {/* White-Labeling Quick Access */}
+          <Card>
+            <CardHeader
+              title="Enterprise White-Labeling"
+              description="Platform identity & domain customization"
+            />
+            <div className="space-y-3 text-xs">
+              <p className="text-slate-400 [data-theme=light]:text-slate-600 [data-theme=beige]:text-[#8c7e73]">
+                Upload custom platform logos, favicons, custom domain footers, and custom email/SMTP signatures.
+              </p>
+              {onNavigate && (
+                <Button
+                  id="nav-to-whitelabel-btn"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => onNavigate('/admin/settings/white-label')}
+                >
+                  Configure White-Label Branding
+                </Button>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
 

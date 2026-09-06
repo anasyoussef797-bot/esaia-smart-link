@@ -10,6 +10,7 @@ export type OrgPlan = 'starter' | 'pro' | 'growth' | 'enterprise';
 export type Permission =
   | 'org:read'
   | 'org:update'
+  | 'org:manage'
   | 'org:manage_team'
   | 'org:manage_billing'
   | 'clients:view'
@@ -32,6 +33,7 @@ export type Permission =
 export const ALL_PERMISSIONS: Permission[] = [
   'org:read',
   'org:update',
+  'org:manage',
   'org:manage_team',
   'org:manage_billing',
   'clients:view',
@@ -57,6 +59,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<Role, Permission[]> = {
   org_admin: [
     'org:read',
     'org:update',
+    'org:manage',
     'org:manage_team',
     'org:manage_billing',
     'clients:view',
@@ -120,18 +123,25 @@ export interface UserProfile {
 export interface WhiteLabelBranding {
   platformName?: string;
   tagline?: string;
+  logoUrl?: string | null;
   logoLightUrl?: string | null;
   logoDarkUrl?: string | null;
   faviconUrl?: string | null;
   accentColor?: string; // hex e.g. '#2563eb'
   hidePoweredBy?: boolean;
+  poweredByBadge?: boolean;
+  footerText?: string;
   footerCopyright?: string;
   supportEmail?: string;
   privacyPolicyUrl?: string;
   termsOfServiceUrl?: string;
   senderName?: string;
   senderEmail?: string;
+  senderRole?: string;
+  senderPhone?: string;
   emailSignature?: string;
+  emailDisclaimer?: string;
+  customCss?: string;
 }
 
 export interface Organization {

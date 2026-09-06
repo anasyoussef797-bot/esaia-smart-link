@@ -4,7 +4,7 @@
  * removal of "Powered by", and custom email/SMTP signatures.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Palette,
   Check,
@@ -20,16 +20,22 @@ import {
   Sliders,
   ExternalLink,
   Laptop,
-  Smartphone
+  Smartphone,
+  Send,
+  Phone,
+  HelpCircle,
+  Code
 } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { WhiteLabelBranding } from '../../types/auth';
+import { BrandAssetUploader } from './components/BrandAssetUploader';
 
 const COLOR_PRESETS = [
   { name: 'Sapphire Modern', hex: '#2563eb' },
@@ -41,34 +47,62 @@ const COLOR_PRESETS = [
 ];
 
 export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> = ({ onNavigate }) => {
-  const { currentOrg, updateCurrentOrgBranding, isOrgAdmin } = useAuth();
+  const { currentOrg, updateCurrentOrgBranding, isOrgAdmin, user } = useAuth();
   const { showToast } = useNotification();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const orgBranding = currentOrg?.branding || {};
 
   // Form State
   const [platformName, setPlatformName] = useState(orgBranding.platformName || currentOrg?.name || 'ESAIA');
   const [tagline, setTagline] = useState(orgBranding.tagline || 'Enterprise Dynamic QR & Mobile Micro-Sites');
+  const [logoUrl, setLogoUrl] = useState(orgBranding.logoUrl || '');
   const [logoLightUrl, setLogoLightUrl] = useState(orgBranding.logoLightUrl || '');
   const [logoDarkUrl, setLogoDarkUrl] = useState(orgBranding.logoDarkUrl || '');
   const [faviconUrl, setFaviconUrl] = useState(orgBranding.faviconUrl || '');
   const [accentColor, setAccentColor] = useState(orgBranding.accentColor || '#2563eb');
   const [hidePoweredBy, setHidePoweredBy] = useState(orgBranding.hidePoweredBy ?? true);
+  const [footerText, setFooterText] = useState(orgBranding.footerText || '');
   const [footerCopyright, setFooterCopyright] = useState(
-    orgBranding.footerCopyright || `© ${new Date().getFullYear()} ${currentOrg?.name || 'Impact Hub Cairo'}. All rights reserved.`
+    orgBranding.footerCopyright || `© ${new Date().getFullYear()} ${currentOrg?.name || 'Enterprise Client'}. All rights reserved.`
   );
-  const [supportEmail, setSupportEmail] = useState(orgBranding.supportEmail || 'support@impacthub.eg');
-  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState(orgBranding.privacyPolicyUrl || 'https://impacthub.eg/privacy');
-  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState(orgBranding.termsOfServiceUrl || 'https://impacthub.eg/terms');
-  const [senderName, setSenderName] = useState(orgBranding.senderName || `${currentOrg?.name || 'Impact Hub'} Notifications`);
-  const [senderEmail, setSenderEmail] = useState(orgBranding.senderEmail || 'alerts@qr.impacthub.eg');
+  const [supportEmail, setSupportEmail] = useState(orgBranding.supportEmail || 'support@enterprise.eg');
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState(orgBranding.privacyPolicyUrl || 'https://enterprise.eg/privacy');
+  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState(orgBranding.termsOfServiceUrl || 'https://enterprise.eg/terms');
+  
+  // Email / SMTP State
+  const [senderName, setSenderName] = useState(orgBranding.senderName || `${currentOrg?.name || 'Enterprise'} Notifications`);
+  const [senderEmail, setSenderEmail] = useState(orgBranding.senderEmail || 'notifications@qr.enterprise.eg');
+  const [senderRole, setSenderRole] = useState(orgBranding.senderRole || 'Digital Fleet & Operations Team');
+  const [senderPhone, setSenderPhone] = useState(orgBranding.senderPhone || '+20 100 123 4567');
   const [emailSignature, setEmailSignature] = useState(
-    orgBranding.emailSignature || `Best regards,\n${currentOrg?.name || 'Impact Hub Cairo'} Digital Fleet Team\nCairo, Egypt`
+    orgBranding.emailSignature || `Best regards,\n${currentOrg?.name || 'Enterprise'} Digital Fleet Team\nCairo, Egypt`
   );
+  const [emailDisclaimer, setEmailDisclaimer] = useState(
+    orgBranding.emailDisclaimer || 'CONFIDENTIALITY NOTICE: This transmission and any attachments are intended exclusively for the named addressee. Unauthorized distribution or copying is strictly prohibited.'
+  );
+  const [customCss, setCustomCss] = useState(orgBranding.customCss || '');
 
   const [isSaving, setIsSaving] = useState(false);
-  const [previewTab, setPreviewTab] = useState<'portal' | 'mobile_footer' | 'email'>('portal');
+  const [previewTab, setPreviewTab] = useState<'portal' | 'mobile_footer' | 'email' | 'tab'>('portal');
+
+  // Test Email Simulator Modal
+  const [isTestEmailOpen, setIsTestEmailOpen] = useState(false);
+  const [testRecipient, setTestRecipient] = useState(user?.email || 'admin@enterprise.eg');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // Synchronize browser tab title and favicon in real-time when editing
+  useEffect(() => {
+    if (faviconUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'shortcut icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = faviconUrl;
+    }
+  }, [faviconUrl]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -76,24 +110,31 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
       const updated: WhiteLabelBranding = {
         platformName,
         tagline,
+        logoUrl: logoUrl || logoDarkUrl || logoLightUrl || null,
         logoLightUrl: logoLightUrl || null,
         logoDarkUrl: logoDarkUrl || null,
         faviconUrl: faviconUrl || null,
         accentColor,
         hidePoweredBy,
+        poweredByBadge: !hidePoweredBy,
+        footerText: footerText.trim() || undefined,
         footerCopyright,
         supportEmail,
         privacyPolicyUrl,
         termsOfServiceUrl,
         senderName,
         senderEmail,
-        emailSignature
+        senderRole,
+        senderPhone,
+        emailSignature,
+        emailDisclaimer,
+        customCss
       };
 
       await updateCurrentOrgBranding(updated);
       showToast({
         title: 'White-Label Branding Applied',
-        message: 'Your custom logos, colors, and email signatures are now active across your organization workspace.',
+        message: 'Your custom logos, colors, domain footers, and email signatures are now active across your organization workspace.',
         type: 'success'
       });
     } catch (err) {
@@ -110,23 +151,43 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
   const handleReset = () => {
     setPlatformName(currentOrg?.name || 'ESAIA');
     setTagline('Enterprise Dynamic QR & Mobile Micro-Sites');
+    setLogoUrl('');
     setLogoLightUrl('');
     setLogoDarkUrl('');
     setFaviconUrl('');
     setAccentColor('#2563eb');
     setHidePoweredBy(true);
+    setFooterText('');
     setFooterCopyright(`© ${new Date().getFullYear()} ${currentOrg?.name || 'Organization'}. All rights reserved.`);
-    setSupportEmail('support@impacthub.eg');
-    setPrivacyPolicyUrl('https://impacthub.eg/privacy');
-    setTermsOfServiceUrl('https://impacthub.eg/terms');
+    setSupportEmail('support@enterprise.eg');
+    setPrivacyPolicyUrl('https://enterprise.eg/privacy');
+    setTermsOfServiceUrl('https://enterprise.eg/terms');
     setSenderName(`${currentOrg?.name || 'Organization'} Alerts`);
-    setSenderEmail('alerts@qr.impacthub.eg');
+    setSenderEmail('alerts@qr.enterprise.eg');
+    setSenderRole('Digital Fleet & Operations Team');
+    setSenderPhone('+20 100 123 4567');
     setEmailSignature(`Best regards,\n${currentOrg?.name || 'Organization'} Team`);
+    setEmailDisclaimer('CONFIDENTIALITY NOTICE: This transmission is intended solely for the addressee.');
+    setCustomCss('');
     showToast({
       title: 'Reset to Defaults',
       message: 'Default branding values restored.',
       type: 'info'
     });
+  };
+
+  const handleSendTestEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSendingTest(true);
+    setTimeout(() => {
+      setIsSendingTest(false);
+      setIsTestEmailOpen(false);
+      showToast({
+        title: 'Test Email Dispatched',
+        message: `Simulated branded dispatch delivered to ${testRecipient} with your active SMTP signature & headers.`,
+        type: 'success'
+      });
+    }, 900);
   };
 
   return (
@@ -138,12 +199,12 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
             <h1 className="text-xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
               White-Label Enterprise Branding
             </h1>
-            <Badge variant="primary" size="sm">
+            <Badge variant="brand" size="sm">
               ENTERPRISE TIER
             </Badge>
           </div>
           <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-1">
-            Customize platform logos, custom domain footers, and outgoing notification signatures for your agency or enterprise brand.
+            Customize platform logos, favicons, custom domain footers, and outgoing notification signatures for your agency or enterprise brand.
           </p>
         </div>
 
@@ -181,21 +242,21 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Form: Configuration Controls (7 Cols) */}
         <div className="lg:col-span-7 space-y-5">
-          {/* Platform Identity */}
+          {/* Section 1: Platform Identity */}
           <Card padding="md">
             <CardHeader
               title="Platform Identity & Titles"
-              description="Define the brand name that clients and team members see instead of default platform labels."
+              description="Define the brand name and slogan that clients and team members see instead of default platform labels."
             />
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Platform Name
+                  Platform Name / Application Title
                 </label>
                 <Input
                   value={platformName}
                   onChange={e => setPlatformName(e.target.value)}
-                  placeholder="e.g. Impact Hub QR Suite or Apex Media Portal"
+                  placeholder="e.g. Apex Media QR Suite or Impact Hub Portal"
                 />
               </div>
 
@@ -207,52 +268,6 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                   value={tagline}
                   onChange={e => setTagline(e.target.value)}
                   placeholder="e.g. Enterprise Smart QR & Connected Hospitality"
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Visual Brand Assets */}
-          <Card padding="md">
-            <CardHeader
-              title="Visual Assets & Brand Colors"
-              description="Provide custom SVG or PNG image URLs for your organization's logos and favicons."
-            />
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Dark Mode Logo URL
-                  </label>
-                  <Input
-                    value={logoDarkUrl}
-                    onChange={e => setLogoDarkUrl(e.target.value)}
-                    placeholder="https://cdn.brand.com/logo-light.svg"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">Rendered on dark theme backgrounds.</p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Light Mode Logo URL
-                  </label>
-                  <Input
-                    value={logoLightUrl}
-                    onChange={e => setLogoLightUrl(e.target.value)}
-                    placeholder="https://cdn.brand.com/logo-dark.svg"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">Rendered on light / beige backgrounds.</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Custom Favicon URL (.ico / .svg / .png)
-                </label>
-                <Input
-                  value={faviconUrl}
-                  onChange={e => setFaviconUrl(e.target.value)}
-                  placeholder="https://cdn.brand.com/favicon.png"
                 />
               </div>
 
@@ -267,7 +282,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       key={preset.hex}
                       type="button"
                       onClick={() => setAccentColor(preset.hex)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
                         accentColor === preset.hex
                           ? 'border-white [data-theme=light]:border-slate-900 bg-slate-800 [data-theme=light]:bg-slate-200 text-white [data-theme=light]:text-slate-900 shadow-sm'
                           : 'border-[#24293d] [data-theme=light]:border-slate-200 hover:border-slate-500 text-slate-300 [data-theme=light]:text-slate-700'
@@ -296,14 +311,63 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
             </div>
           </Card>
 
-          {/* Domain Footers & Powered-By Removal */}
+          {/* Section 2: Visual Brand Asset Uploaders */}
           <Card padding="md">
             <CardHeader
-              title="Footers & 'Powered by' Whitelabeling"
-              description="Configure public-facing footer copyrights, support contacts, and compliance links."
+              title="Brand Logos & Favicon Upload"
+              description="Upload high-resolution vector or raster graphics for light theme, dark theme, and browser tab favicons."
+            />
+            <div className="space-y-6">
+              {/* Dark Mode Logo Uploader */}
+              <BrandAssetUploader
+                label="Dark Theme Logo (Header & Dark Mode)"
+                description="Displayed across dark dashboard headers and dark micro-sites. Usually white or colored text."
+                value={logoDarkUrl}
+                onChange={val => {
+                  setLogoDarkUrl(val);
+                  if (!logoUrl) setLogoUrl(val);
+                }}
+                recommendedSize="400 × 120 px SVG or PNG"
+              />
+
+              <div className="border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]" />
+
+              {/* Light Mode Logo Uploader */}
+              <BrandAssetUploader
+                label="Light Theme Logo (Public Pages & Light Mode)"
+                description="Displayed across light/beige backgrounds, public bio pages, and mobile redirects."
+                value={logoLightUrl}
+                onChange={val => {
+                  setLogoLightUrl(val);
+                  if (!logoUrl) setLogoUrl(val);
+                }}
+                recommendedSize="400 × 120 px SVG or PNG"
+              />
+
+              <div className="border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]" />
+
+              {/* Favicon Uploader */}
+              <BrandAssetUploader
+                label="Browser Tab Favicon"
+                description="The icon displayed in the browser tab and mobile home-screen bookmarks (.ico, .png, .svg)."
+                value={faviconUrl}
+                onChange={setFaviconUrl}
+                accept=".ico,image/x-icon,image/png,image/svg+xml"
+                recommendedSize="64 × 64 px or 32 × 32 px"
+                isFavicon
+              />
+            </div>
+          </Card>
+
+          {/* Section 3: Custom Domain Footers & Attributions */}
+          <Card padding="md">
+            <CardHeader
+              title="Custom Domain Footers & Attribution"
+              description="Configure public-facing footer copyrights, support contacts, compliance links, and white-label badges."
             />
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]">
+              {/* Hide Powered By Toggle */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]">
                 <div>
                   <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                     Hide "Powered by ESAIA" Badge
@@ -320,6 +384,20 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                 />
               </div>
 
+              {/* Custom Footer Subtitle */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
+                  Custom Public Footer Headline (Optional)
+                </label>
+                <Input
+                  value={footerText}
+                  onChange={e => setFooterText(e.target.value)}
+                  placeholder={`e.g. ${platformName} Verified Enterprise Experience`}
+                />
+                <p className="text-[10px] text-slate-500 mt-1">Replaces the default verification text at the bottom of public mobile pages.</p>
+              </div>
+
+              {/* Footer Copyright */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
                   Footer Copyright Line
@@ -337,9 +415,10 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                     Support Contact Email
                   </label>
                   <Input
+                    type="email"
                     value={supportEmail}
                     onChange={e => setSupportEmail(e.target.value)}
-                    placeholder="support@brand.com"
+                    placeholder="support@yourbrand.com"
                   />
                 </div>
 
@@ -350,19 +429,58 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                   <Input
                     value={privacyPolicyUrl}
                     onChange={e => setPrivacyPolicyUrl(e.target.value)}
-                    placeholder="https://brand.com/privacy"
+                    placeholder="https://yourbrand.com/privacy"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
+                  Terms of Service URL
+                </label>
+                <Input
+                  value={termsOfServiceUrl}
+                  onChange={e => setTermsOfServiceUrl(e.target.value)}
+                  placeholder="https://yourbrand.com/terms"
+                />
+              </div>
+
+              {/* Optional Custom CSS */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d]">
+                    Custom Public CSS (Advanced)
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-mono">Optional</span>
+                </div>
+                <textarea
+                  rows={2}
+                  value={customCss}
+                  onChange={e => setCustomCss(e.target.value)}
+                  placeholder=":root { --brand-font: 'Poppins', sans-serif; }"
+                  className="w-full text-xs font-mono rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] p-2.5 text-slate-200 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] focus:outline-hidden focus:border-blue-500"
+                />
               </div>
             </div>
           </Card>
 
-          {/* Email / SMTP Signatures */}
+          {/* Section 4: Email & SMTP Signatures */}
           <Card padding="md">
-            <CardHeader
-              title="Automated Email & Alert Signatures"
-              description="Customize the sender display and footer signatures for client invites and monthly scan reports."
-            />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <CardHeader
+                title="Automated Email & SMTP Signatures"
+                description="Customize sender headers and corporate signatures for client invitations, password resets, and automated monthly analytics digests."
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Send className="w-3.5 h-3.5" />}
+                onClick={() => setIsTestEmailOpen(true)}
+              >
+                Send Test Email
+              </Button>
+            </div>
+
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -372,31 +490,69 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                   <Input
                     value={senderName}
                     onChange={e => setSenderName(e.target.value)}
-                    placeholder="e.g. Impact Hub Cairo Alerts"
+                    placeholder="e.g. Apex Media Notifications"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    From Email Address
+                    From / Reply-To Email
                   </label>
                   <Input
+                    type="email"
                     value={senderEmail}
                     onChange={e => setSenderEmail(e.target.value)}
-                    placeholder="notifications@qr.impacthub.eg"
+                    placeholder="notifications@qr.yourbrand.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
+                    Sender Department / Title
+                  </label>
+                  <Input
+                    value={senderRole}
+                    onChange={e => setSenderRole(e.target.value)}
+                    placeholder="e.g. Digital Fleet & Operations Team"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
+                    Contact Phone / WhatsApp
+                  </label>
+                  <Input
+                    value={senderPhone}
+                    onChange={e => setSenderPhone(e.target.value)}
+                    placeholder="e.g. +20 100 123 4567"
+                    leftIcon={<Phone className="w-3.5 h-3.5 text-slate-400" />}
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Email Footer Signature
+                  Email Footer Signature Body
                 </label>
                 <textarea
                   rows={3}
                   value={emailSignature}
                   onChange={e => setEmailSignature(e.target.value)}
                   className="w-full text-xs font-mono rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] p-2.5 text-slate-200 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] focus:outline-hidden focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
+                  Legal Confidentiality Disclaimer (Notice)
+                </label>
+                <textarea
+                  rows={2}
+                  value={emailDisclaimer}
+                  onChange={e => setEmailDisclaimer(e.target.value)}
+                  className="w-full text-[11px] font-sans rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] p-2.5 text-slate-400 [data-theme=light]:text-slate-600 [data-theme=beige]:text-[#8c7e73] focus:outline-hidden focus:border-blue-500"
                 />
               </div>
             </div>
@@ -424,96 +580,150 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                 <button
                   type="button"
                   onClick={() => setPreviewTab('portal')}
-                  className={`flex-1 py-1 px-2 text-xs font-medium rounded-md transition ${
+                  className={`flex-1 py-1 px-1.5 text-[11px] font-medium rounded-md transition cursor-pointer ${
                     previewTab === 'portal'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Portal Header
+                  Portal
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTab('mobile_footer')}
-                  className={`flex-1 py-1 px-2 text-xs font-medium rounded-md transition ${
+                  className={`flex-1 py-1 px-1.5 text-[11px] font-medium rounded-md transition cursor-pointer ${
                     previewTab === 'mobile_footer'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Page Footer
+                  Footer
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTab('email')}
-                  className={`flex-1 py-1 px-2 text-xs font-medium rounded-md transition ${
+                  className={`flex-1 py-1 px-1.5 text-[11px] font-medium rounded-md transition cursor-pointer ${
                     previewTab === 'email'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Alert Email
+                  Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('tab')}
+                  className={`flex-1 py-1 px-1.5 text-[11px] font-medium rounded-md transition cursor-pointer ${
+                    previewTab === 'tab'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
+                  }`}
+                >
+                  Favicon
                 </button>
               </div>
 
               {/* Preview Window Frame */}
               <div className="rounded-xl border border-[#24293d] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] overflow-hidden bg-[#090b10] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#f4efe6]">
                 {/* Browser-like window header */}
-                <div className="px-3 py-2 bg-[#141722] [data-theme=light]:bg-slate-200 [data-theme=beige]:border-b [data-theme=beige]:bg-[#eae4d9] border-b border-[#24293d] [data-theme=light]:border-slate-300 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                <div className="px-3 py-2 bg-[#141722] [data-theme=light]:bg-slate-200 [data-theme=beige]:bg-[#eae4d9] border-b border-[#24293d] [data-theme=light]:border-slate-300 flex items-center justify-between text-[11px] text-slate-400 font-mono">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
                   </div>
-                  <span className="truncate max-w-[180px]">{previewTab === 'portal' ? 'qr.impacthub.eg/admin' : 'menu.nilecoffee.com'}</span>
+                  <span className="truncate max-w-[180px]">
+                    {previewTab === 'portal'
+                      ? `qr.${currentOrg?.slug || 'enterprise'}.app/admin`
+                      : previewTab === 'tab'
+                      ? `${platformName} | Dashboard`
+                      : 'menu.cairolounge.eg'}
+                  </span>
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </div>
 
                 {/* Preview Content */}
                 <div className="p-4 space-y-4">
+                  {/* Tab 1: Portal Header */}
                   {previewTab === 'portal' && (
                     <div className="space-y-4">
                       <div className="p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm"
-                            style={{ backgroundColor: accentColor }}
-                          >
-                            {platformName.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-white [data-theme=light]:text-slate-900 leading-tight">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {logoDarkUrl || logoUrl ? (
+                            <img
+                              src={logoDarkUrl || logoUrl}
+                              alt={platformName}
+                              className="h-8 max-w-[120px] object-contain"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm"
+                              style={{ backgroundColor: accentColor }}
+                            >
+                              {platformName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white [data-theme=light]:text-slate-900 leading-tight truncate">
                               {platformName}
                             </p>
-                            <p className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500 leading-tight">
+                            <p className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500 leading-tight truncate">
                               {tagline}
                             </p>
                           </div>
                         </div>
 
                         <span
-                          className="px-2 py-0.5 rounded text-[10px] font-semibold text-white"
+                          className="px-2 py-0.5 rounded text-[10px] font-semibold text-white shrink-0"
                           style={{ backgroundColor: accentColor }}
                         >
-                          Workspace
+                          Enterprise
                         </span>
                       </div>
 
-                      <div className="p-3 rounded-lg bg-[#141722]/50 border border-dashed border-[#24293d] text-center py-6">
-                        <p className="text-xs text-slate-400">
-                          Branded client dashboard loaded with accent <code className="font-mono text-blue-400">{accentColor}</code>.
+                      <div className="p-4 rounded-lg bg-[#141722]/50 border border-dashed border-[#24293d] text-center space-y-1">
+                        <p className="text-xs text-slate-300 [data-theme=light]:text-slate-700">
+                          Workspace navigation and client bio cards branded under <strong>{platformName}</strong>.
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                          Accent token active: <code className="font-mono text-blue-400">{accentColor}</code>
                         </p>
                       </div>
                     </div>
                   )}
 
+                  {/* Tab 2: Mobile Public Footer */}
                   {previewTab === 'mobile_footer' && (
                     <div className="space-y-3">
-                      <div className="p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 text-center space-y-2">
-                        <p className="text-xs text-slate-300 [data-theme=light]:text-slate-800">
+                      <div className="p-4 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 text-center space-y-2.5">
+                        {logoLightUrl || logoUrl ? (
+                          <div className="flex justify-center mb-1">
+                            <img
+                              src={logoLightUrl || logoUrl}
+                              alt={platformName}
+                              className="h-6 max-w-[100px] object-contain"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : null}
+
+                        {footerText ? (
+                          <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900">
+                            {footerText}
+                          </p>
+                        ) : (
+                          <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-slate-300 [data-theme=light]:text-slate-800">
+                            <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>{platformName} Verified Enterprise Experience</span>
+                          </div>
+                        )}
+
+                        <p className="text-[11px] text-slate-400 [data-theme=light]:text-slate-600">
                           {footerCopyright}
                         </p>
-                        <div className="flex items-center justify-center gap-3 text-[10px] text-blue-400">
+
+                        <div className="flex flex-wrap items-center justify-center gap-2.5 text-[10px]" style={{ color: accentColor }}>
                           <a href="#" onClick={e => e.preventDefault()} className="hover:underline">
                             Privacy Policy
                           </a>
@@ -528,31 +738,94 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                         </div>
 
                         {!hidePoweredBy && (
-                          <p className="text-[9px] text-slate-500 pt-1">
-                            Powered by ESAIA Cloud
+                          <p className="text-[9px] text-slate-500 pt-1 border-t border-[#1c2030] [data-theme=light]:border-slate-200">
+                            Powered by {platformName || 'ESAIA Smart Platform'} · SSL Encrypted
                           </p>
                         )}
                       </div>
                     </div>
                   )}
 
+                  {/* Tab 3: Email Notification & Signature */}
                   {previewTab === 'email' && (
-                    <div className="p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 text-xs space-y-3 font-sans">
-                      <div className="border-b border-[#24293d] [data-theme=light]:border-slate-200 pb-2">
+                    <div className="p-3.5 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 text-xs space-y-3 font-sans">
+                      <div className="border-b border-[#24293d] [data-theme=light]:border-slate-200 pb-2 space-y-0.5">
                         <p className="text-[11px] text-slate-400">
                           From: <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
                         </p>
                         <p className="text-[11px] text-slate-400">
-                          Subject: <strong>Your Weekly QR Analytics Summary</strong>
+                          Subject: <strong>Dynamic Fleet Performance Report</strong>
                         </p>
                       </div>
-                      <p className="text-slate-300 [data-theme=light]:text-slate-700 leading-relaxed">
-                        Hello team,<br />
-                        Your dynamic QR campaigns received <strong>14,892 total scans</strong> across Cairo and Alexandria this week.
+
+                      {logoLightUrl || logoUrl ? (
+                        <div className="pb-1">
+                          <img
+                            src={logoLightUrl || logoUrl}
+                            alt={platformName}
+                            className="h-5 object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      ) : null}
+
+                      <p className="text-slate-300 [data-theme=light]:text-slate-700 leading-relaxed text-[11px]">
+                        Hello Partner,<br />
+                        Your dynamic QR campaigns recorded <strong>18,420 scans</strong> across Cairo, Giza, and Alexandria with zero bounce errors.
                       </p>
-                      <div className="border-t border-[#24293d] [data-theme=light]:border-slate-200 pt-2 text-[11px] text-slate-400 whitespace-pre-line font-mono">
-                        {emailSignature}
+
+                      <div className="pt-2 border-t border-[#24293d] [data-theme=light]:border-slate-200 space-y-1">
+                        <p className="font-semibold text-white [data-theme=light]:text-slate-900 text-[11px]">
+                          {senderName}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono">
+                          {senderRole} • {senderPhone}
+                        </p>
+                        <div className="text-[10px] text-slate-400 whitespace-pre-line font-mono pt-1">
+                          {emailSignature}
+                        </div>
                       </div>
+
+                      {emailDisclaimer && (
+                        <div className="pt-2 border-t border-[#1c2030] [data-theme=light]:border-slate-100 text-[9px] text-slate-500 leading-tight">
+                          {emailDisclaimer}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab 4: Browser Favicon Tab Mockup */}
+                  {previewTab === 'tab' && (
+                    <div className="p-4 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 space-y-3 text-center">
+                      <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900">
+                        Browser Tab & Bookmark Simulation
+                      </p>
+                      
+                      {/* Browser Tab Chrome Mockup */}
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-t-lg bg-[#1a1e2d] [data-theme=light]:bg-slate-200 border-t border-x border-[#24293d] [data-theme=light]:border-slate-300 shadow-sm text-xs">
+                        {faviconUrl ? (
+                          <img
+                            src={faviconUrl}
+                            alt="Favicon"
+                            className="w-4 h-4 object-contain rounded-xs"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <span
+                            className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] text-white font-bold"
+                            style={{ backgroundColor: accentColor }}
+                          >
+                            {platformName.charAt(0)}
+                          </span>
+                        )}
+                        <span className="font-medium text-slate-200 [data-theme=light]:text-slate-800 text-[11px] truncate max-w-[140px]">
+                          {platformName} | Dashboard
+                        </span>
+                      </div>
+
+                      <p className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500">
+                        {faviconUrl ? 'Custom favicon injected into document head.' : 'Default platform emblem active.'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -560,15 +833,55 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
               {/* Status summary */}
               <div className="flex items-center justify-between text-[11px] text-slate-400 [data-theme=light]:text-slate-500 pt-1">
-                <span>Active Workspace:</span>
+                <span>Active Tenant Workspace:</span>
                 <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                  {currentOrg?.name || 'Impact Hub Cairo'}
+                  {currentOrg?.name || 'Enterprise'}
                 </strong>
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Test Email Simulator Modal */}
+      <Modal
+        isOpen={isTestEmailOpen}
+        onClose={() => setIsTestEmailOpen(false)}
+        title="Simulate Branded Outgoing Email"
+        description="Verify how your custom sender headers, logos, and signatures render in real mail clients."
+      >
+        <form onSubmit={handleSendTestEmail} className="space-y-4">
+          <Input
+            label="Recipient Test Address"
+            type="email"
+            value={testRecipient}
+            onChange={e => setTestRecipient(e.target.value)}
+            required
+            leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+          />
+
+          <div className="p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] text-xs space-y-1.5">
+            <p className="text-slate-400">
+              From: <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
+            </p>
+            <p className="text-slate-400">
+              Signature: <span className="font-mono text-blue-400">{senderRole}</span>
+            </p>
+            <p className="text-[11px] text-slate-500 pt-1 border-t border-[#24293d] [data-theme=light]:border-slate-200">
+              Uses mock SMTP relay to simulate production delivery telemetry without incurring actual provider credits.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2">
+            <Button variant="ghost" type="button" onClick={() => setIsTestEmailOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={isSendingTest} leftIcon={<Send className="w-4 h-4" />}>
+              Send Simulated Email
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

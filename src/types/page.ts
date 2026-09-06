@@ -182,6 +182,7 @@ export interface Page {
   status: PageStatus;
   seo: SeoConfig;
   themeConfig: PageThemeConfig;
+  theme?: any;
   blocks: PageBlock[];
   viewCount: number;
   publishedAt?: string | null;

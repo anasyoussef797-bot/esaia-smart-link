@@ -76,6 +76,7 @@ export interface QrCode {
   status: QrStatus;
   expiresAt?: string | null;
   styleConfig: QrStyleConfig;
+  design?: any;
   totalScans: number;
   uniqueScans: number;
   lastScannedAt?: string | null;

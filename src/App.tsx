@@ -33,8 +33,10 @@ import { SettingsPage } from './pages/settings/SettingsPage';
 import { DataExportPage } from './pages/settings/DataExportPage';
 import { WhiteLabelPage } from './pages/settings/WhiteLabelPage';
 import { NotFoundPage } from './pages/errors/NotFoundPage';
+import { ServerErrorPage } from './pages/errors/ServerErrorPage';
 import { PublicPageRenderer } from './pages/public/PublicPageRenderer';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -210,6 +212,14 @@ function AppRouter() {
       );
     }
 
+    if (currentPath === '/admin/500' || currentPath === '/500') {
+      return (
+        <ProtectedRoute onNavigate={navigate}>
+          <ServerErrorPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
+
     if (currentPath === '/admin' || currentPath === '/admin/' || currentPath === '/admin/overview') {
       return (
         <ProtectedRoute onNavigate={navigate}>
@@ -241,6 +251,7 @@ export default function App() {
           <NotificationProvider>
             <AuthProvider>
               <AppRouter />
+              <OfflineIndicator />
             </AuthProvider>
           </NotificationProvider>
         </LanguageProvider>

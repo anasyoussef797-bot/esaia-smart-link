@@ -914,7 +914,19 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
       </main>
 
       {/* White-Label / Platform Footer */}
-      <footer className="w-full max-w-md py-6 text-center text-xs space-y-1.5">
+      <footer className="w-full max-w-md py-6 text-center text-xs space-y-2">
+        {/* Custom White-Label Logo in Footer if available */}
+        {(branding?.logoLightUrl || branding?.logoUrl) && (
+          <div className="flex justify-center mb-1">
+            <img
+              src={branding.logoLightUrl || branding.logoUrl || ''}
+              alt={branding?.platformName || 'Brand'}
+              className="h-5 max-w-[120px] object-contain opacity-80"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        )}
+
         {branding?.footerText ? (
           <p className="text-xs font-medium" style={{ color: p.textSecondary }}>
             {branding.footerText}
@@ -926,13 +938,46 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
           </div>
         )}
 
+        {branding?.footerCopyright && (
+          <p className="text-[11px] opacity-75" style={{ color: p.textSecondary }}>
+            {branding.footerCopyright}
+          </p>
+        )}
+
+        {(branding?.privacyPolicyUrl || branding?.termsOfServiceUrl || branding?.supportEmail) && (
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] opacity-70" style={{ color: p.textSecondary }}>
+            {branding.privacyPolicyUrl && (
+              <a href={branding.privacyPolicyUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                Privacy
+              </a>
+            )}
+            {branding.privacyPolicyUrl && branding.termsOfServiceUrl && <span>•</span>}
+            {branding.termsOfServiceUrl && (
+              <a href={branding.termsOfServiceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                Terms
+              </a>
+            )}
+            {(branding.privacyPolicyUrl || branding.termsOfServiceUrl) && branding.supportEmail && <span>•</span>}
+            {branding.supportEmail && (
+              <a href={`mailto:${branding.supportEmail}`} className="hover:underline">
+                Support
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Display badge only if not suppressed by white-label configuration */}
-        {branding?.poweredByBadge !== false && (
+        {branding?.hidePoweredBy !== true && branding?.poweredByBadge !== false && (
           <p className="text-[10px] opacity-60" style={{ color: p.textSecondary }}>
             Powered by {branding?.platformName || 'ESAIA Smart Platform'} · SSL Encrypted · zero-tracking privacy
           </p>
         )}
       </footer>
+
+      {/* Tenant Custom CSS injection */}
+      {branding?.customCss && (
+        <style dangerouslySetInnerHTML={{ __html: branding.customCss }} />
+      )}
     </div>
   );
 };
