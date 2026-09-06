@@ -12,7 +12,7 @@ import {
   orderBy,
   limit
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { AnalyticsDailySummary, QrAnalyticsDaily, TimeSeriesPoint } from '../../types/analytics';
 import { handleFirestoreError, OperationType } from './firestoreErrors';
 
@@ -22,19 +22,26 @@ export const analyticsService = {
    */
   async getDailySummaries(orgId: string, daysCount = 30): Promise<AnalyticsDailySummary[]> {
     const colPath = 'analyticsDailySummary';
-    try {
-      const q = query(
-        collection(db, colPath),
-        where('orgId', '==', orgId),
-        limit(daysCount)
-      );
-      const snap = await getDocs(q);
-      const items = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as AnalyticsDailySummary));
-      if (items.length > 0) {
-        return items.sort((a, b) => a.date.localeCompare(b.date));
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(
+          collection(db, colPath),
+          where('orgId', '==', orgId),
+          limit(daysCount)
+        );
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+        ]);
+        if (snap && !snap.empty) {
+          const items = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) } as AnalyticsDailySummary));
+          if (items.length > 0) {
+            return items.sort((a, b) => a.date.localeCompare(b.date));
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore analytics fallback to pre-aggregated rollups:', err);
       }
-    } catch (err) {
-      console.warn('Firestore analytics fallback to pre-aggregated rollups:', err);
     }
 
     // Generate high-fidelity 30-day pre-aggregated series
@@ -46,19 +53,26 @@ export const analyticsService = {
    */
   async getQrDailyStats(qrId: string, daysCount = 30): Promise<QrAnalyticsDaily[]> {
     const colPath = 'qrAnalyticsDaily';
-    try {
-      const q = query(
-        collection(db, colPath),
-        where('qrId', '==', qrId),
-        limit(daysCount)
-      );
-      const snap = await getDocs(q);
-      const items = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as QrAnalyticsDaily));
-      if (items.length > 0) {
-        return items.sort((a, b) => a.date.localeCompare(b.date));
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(
+          collection(db, colPath),
+          where('qrId', '==', qrId),
+          limit(daysCount)
+        );
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+        ]);
+        if (snap && !snap.empty) {
+          const items = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) } as QrAnalyticsDaily));
+          if (items.length > 0) {
+            return items.sort((a, b) => a.date.localeCompare(b.date));
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore QR analytics fallback:', err);
       }
-    } catch (err) {
-      console.warn('Firestore QR analytics fallback:', err);
     }
 
     return [];

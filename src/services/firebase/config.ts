@@ -22,7 +22,9 @@ const firebaseConfig = {
 export const isFirebaseConfigured = Boolean(
   import.meta.env.VITE_FIREBASE_API_KEY && 
   import.meta.env.VITE_FIREBASE_PROJECT_ID &&
-  import.meta.env.VITE_FIREBASE_API_KEY !== 'your-firebase-api-key'
+  import.meta.env.VITE_FIREBASE_API_KEY !== 'your-firebase-api-key' &&
+  import.meta.env.VITE_FIREBASE_API_KEY !== 'demo-api-key' &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'esaia-saas'
 );
 
 let app: FirebaseApp;

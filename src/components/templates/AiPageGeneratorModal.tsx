@@ -41,7 +41,7 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
     setError(null);
 
     try {
-      // 1. Try requesting server-side AI synthesis endpoint
+      // 1. Try requesting server-side AI synthesis endpoint with strict 3.5s timeout
       let generatedData: {
         title: string;
         subtitle: string;
@@ -50,9 +50,13 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
       } | null = null;
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
         const res = await fetch('/api/ai/generate-page', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             businessName,
             industry,
@@ -61,17 +65,18 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             themeVibe
           })
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data) {
+          if (json.success && json.data && json.data.blocks?.length) {
             generatedData = json.data;
           }
         }
       } catch (networkErr) {
-        console.warn('Server AI endpoint unavailable, using resilient client synthesis engine:', networkErr);
+        console.warn('Server AI endpoint unavailable or timed out, using intelligent instant client synthesis engine:', networkErr);
       }
 
-      // 2. Resilient Client Synthesizer Fallback if API key not present or offline
+      // 2. Intelligent Client Synthesizer Engine (Domain-Aware & Multi-Lingual)
       if (!generatedData) {
         const baseTheme: PageThemeConfig =
           themeVibe === 'light'
@@ -81,7 +86,37 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             : DEFAULT_THEME_DARK;
 
         const cleanName = businessName.trim();
-        const cleanDesc = description.trim() || (isRTL ? 'الخدمة المميزة والاحترافية بأعلى معايير الجودة.' : 'Premium services tailored with excellence and precision.');
+        const cleanDesc = description.trim() || (isRTL ? 'الخدمة المميزة والاحترافية بأعلى معايير الجودة والسرعة.' : 'Premium services tailored with excellence and precision.');
+
+        // Curate high-res domain imagery and copy based on industry
+        let heroCover = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1000&auto=format&fit=crop&q=80'; // logistics/shipping default
+        let domainBadge = isRTL ? 'بوابة الأعمال الرسمية' : 'OFFICIAL PORTAL';
+        let primaryBtnText = isRTL ? 'احجز أو استفسر عبر واتساب' : 'Chat Directly on WhatsApp';
+        let aboutText = isRTL
+          ? `مرحباً بكم في ${cleanName}. نقدم أرقى حلول ${cleanDesc} مع الالتزام بأعلى معايير الجودة والسرعة والأمان.`
+          : `Welcome to ${cleanName}. We provide industry-leading solutions for ${cleanDesc} with proven reliability and 24/7 client care.`;
+
+        if (industry === 'auto') {
+          heroCover = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1000&auto=format&fit=crop&q=80';
+          domainBadge = isRTL ? 'خدمات النقل والسيارات' : 'AUTOMOTIVE & LOGISTICS';
+          primaryBtnText = isRTL ? 'طلب تسعير الشحن الفوري' : 'Request Instant Freight Quote';
+        } else if (industry === 'food') {
+          heroCover = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
+          domainBadge = isRTL ? 'قائمة الطعام والطلبات' : 'MENU & DINING';
+          primaryBtnText = isRTL ? 'استعرض المنيو واطلب الآن' : 'View Menu & Order';
+        } else if (industry === 'legal') {
+          heroCover = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1000&auto=format&fit=crop&q=80';
+          domainBadge = isRTL ? 'استشارات قانونية معتمدة' : 'CERTIFIED LEGAL PRACTICE';
+          primaryBtnText = isRTL ? 'حجز جلسة استشارة سرية' : 'Book Confidential Consultation';
+        } else if (industry === 'health' || industry === 'beauty') {
+          heroCover = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1000&auto=format&fit=crop&q=80';
+          domainBadge = isRTL ? 'حجز موعد طبي متقدم' : 'APPOINTMENTS & CLINIC';
+          primaryBtnText = isRTL ? 'حجز موعد كشف فوري' : 'Schedule Appointment';
+        } else if (industry === 'real_estate') {
+          heroCover = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1000&auto=format&fit=crop&q=80';
+          domainBadge = isRTL ? 'عقارات وفرص استثمارية' : 'PREMIUM PROPERTIES';
+          primaryBtnText = isRTL ? 'تواصل مع مستشار العقارات' : 'Contact Property Advisor';
+        }
 
         const synthBlocks: PageBlock[] = [
           {
@@ -93,8 +128,8 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             content: {
               title: cleanName,
               subtitle: cleanDesc,
-              badge: pageType === 'landing' ? 'OFFICIAL PORTAL' : 'CONNECT & EXPLORE',
-              coverUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1000&auto=format&fit=crop&q=80',
+              badge: domainBadge,
+              coverUrl: heroCover,
               alignment: 'center'
             }
           },
@@ -105,9 +140,10 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             isVisible: true,
             orderIndex: 1,
             content: {
-              label: isRTL ? 'تواصل معنا مباشرة عبر واتساب' : 'Chat Directly on WhatsApp',
+              label: primaryBtnText,
               url: 'https://wa.me/?text=Hello!%20I%20would%20like%20more%20information.',
-              variant: 'primary'
+              variant: 'primary',
+              icon: 'MessageCircle'
             }
           },
           {
@@ -117,9 +153,22 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             isVisible: true,
             orderIndex: 2,
             content: {
-              text: isRTL
-                ? `مرحباً بكم في ${cleanName}. نقدم لعملائنا أرقى الحلول والخدمات مع التزام كامل بالدقة والسرعة وخدمة ما بعد البيع.`
-                : `Welcome to ${cleanName}. Delivering world-class solutions with unwavering dedication to quality, speed, and client success.`
+              text: aboutText
+            }
+          },
+          {
+            id: `b_hours_${Date.now()}`,
+            type: 'business_hours',
+            title: 'Working Hours',
+            isVisible: true,
+            orderIndex: 3,
+            content: {
+              title: isRTL ? 'أوقات العمل واستقبال الطلبات' : 'Operating & Dispatch Hours',
+              days: [
+                { day: isRTL ? 'السبت - الخميس' : 'Saturday - Thursday', open: '08:00 AM', close: '09:00 PM', isClosed: false },
+                { day: isRTL ? 'الجمعة' : 'Friday', open: '01:00 PM', close: '09:00 PM', isClosed: false }
+              ],
+              note: isRTL ? 'خدمة الدعم الفني وتتبع الشحنات متاحة 24/7' : 'Support desk and emergency dispatch active 24/7.'
             }
           },
           {
@@ -127,12 +176,12 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
             type: 'social_links',
             title: 'Social Channels',
             isVisible: true,
-            orderIndex: 3,
+            orderIndex: 4,
             content: {
               links: [
+                { platform: 'whatsapp', url: 'https://wa.me' },
                 { platform: 'instagram', url: 'https://instagram.com' },
-                { platform: 'linkedin', url: 'https://linkedin.com' },
-                { platform: 'whatsapp', url: 'https://wa.me' }
+                { platform: 'linkedin', url: 'https://linkedin.com' }
               ],
               style: 'icons'
             }
@@ -148,7 +197,8 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
       }
 
       // 3. Persist into pageService
-      const newSlug = `${businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Math.random().toString(36).substring(2, 5)}`;
+      const asciiSlug = businessName.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+      const newSlug = `${asciiSlug || 'site'}-${Math.random().toString(36).substring(2, 6)}`;
       const pageId = await pageService.createPage({
         orgId: currentOrg?.id || 'org_esaia_main',
         clientId: null,
@@ -159,15 +209,15 @@ export const AiPageGeneratorModal: React.FC<AiPageGeneratorModalProps> = ({
         status: 'draft',
         themeConfig: generatedData.themeConfig,
         seo: {
-          metaTitle: `${generatedData.title} | Official Site`,
+          metaTitle: `${generatedData.title} | Official Portal`,
           metaDescription: generatedData.subtitle
         },
         blocks: generatedData.blocks
       });
 
-      // 4. Navigate user straight to builder!
-      onPageCreated(pageId);
+      // 4. Close modal and navigate user straight to builder!
       onClose();
+      onPageCreated(pageId);
     } catch (err: any) {
       console.error('Failed to generate page:', err);
       setError(err.message || 'Failed to generate page with AI.');

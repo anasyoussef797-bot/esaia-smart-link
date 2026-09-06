@@ -24,7 +24,7 @@ import {
   updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { auth, db } from './config';
+import { auth, db, isFirebaseConfigured } from './config';
 import { UserProfile, Organization, OrganizationMember, Role, Permission, ROLE_DEFAULT_PERMISSIONS, WhiteLabelBranding } from '../../types/auth';
 
 export const authService = {
@@ -52,41 +52,35 @@ export const authService = {
 
       try {
         // 1. Fetch User Profile
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        let userProfile: UserProfile;
+        let userProfile: UserProfile = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || 'anasyoussef797@gmail.com',
+          displayName: firebaseUser.displayName || 'ESAIA Administrator',
+          photoUrl: firebaseUser.photoURL,
+          isGlobalSuperAdmin: firebaseUser.email === 'anasyoussef797@gmail.com',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
 
-        try {
-          const userSnap = await getDoc(userDocRef);
-          if (userSnap.exists()) {
-            userProfile = { id: userSnap.id, ...(userSnap.data() as any) };
-          } else {
-            // Provision default user document
-            userProfile = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || 'ESAIA Administrator',
-              photoUrl: firebaseUser.photoURL,
-              isGlobalSuperAdmin: firebaseUser.email === 'anasyoussef797@gmail.com',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            await setDoc(userDocRef, {
-              ...userProfile,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
+        if (isFirebaseConfigured) {
+          try {
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const userSnap = await Promise.race([
+              getDoc(userDocRef),
+              new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+            ]);
+            if (userSnap && userSnap.exists()) {
+              userProfile = { id: userSnap.id, ...(userSnap.data() as any) };
+            } else {
+              setDoc(userDocRef, {
+                ...userProfile,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              }).catch(() => {});
+            }
+          } catch (e) {
+            // Instant fallback profile
           }
-        } catch (e) {
-          // Fallback profile if Firestore is offline
-          userProfile = {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || 'admin@esaia.app',
-            displayName: firebaseUser.displayName || 'ESAIA Administrator',
-            photoUrl: firebaseUser.photoURL,
-            isGlobalSuperAdmin: firebaseUser.email === 'anasyoussef797@gmail.com',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
         }
 
         // 2. Fetch Organization Memberships
@@ -94,29 +88,37 @@ export const authService = {
         let currentMembership: OrganizationMember | null = null;
         let currentOrg: Organization | null = null;
 
-        try {
-          const membersQuery = query(
-            collection(db, 'organizationMembers'),
-            where('userId', '==', firebaseUser.uid)
-          );
-          const memberSnaps = await getDocs(membersQuery);
+        if (isFirebaseConfigured) {
+          try {
+            const membersQuery = query(
+              collection(db, 'organizationMembers'),
+              where('userId', '==', firebaseUser.uid)
+            );
+            const memberSnaps = await Promise.race([
+              getDocs(membersQuery),
+              new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+            ]);
 
-          if (!memberSnaps.empty) {
-            for (const mDoc of memberSnaps.docs) {
-              const mData = mDoc.data() as OrganizationMember;
-              const orgDoc = await getDoc(doc(db, 'organizations', mData.orgId));
-              if (orgDoc.exists()) {
-                const org = { id: orgDoc.id, ...(orgDoc.data() as any) } as Organization;
-                availableOrgs.push(org);
-                if (!currentOrg || (userProfile.defaultOrgId && org.id === userProfile.defaultOrgId)) {
-                  currentOrg = org;
-                  currentMembership = { id: mDoc.id, ...mData };
+            if (memberSnaps && !memberSnaps.empty) {
+              for (const mDoc of memberSnaps.docs) {
+                const mData = mDoc.data() as OrganizationMember;
+                const orgDoc = await Promise.race([
+                  getDoc(doc(db, 'organizations', mData.orgId)),
+                  new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000))
+                ]);
+                if (orgDoc && orgDoc.exists()) {
+                  const org = { id: orgDoc.id, ...(orgDoc.data() as any) } as Organization;
+                  availableOrgs.push(org);
+                  if (!currentOrg || (userProfile.defaultOrgId && org.id === userProfile.defaultOrgId)) {
+                    currentOrg = org;
+                    currentMembership = { id: mDoc.id, ...mData };
+                  }
                 }
               }
             }
+          } catch (e) {
+            console.warn('Membership query notice (using instant workspaces):', e);
           }
-        } catch (e) {
-          console.warn('Membership query notice (using seeded workspaces if offline):', e);
         }
 
         // If no organization exists, provide default ESAIA primary organization + demo organizations

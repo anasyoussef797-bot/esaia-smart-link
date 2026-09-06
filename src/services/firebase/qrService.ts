@@ -15,7 +15,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { QrCode, QrStatus, QrStyleConfig } from '../../types/qr';
 import { handleFirestoreError, OperationType } from './firestoreErrors';
 
@@ -280,24 +280,29 @@ export const qrService = {
 
   async getQrCodesByOrg(orgId: string, clientId?: string): Promise<QrCode[]> {
     const colPath = 'qrCodes';
-    try {
-      let q = query(collection(db, colPath), where('orgId', '==', orgId));
-      if (clientId && clientId !== 'all') {
-        q = query(q, where('clientId', '==', clientId));
+    if (isFirebaseConfigured) {
+      try {
+        let q = query(collection(db, colPath), where('orgId', '==', orgId));
+        if (clientId && clientId !== 'all') {
+          q = query(q, where('clientId', '==', clientId));
+        }
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && !snap.empty) {
+          const firestoreList = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) } as QrCode));
+          // Merge with in-memory store
+          firestoreList.forEach((item: QrCode) => {
+            const idx = inMemoryQrs.findIndex(m => m.id === item.id);
+            if (idx >= 0) inMemoryQrs[idx] = item;
+            else inMemoryQrs.push(item);
+          });
+          return firestoreList;
+        }
+      } catch (err) {
+        console.warn('Using resilient in-memory QR fleet fallback.');
       }
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const firestoreList = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as QrCode));
-        // Merge with in-memory store
-        firestoreList.forEach(item => {
-          const idx = inMemoryQrs.findIndex(m => m.id === item.id);
-          if (idx >= 0) inMemoryQrs[idx] = item;
-          else inMemoryQrs.push(item);
-        });
-        return firestoreList;
-      }
-    } catch (err) {
-      console.warn('Using resilient in-memory QR fleet fallback.');
     }
 
     // Filter in-memory fallback
@@ -308,31 +313,46 @@ export const qrService = {
   },
 
   async getQrCodeBySlug(publicCode: string): Promise<QrCode | null> {
+    const found = inMemoryQrs.find(q => q.publicCode === publicCode);
+    if (found) return found;
+
     const colPath = 'qrCodes';
-    try {
-      const q = query(collection(db, colPath), where('publicCode', '==', publicCode));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const d = snap.docs[0];
-        return { id: d.id, ...(d.data() as any) } as QrCode;
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(collection(db, colPath), where('publicCode', '==', publicCode));
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && !snap.empty) {
+          const d = snap.docs[0];
+          return { id: d.id, ...(d.data() as any) } as QrCode;
+        }
+      } catch (err) {
+        // Fallback to in-memory
       }
-    } catch (err) {
-      // Fallback to in-memory
     }
-    return inMemoryQrs.find(q => q.publicCode === publicCode) || null;
+    return null;
   },
 
   async getQrCodeById(qrId: string): Promise<QrCode | null> {
-    const docPath = `qrCodes/${qrId}`;
-    try {
-      const snap = await getDoc(doc(db, 'qrCodes', qrId));
-      if (snap.exists()) {
-        return { id: snap.id, ...(snap.data() as any) } as QrCode;
+    const found = inMemoryQrs.find(q => q.id === qrId);
+    if (found) return found;
+
+    if (isFirebaseConfigured) {
+      try {
+        const snap = await Promise.race([
+          getDoc(doc(db, 'qrCodes', qrId)),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && snap.exists()) {
+          return { id: snap.id, ...(snap.data() as any) } as QrCode;
+        }
+      } catch (err) {
+        // Fallback
       }
-    } catch (err) {
-      // Fallback
     }
-    return inMemoryQrs.find(q => q.id === qrId) || null;
+    return null;
   },
 
   async createQrCode(qr: Omit<QrCode, 'id' | 'createdAt' | 'updatedAt' | 'totalScans' | 'uniqueScans'>): Promise<string> {
@@ -352,15 +372,22 @@ export const qrService = {
     inMemoryQrs.unshift(fullQr);
     this.syncRedirectCache(fullQr);
 
-    try {
-      const newRef = doc(db, colPath, newId);
-      await setDoc(newRef, {
-        ...fullQr,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn('Offline create stored in local state:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          const newRef = doc(db, colPath, newId);
+          await Promise.race([
+            setDoc(newRef, {
+              ...fullQr,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        } catch (err) {
+          console.warn('Offline create stored in local state:', err);
+        }
+      })();
     }
 
     return newId;

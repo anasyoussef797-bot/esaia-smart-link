@@ -10,6 +10,7 @@ import path from 'path';
 import crypto from 'crypto';
 import dns from 'dns/promises';
 import dotenv from 'dotenv';
+import compression from 'compression';
 import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
@@ -17,6 +18,7 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+app.use(compression());
 app.use(express.json());
 
 // ==============================================================================
@@ -26,9 +28,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // Note: Do not set X-Frame-Options: SAMEORIGIN so Google AI Studio live preview iframe functions seamlessly
   next();
 });
 

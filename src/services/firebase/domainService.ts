@@ -16,7 +16,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { CustomDomain, DnsRecord, DomainStatus } from '../../types/domain';
 import { auditService } from './auditService';
 
@@ -154,14 +154,19 @@ export const domainService = {
    * Get all custom domains configured for an organization
    */
   async getDomainsByOrg(orgId: string): Promise<CustomDomain[]> {
-    try {
-      const q = query(collection(db, 'customDomains'), where('orgId', '==', orgId));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })) as CustomDomain[];
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(collection(db, 'customDomains'), where('orgId', '==', orgId));
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+        ]);
+        if (snap && !snap.empty) {
+          return snap.docs.map((doc: any) => ({ id: doc.id, ...(doc.data() as any) })) as CustomDomain[];
+        }
+      } catch (e) {
+        console.warn('Firestore customDomains fetch failed, using local cache:', e);
       }
-    } catch (e) {
-      console.warn('Firestore customDomains fetch failed, using local cache:', e);
     }
 
     // LocalStorage fallback

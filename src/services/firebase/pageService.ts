@@ -16,7 +16,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { Page, PageStatus, PageThemeConfig } from '../../types/page';
 import { qrService } from './qrService';
 
@@ -639,24 +639,29 @@ let inMemoryPages: Page[] = loadStoredPages();
 export const pageService = {
   async getPagesByOrg(orgId: string, clientId?: string): Promise<Page[]> {
     const colPath = 'pages';
-    try {
-      let q = query(collection(db, colPath), where('orgId', '==', orgId));
-      if (clientId && clientId !== 'all') {
-        q = query(q, where('clientId', '==', clientId));
+    if (isFirebaseConfigured) {
+      try {
+        let q = query(collection(db, colPath), where('orgId', '==', orgId));
+        if (clientId && clientId !== 'all') {
+          q = query(q, where('clientId', '==', clientId));
+        }
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && !snap.empty) {
+          const firestorePages = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) } as Page));
+          firestorePages.forEach((p: Page) => {
+            const idx = inMemoryPages.findIndex(m => m.id === p.id);
+            if (idx >= 0) inMemoryPages[idx] = p;
+            else inMemoryPages.push(p);
+          });
+          persistPages(inMemoryPages);
+          return firestorePages;
+        }
+      } catch (err) {
+        // Offline fallback
       }
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const firestorePages = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Page));
-        firestorePages.forEach(p => {
-          const idx = inMemoryPages.findIndex(m => m.id === p.id);
-          if (idx >= 0) inMemoryPages[idx] = p;
-          else inMemoryPages.push(p);
-        });
-        persistPages(inMemoryPages);
-        return firestorePages;
-      }
-    } catch (err) {
-      // Offline fallback
     }
 
     return inMemoryPages.filter(p => {
@@ -667,33 +672,55 @@ export const pageService = {
 
   async getPageBySlug(slug: string): Promise<Page | null> {
     const cleanSlug = slug.toLowerCase().trim();
+    // 1. Instant check in memory
+    const found = inMemoryPages.find(p => p.slug.toLowerCase() === cleanSlug);
+    if (found) return found;
+
     const colPath = 'pages';
-    try {
-      const q = query(collection(db, colPath), where('slug', '==', cleanSlug));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const d = snap.docs[0];
-        return { id: d.id, ...(d.data() as any) } as Page;
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(collection(db, colPath), where('slug', '==', cleanSlug));
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && !snap.empty) {
+          const d = snap.docs[0];
+          const page = { id: d.id, ...(d.data() as any) } as Page;
+          inMemoryPages.unshift(page);
+          persistPages(inMemoryPages);
+          return page;
+        }
+      } catch (err) {
+        // Offline fallback
       }
-    } catch (err) {
-      // Offline fallback
     }
 
-    const found = inMemoryPages.find(p => p.slug.toLowerCase() === cleanSlug);
-    return found || null;
+    return null;
   },
 
   async getPageById(pageId: string): Promise<Page | null> {
-    const docPath = `pages/${pageId}`;
-    try {
-      const snap = await getDoc(doc(db, 'pages', pageId));
-      if (snap.exists()) {
-        return { id: snap.id, ...(snap.data() as any) } as Page;
+    // 1. Instant local lookup
+    const found = inMemoryPages.find(p => p.id === pageId);
+    if (found) return found;
+
+    if (isFirebaseConfigured) {
+      try {
+        const snap = await Promise.race([
+          getDoc(doc(db, 'pages', pageId)),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && snap.exists()) {
+          const page = { id: snap.id, ...(snap.data() as any) } as Page;
+          inMemoryPages.unshift(page);
+          persistPages(inMemoryPages);
+          return page;
+        }
+      } catch (err) {
+        // Offline fallback
       }
-    } catch (err) {
-      // Offline fallback
     }
-    return inMemoryPages.find(p => p.id === pageId) || null;
+    return null;
   },
 
   async createPage(page: Omit<Page, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>): Promise<string> {
@@ -711,15 +738,23 @@ export const pageService = {
     inMemoryPages.unshift(fullPage);
     persistPages(inMemoryPages);
 
-    try {
-      const newRef = doc(db, 'pages', newId);
-      await setDoc(newRef, {
-        ...fullPage,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn('Offline page stored locally:', err);
+    if (isFirebaseConfigured) {
+      // Background non-blocking sync with timeout
+      (async () => {
+        try {
+          const newRef = doc(db, 'pages', newId);
+          await Promise.race([
+            setDoc(newRef, {
+              ...fullPage,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        } catch (err) {
+          console.warn('Background Firestore write skipped or timed out:', err);
+        }
+      })();
     }
 
     return newId;
@@ -736,13 +771,20 @@ export const pageService = {
       persistPages(inMemoryPages);
     }
 
-    try {
-      await updateDoc(doc(db, 'pages', pageId), {
-        ...updates,
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn('Offline page update stored locally:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await Promise.race([
+            updateDoc(doc(db, 'pages', pageId), {
+              ...updates,
+              updatedAt: serverTimestamp()
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        } catch (err) {
+          console.warn('Background Firestore update skipped or timed out:', err);
+        }
+      })();
     }
   },
 
@@ -758,10 +800,17 @@ export const pageService = {
     inMemoryPages = inMemoryPages.filter(p => p.id !== pageId);
     persistPages(inMemoryPages);
 
-    try {
-      await deleteDoc(doc(db, 'pages', pageId));
-    } catch (err) {
-      console.warn('Offline delete stored locally:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await Promise.race([
+            deleteDoc(doc(db, 'pages', pageId)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        } catch (err) {
+          console.warn('Background Firestore delete skipped or timed out:', err);
+        }
+      })();
     }
   },
 

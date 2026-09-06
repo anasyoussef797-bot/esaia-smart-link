@@ -3,7 +3,7 @@
  * Core Application Entry, Protected Routing & Multi-Tenant Engine
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -12,29 +12,31 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
-// Pages
+// Direct import for immediate authentication screen render
 import { LoginPage } from './pages/auth/LoginPage';
-import { OverviewPage } from './pages/dashboard/OverviewPage';
-import { ClientsPage } from './pages/clients/ClientsPage';
-import { ClientDetailPage } from './pages/clients/ClientDetailPage';
-import { QrManagerPage } from './pages/qr/QrManagerPage';
-import { PagesManagerPage } from './pages/pages/PagesManagerPage';
-import { PageBuilderPage } from './pages/pages/PageBuilderPage';
-import { LinksManagerPage } from './pages/links/LinksManagerPage';
-import { CardsManagerPage } from './pages/cards/CardsManagerPage';
-import { MenusManagerPage } from './pages/menus/MenusManagerPage';
-import { AnalyticsPage } from './pages/analytics/AnalyticsPage';
-import { TemplatesPage } from './pages/templates/TemplatesPage';
-import { MediaPage } from './pages/media/MediaPage';
-import { DomainsPage } from './pages/domains/DomainsPage';
-import { ImportPage } from './pages/import/ImportPage';
-import { AuditPage } from './pages/audit/AuditPage';
-import { SettingsPage } from './pages/settings/SettingsPage';
-import { DataExportPage } from './pages/settings/DataExportPage';
-import { WhiteLabelPage } from './pages/settings/WhiteLabelPage';
-import { NotFoundPage } from './pages/errors/NotFoundPage';
-import { ServerErrorPage } from './pages/errors/ServerErrorPage';
-import { PublicPageRenderer } from './pages/public/PublicPageRenderer';
+
+// Dynamic Code-Splitting / Lazy-Loaded Route Chunks for Ultra-Fast Initial Load
+const OverviewPage = lazy(() => import('./pages/dashboard/OverviewPage').then(m => ({ default: m.OverviewPage })));
+const ClientsPage = lazy(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage })));
+const ClientDetailPage = lazy(() => import('./pages/clients/ClientDetailPage').then(m => ({ default: m.ClientDetailPage })));
+const QrManagerPage = lazy(() => import('./pages/qr/QrManagerPage').then(m => ({ default: m.QrManagerPage })));
+const PagesManagerPage = lazy(() => import('./pages/pages/PagesManagerPage').then(m => ({ default: m.PagesManagerPage })));
+const PageBuilderPage = lazy(() => import('./pages/pages/PageBuilderPage').then(m => ({ default: m.PageBuilderPage })));
+const LinksManagerPage = lazy(() => import('./pages/links/LinksManagerPage').then(m => ({ default: m.LinksManagerPage })));
+const CardsManagerPage = lazy(() => import('./pages/cards/CardsManagerPage').then(m => ({ default: m.CardsManagerPage })));
+const MenusManagerPage = lazy(() => import('./pages/menus/MenusManagerPage').then(m => ({ default: m.MenusManagerPage })));
+const AnalyticsPage = lazy(() => import('./pages/analytics/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const TemplatesPage = lazy(() => import('./pages/templates/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
+const MediaPage = lazy(() => import('./pages/media/MediaPage').then(m => ({ default: m.MediaPage })));
+const DomainsPage = lazy(() => import('./pages/domains/DomainsPage').then(m => ({ default: m.DomainsPage })));
+const ImportPage = lazy(() => import('./pages/import/ImportPage').then(m => ({ default: m.ImportPage })));
+const AuditPage = lazy(() => import('./pages/audit/AuditPage').then(m => ({ default: m.AuditPage })));
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const DataExportPage = lazy(() => import('./pages/settings/DataExportPage').then(m => ({ default: m.DataExportPage })));
+const WhiteLabelPage = lazy(() => import('./pages/settings/WhiteLabelPage').then(m => ({ default: m.WhiteLabelPage })));
+const NotFoundPage = lazy(() => import('./pages/errors/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const ServerErrorPage = lazy(() => import('./pages/errors/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
+const PublicPageRenderer = lazy(() => import('./pages/public/PublicPageRenderer').then(m => ({ default: m.PublicPageRenderer })));
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 
@@ -65,7 +67,11 @@ function AppRouter() {
   // 1. Check for Public Landing Page Route: /p/:slug
   if (currentPath.startsWith('/p/')) {
     const slug = currentPath.replace('/p/', '');
-    return <PublicPageRenderer slug={slug} />;
+    return (
+      <Suspense fallback={<LoadingScreen message="Loading Page..." />}>
+        <PublicPageRenderer slug={slug} />
+      </Suspense>
+    );
   }
 
   // 2. Unauthenticated user route check
@@ -238,7 +244,9 @@ function AppRouter() {
 
   return (
     <AdminLayout currentPath={currentPath} onNavigate={navigate}>
-      {renderAdminContent()}
+      <Suspense fallback={<LoadingScreen message="Loading View..." />}>
+        {renderAdminContent()}
+      </Suspense>
     </AdminLayout>
   );
 }

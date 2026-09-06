@@ -14,7 +14,7 @@ import {
   orderBy,
   limit
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { AuditLog, AuditAction, ResourceType } from '../../types/audit';
 import { handleFirestoreError, OperationType } from './firestoreErrors';
 
@@ -225,18 +225,24 @@ export const auditService = {
     let logs: AuditLog[] = [];
     const colPath = 'auditLogs';
 
-    try {
-      const q = query(
-        collection(db, colPath),
-        where('orgId', '==', orgId),
-        orderBy('timestamp', 'desc'),
-        limit(100)
-      );
-      const snap = await getDocs(q);
-      logs = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as AuditLog));
-    } catch (err) {
-      // Fallback to local memory logs
-      logs = localMemoryLogs.filter(l => l.orgId === orgId);
+    if (isFirebaseConfigured) {
+      try {
+        const q = query(
+          collection(db, colPath),
+          where('orgId', '==', orgId),
+          limit(100)
+        );
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+        ]);
+        if (snap && !snap.empty) {
+          logs = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) } as AuditLog));
+        }
+      } catch (err) {
+        // Fallback to local memory logs
+        logs = localMemoryLogs.filter(l => l.orgId === orgId);
+      }
     }
 
     if (logs.length === 0) {

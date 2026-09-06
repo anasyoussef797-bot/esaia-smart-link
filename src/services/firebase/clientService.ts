@@ -14,7 +14,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db, isFirebaseConfigured } from './config';
 import { Client, ClientStatus } from '../../types/client';
 import { QrCode } from '../../types/qr';
 import { Page } from '../../types/page';
@@ -156,24 +156,29 @@ function saveLocalClients(clients: Client[]): void {
 export const clientService = {
   async getClientsByOrg(orgId: string, status?: ClientStatus): Promise<Client[]> {
     const colPath = 'clients';
-    try {
-      let q = query(collection(db, colPath), where('orgId', '==', orgId));
-      if (status) {
-        q = query(q, where('status', '==', status));
+    if (isFirebaseConfigured) {
+      try {
+        let q = query(collection(db, colPath), where('orgId', '==', orgId));
+        if (status) {
+          q = query(q, where('status', '==', status));
+        }
+        const snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && !snap.empty) {
+          const fetched = snap.docs.map((d: any) => ({
+            id: d.id,
+            ...(d.data() as any),
+            createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate().toISOString() : d.data().createdAt || new Date().toISOString(),
+            updatedAt: d.data().updatedAt?.toDate ? d.data().updatedAt.toDate().toISOString() : d.data().updatedAt || new Date().toISOString()
+          } as Client));
+          saveLocalClients(fetched);
+          return fetched;
+        }
+      } catch (err) {
+        console.warn('Firestore fetch failed or permission blocked, falling back to cached local storage:', err);
       }
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const fetched = snap.docs.map(d => ({
-          id: d.id,
-          ...(d.data() as any),
-          createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate().toISOString() : d.data().createdAt || new Date().toISOString(),
-          updatedAt: d.data().updatedAt?.toDate ? d.data().updatedAt.toDate().toISOString() : d.data().updatedAt || new Date().toISOString()
-        } as Client));
-        saveLocalClients(fetched);
-        return fetched;
-      }
-    } catch (err) {
-      console.warn('Firestore fetch failed or permission blocked, falling back to cached local storage:', err);
     }
 
     // Fallback to local storage for robust multi-tenant operation
@@ -183,19 +188,24 @@ export const clientService = {
 
   async getClientById(clientId: string): Promise<Client | null> {
     const docPath = `clients/${clientId}`;
-    try {
-      const snap = await getDoc(doc(db, 'clients', clientId));
-      if (snap.exists()) {
-        const d = snap.data();
-        return {
-          id: snap.id,
-          ...(d as any),
-          createdAt: d.createdAt?.toDate ? d.createdAt.toDate().toISOString() : d.createdAt || new Date().toISOString(),
-          updatedAt: d.updatedAt?.toDate ? d.updatedAt.toDate().toISOString() : d.updatedAt || new Date().toISOString()
-        } as Client;
+    if (isFirebaseConfigured) {
+      try {
+        const snap = await Promise.race([
+          getDoc(doc(db, 'clients', clientId)),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (snap && snap.exists()) {
+          const d = snap.data();
+          return {
+            id: snap.id,
+            ...(d as any),
+            createdAt: d.createdAt?.toDate ? d.createdAt.toDate().toISOString() : d.createdAt || new Date().toISOString(),
+            updatedAt: d.updatedAt?.toDate ? d.updatedAt.toDate().toISOString() : d.updatedAt || new Date().toISOString()
+          } as Client;
+        }
+      } catch (err) {
+        console.warn('Firestore getDoc failed, looking up local client cache:', err);
       }
-    } catch (err) {
-      console.warn('Firestore getDoc failed, looking up local client cache:', err);
     }
 
     try {
@@ -226,14 +236,21 @@ export const clientService = {
     const existing = getLocalClients(client.orgId);
     saveLocalClients([newClientObject, ...existing]);
 
-    try {
-      await setDoc(doc(db, colPath, newId), {
-        ...client,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn('Firestore setDoc failed, saved client locally:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await Promise.race([
+            setDoc(doc(db, colPath, newId), {
+              ...client,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        } catch (err) {
+          console.warn('Firestore setDoc background sync failed:', err);
+        }
+      })();
     }
 
     return newId;
