@@ -194,13 +194,41 @@ export const en: TranslationSchema = {
     createBtn: 'Create Menu'
   },
   templatesModule: {
-    title: 'Pre-Built Digital Templates',
-    subtitle: 'Launch professional landing pages, digital menus, and business cards in seconds.',
+    title: 'Pre-Built Customizable Templates',
+    subtitle: 'Browse ready-made landing pages and link-in-bio designs tailored across 22 industries.',
     useTemplate: 'Use Template',
     categoryHospitality: 'Hospitality',
     categoryNetworking: 'Networking',
     categoryEvents: 'Events',
-    categorySocial: 'Social'
+    categorySocial: 'Social',
+    tabs: {
+      featured: 'Featured',
+      landing: 'Landing pages',
+      linkInBio: 'Link in bio',
+      myTemplates: 'My templates'
+    },
+    aiBanner: {
+      title: 'Create your page using AI',
+      step1: '01 Tell AI what you do and get a page',
+      step2: '02 Customize your page structure',
+      step3: '03 Personalize your page & publish',
+      cta: 'Generate page ->'
+    },
+    blankTemplate: {
+      title: 'Blank template',
+      subtitle: 'Option for those who like to create from scratch'
+    },
+    sections: {
+      landingPages: 'Landing page templates',
+      linkInBio: 'Link In bio templates',
+      categories: 'Categories',
+      collapseCategories: 'Collapse categories',
+      expandCategories: 'Expand categories',
+      viewAll: 'View all',
+      searchPlaceholder: 'Search templates by title, industry, or keywords...',
+      noTemplatesFound: 'No templates match your search criteria.',
+      noSavedTemplates: 'You have not saved any templates yet. Click the bookmark icon on any template to pin it here.'
+    }
   },
   mediaModule: {
     title: 'Organization Media & Asset Vault',

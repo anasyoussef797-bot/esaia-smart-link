@@ -39,7 +39,7 @@ import { qrService } from '../../services/firebase/qrService';
 
 export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { showToast } = useNotification();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const [pages, setPages] = useState<Page[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -261,6 +261,14 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
           <p className="text-xs text-slate-400 mt-1">{t.pagesModule.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            id="browse-templates-btn"
+            variant="outline"
+            leftIcon={<Sparkles className="w-4 h-4 text-amber-400" />}
+            onClick={() => onNavigate('/admin/templates')}
+          >
+            {isRTL ? 'النماذج الجاهزة' : 'Ready-Made Templates'}
+          </Button>
           <Button
             id="new-page-btn"
             variant="primary"
@@ -485,7 +493,20 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
       >
         <form onSubmit={handleCreatePage} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-300 mb-2 block">Choose Quick-Start Template</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-slate-300">Choose Quick-Start Template</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNewPageModalOpen(false);
+                  onNavigate('/admin/templates');
+                }}
+                className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>{isRTL ? 'تصفح كافة النماذج (22 مجالاً) ->' : 'Full Gallery (22 Categories) ->'}</span>
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"

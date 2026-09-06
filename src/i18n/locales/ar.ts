@@ -194,13 +194,41 @@ export const ar: TranslationSchema = {
     createBtn: 'إنشاء القائمة'
   },
   templatesModule: {
-    title: 'القوالب الرقمية الجاهزة',
-    subtitle: 'أطلق صفحات هبوط وقوائم طعام وبطاقات عمل احترافية خلال ثوانٍ معدودة.',
-    useTemplate: 'استخدام القالب',
+    title: 'النماذج والقوالب الجاهزة القابلة للتخصيص',
+    subtitle: 'تصفح مكتبة نماذج صفحات الهبوط وروابط السيرة الذاتية المصممة باحترافية عبر 22 مجالاً مختلفاً.',
+    useTemplate: 'استخدام وتخصيص',
     categoryHospitality: 'الضيافة والمطاعم',
     categoryNetworking: 'الأعمال والتشبيك',
     categoryEvents: 'الفعاليات والمؤتمرات',
-    categorySocial: 'وسائل التواصل الاجتماعي'
+    categorySocial: 'وسائل التواصل الاجتماعي',
+    tabs: {
+      featured: 'المميزة',
+      landing: 'صفحات الهبوط',
+      linkInBio: 'روابط السيرة الذاتية (Link in bio)',
+      myTemplates: 'نماذجي'
+    },
+    aiBanner: {
+      title: 'أنشئ صفحتك باستخدام الذكاء الاصطناعي',
+      step1: '01 أخبر الذكاء الاصطناعي بنشاطك التجاري واحصل على صفحة',
+      step2: '02 خصص هيكل وبلوكات المحتوى بحرية',
+      step3: '03 أضف هويتك وروابطك وانشر فوراً',
+      cta: 'توليد صفحة ذكية ->'
+    },
+    blankTemplate: {
+      title: 'نموذج فارغ',
+      subtitle: 'خيار للراغبين بالبدء من الصفر وتصميم البلوكات يدوياً'
+    },
+    sections: {
+      landingPages: 'نماذج صفحات الهبوط (Landing Pages)',
+      linkInBio: 'نماذج روابط السيرة الذاتية (Link In Bio)',
+      categories: 'التصنيفات والمجالات',
+      collapseCategories: 'طي التصنيفات',
+      expandCategories: 'عرض جميع التصنيفات',
+      viewAll: 'عرض الكل',
+      searchPlaceholder: 'ابحث في النماذج بالاسم أو المجال أو الكلمات المفتاحية...',
+      noTemplatesFound: 'لم يتم العثور على نماذج تطابق بحثك الحالي.',
+      noSavedTemplates: 'لم تقم بحفظ أي نماذج بعد. انقر على أيقونة الإشارة المرجعية في أي نموذج لتثبيته هنا.'
+    }
   },
   mediaModule: {
     title: 'مكتبة وسائط وأصول المؤسسة',

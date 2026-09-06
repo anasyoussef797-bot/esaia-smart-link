@@ -5,6 +5,7 @@
  */
 
 import express, { Request, Response, NextFunction } from 'express';
+import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import crypto from 'crypto';
 import dns from 'dns/promises';
@@ -335,6 +336,188 @@ app.get('/api/health', (req: Request, res: Response) => {
     status: 'ok',
     platform: 'ESAIA SaaS Production Server',
     timestamp: new Date().toISOString()
+  });
+});
+
+// ==============================================================================
+// 3.5. AI Page Generator API (Powered by Gemini / Resilient fallback)
+// ==============================================================================
+let geminiClient: GoogleGenAI | null = null;
+function getGemini(): GoogleGenAI | null {
+  if (!geminiClient && process.env.GEMINI_API_KEY) {
+    geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return geminiClient;
+}
+
+app.post('/api/ai/generate-page', async (req: Request, res: Response) => {
+  const { businessName, industry, pageType, description, themeVibe } = req.body;
+  if (!businessName) {
+    res.status(400).json({ success: false, error: 'Business name is required' });
+    return;
+  }
+
+  const ai = getGemini();
+  if (ai) {
+    try {
+      const prompt = `Generate a high-converting, professional webpage structure for a business.
+Business Name: ${businessName}
+Industry: ${industry}
+Page Type: ${pageType} (e.g. landing page or link in bio)
+Description / Services: ${description || 'Premium commercial services'}
+Theme Vibe: ${themeVibe || 'dark'}
+
+Output ONLY a valid JSON object matching this schema:
+{
+  "title": "${businessName}",
+  "subtitle": "A compelling 1-sentence subtitle describing their offering",
+  "themeConfig": {
+    "preset": "${themeVibe || 'dark'}",
+    "palette": {
+      "background": "${themeVibe === 'light' ? '#f8fafc' : themeVibe === 'beige' ? '#fcfbf7' : '#090a0f'}",
+      "cardBackground": "${themeVibe === 'light' ? '#ffffff' : themeVibe === 'beige' ? '#ffffff' : '#141722'}",
+      "textPrimary": "${themeVibe === 'light' ? '#0f172a' : themeVibe === 'beige' ? '#1c1917' : '#f8fafc'}",
+      "textSecondary": "${themeVibe === 'light' ? '#64748b' : themeVibe === 'beige' ? '#78716c' : '#94a3b8'}",
+      "primaryAction": "#6366f1",
+      "primaryActionText": "#ffffff",
+      "accent": "#818cf8",
+      "border": "${themeVibe === 'light' ? '#e2e8f0' : themeVibe === 'beige' ? '#e7e5e4' : '#24293d'}"
+    },
+    "typography": {
+      "fontFamily": "Plus Jakarta Sans",
+      "headingFont": "Plus Jakarta Sans",
+      "baseFontSize": 16
+    },
+    "buttonStyle": "filled",
+    "borderRadius": "lg",
+    "shadowLevel": "md",
+    "backgroundStyle": "solid"
+  },
+  "blocks": [
+    {
+      "id": "b_hero_1",
+      "type": "hero",
+      "title": "Hero Section",
+      "isVisible": true,
+      "orderIndex": 0,
+      "content": {
+        "title": "${businessName}",
+        "subtitle": "Short compelling value proposition",
+        "badge": "OFFICIAL PORTAL",
+        "coverUrl": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&auto=format&fit=crop&q=80",
+        "alignment": "center"
+      }
+    },
+    {
+      "id": "b_cta_1",
+      "type": "button",
+      "title": "Main CTA",
+      "isVisible": true,
+      "orderIndex": 1,
+      "content": {
+        "label": "Contact Us via WhatsApp",
+        "url": "https://wa.me",
+        "variant": "primary"
+      }
+    },
+    {
+      "id": "b_desc_1",
+      "type": "paragraph",
+      "title": "Overview",
+      "isVisible": true,
+      "orderIndex": 2,
+      "content": {
+        "text": "Detailed overview of the services, credibility, and commitment to client success."
+      }
+    }
+  ]
+}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      if (response.text) {
+        const parsed = JSON.parse(response.text);
+        res.json({ success: true, data: parsed });
+        return;
+      }
+    } catch (geminiError) {
+      console.warn('Gemini generation threw error, falling back to synthesis:', geminiError);
+    }
+  }
+
+  // Resilient fallback output
+  res.json({
+    success: true,
+    data: {
+      title: businessName,
+      subtitle: description || 'Professional services and solutions delivered with excellence.',
+      themeConfig: {
+        preset: themeVibe || 'dark',
+        palette: {
+          background: themeVibe === 'light' ? '#f8fafc' : themeVibe === 'beige' ? '#fcfbf7' : '#090a0f',
+          cardBackground: themeVibe === 'light' ? '#ffffff' : themeVibe === 'beige' ? '#ffffff' : '#141722',
+          textPrimary: themeVibe === 'light' ? '#0f172a' : themeVibe === 'beige' ? '#1c1917' : '#f8fafc',
+          textSecondary: themeVibe === 'light' ? '#64748b' : themeVibe === 'beige' ? '#78716c' : '#94a3b8',
+          primaryAction: '#6366f1',
+          primaryActionText: '#ffffff',
+          accent: '#818cf8',
+          border: themeVibe === 'light' ? '#e2e8f0' : themeVibe === 'beige' ? '#e7e5e4' : '#24293d'
+        },
+        typography: {
+          fontFamily: 'Plus Jakarta Sans',
+          headingFont: 'Plus Jakarta Sans',
+          baseFontSize: 16
+        },
+        buttonStyle: 'filled',
+        borderRadius: 'lg',
+        shadowLevel: 'md',
+        backgroundStyle: 'solid'
+      },
+      blocks: [
+        {
+          id: `b_hero_${Date.now()}`,
+          type: 'hero',
+          title: 'Hero Banner',
+          isVisible: true,
+          orderIndex: 0,
+          content: {
+            title: businessName,
+            subtitle: description || 'Dedicated excellence in client satisfaction and digital services.',
+            badge: pageType === 'landing' ? 'OFFICIAL PORTAL' : 'CONNECT & EXPLORE',
+            coverUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1000&auto=format&fit=crop&q=80',
+            alignment: 'center'
+          }
+        },
+        {
+          id: `b_cta_${Date.now()}`,
+          type: 'button',
+          title: 'Direct Action',
+          isVisible: true,
+          orderIndex: 1,
+          content: {
+            label: 'Instant Consultation on WhatsApp',
+            url: 'https://wa.me/?text=Hello!%20I%20would%20like%20to%20inquire%20about%20your%20services.',
+            variant: 'primary'
+          }
+        },
+        {
+          id: `b_para_${Date.now()}`,
+          type: 'paragraph',
+          title: 'About Highlight',
+          isVisible: true,
+          orderIndex: 2,
+          content: {
+            text: `Welcome to ${businessName}. We specialize in high-impact solutions built to scale.`
+          }
+        }
+      ]
+    }
   });
 });
 

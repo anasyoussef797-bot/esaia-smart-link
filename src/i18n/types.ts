@@ -222,6 +222,34 @@ export interface TranslationSchema {
     categoryNetworking: string;
     categoryEvents: string;
     categorySocial: string;
+    tabs?: {
+      featured: string;
+      landing: string;
+      linkInBio: string;
+      myTemplates: string;
+    };
+    aiBanner?: {
+      title: string;
+      step1: string;
+      step2: string;
+      step3: string;
+      cta: string;
+    };
+    blankTemplate?: {
+      title: string;
+      subtitle: string;
+    };
+    sections?: {
+      landingPages: string;
+      linkInBio: string;
+      categories: string;
+      collapseCategories: string;
+      expandCategories: string;
+      viewAll: string;
+      searchPlaceholder: string;
+      noTemplatesFound: string;
+      noSavedTemplates: string;
+    };
   };
   mediaModule: {
     title: string;
