@@ -51,6 +51,7 @@ export const zh: TranslationSchema = {
     systemTelemetry: '实时系统监控'
   },
   pagesModule: {
+    ...en.pagesModule,
     title: '动态落地页与微网站',
     subtitle: '移动优先的响应式落地页、电子菜单、个人主页与线索收集表单。',
     createPage: '创建落地页',
@@ -70,6 +71,7 @@ export const zh: TranslationSchema = {
     statusArchived: '已归档'
   },
   qrModule: {
+    ...en.qrModule,
     title: '动态二维码矩阵管理',
     subtitle: '具备毫秒级重定向、随时更改目标地址、样式自定义与实时扫码追踪的高性能引擎。',
     createQr: '创建动态二维码',

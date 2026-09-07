@@ -414,6 +414,39 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     setEditingBlock(newBlock);
   };
 
+  const getBlockTypeLabel = (type: BlockType): string => {
+    switch (type) {
+      case 'hero':
+        return t.builderModule.blocks.types.hero;
+      case 'vcard_header':
+        return t.builderModule.blocks.types.vcard;
+      case 'button':
+        return t.builderModule.blocks.types.button;
+      case 'whatsapp_button':
+        return t.builderModule.blocks.types.whatsapp;
+      case 'social_links':
+        return t.builderModule.blocks.types.social;
+      case 'menu_item':
+        return t.builderModule.blocks.types.menu;
+      case 'menu_category':
+        return t.builderModule.blocks.fields.categoryName;
+      case 'map_location':
+        return t.builderModule.blocks.types.location;
+      case 'contact_form':
+        return t.builderModule.blocks.types.contactForm;
+      case 'pdf_viewer':
+        return t.builderModule.blocks.types.pdf;
+      case 'video_embed':
+        return t.builderModule.blocks.types.video;
+      case 'paragraph':
+        return t.builderModule.blocks.types.text;
+      case 'gallery':
+        return t.builderModule.blocks.types.gallery;
+      default:
+        return type.replace(/_/g, ' ');
+    }
+  };
+
   if (loading || !page) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -431,7 +464,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141722] border border-[#24293d]">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-            Back
+            {t.builderModule.back}
           </Button>
 
           <div className="h-6 w-px bg-[#24293d]" />
@@ -443,14 +476,14 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 value={page.title}
                 onChange={e => setPage({ ...page, title: e.target.value })}
                 className="text-base font-bold text-white bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:outline-none px-1"
-                placeholder="Page Title"
+                placeholder={t.pagesModule.pageTitlePlaceholder}
               />
               <Badge variant={page.status === 'published' ? 'success' : 'neutral'}>
-                {page.status === 'published' ? 'Published' : 'Draft'}
+                {page.status === 'published' ? t.builderModule.published : t.builderModule.draft}
               </Badge>
             </div>
             <div className="flex items-center gap-2 mt-0.5 px-1">
-              <span className="text-xs text-slate-400">Public Slug:</span>
+              <span className="text-xs text-slate-400">{t.pagesModule.publicSlugLabel}:</span>
               <span className="text-xs font-mono text-blue-400">/p/{page.slug}</span>
             </div>
           </div>
@@ -463,7 +496,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
             leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
             onClick={() => window.open(`/p/${page.slug}`, '_blank')}
           >
-            Live Preview
+            {t.builderModule.livePreview}
           </Button>
 
           <Button
@@ -473,7 +506,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
             disabled={saving}
             onClick={() => handleSavePage(false)}
           >
-            Save Draft
+            {t.builderModule.saveDraft}
           </Button>
 
           <Button
@@ -483,7 +516,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
             disabled={saving}
             onClick={() => handleSavePage(true)}
           >
-            {saving ? 'Saving...' : 'Publish Live'}
+            {saving ? '...' : t.builderModule.publishLive}
           </Button>
         </div>
       </div>
@@ -501,7 +534,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               }`}
             >
               <Layers className="w-4 h-4" />
-              <span>Blocks ({page.blocks.length})</span>
+              <span>{t.builderModule.tabs.blocks} ({page.blocks.length})</span>
             </button>
 
             <button
@@ -511,7 +544,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               }`}
             >
               <Building2 className="w-4 h-4" />
-              <span>Client Brand Kit</span>
+              <span>{t.builderModule.tabs.brand}</span>
             </button>
 
             <button
@@ -521,7 +554,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               }`}
             >
               <Palette className="w-4 h-4" />
-              <span>Theme &amp; Styles</span>
+              <span>{t.builderModule.tabs.theme}</span>
             </button>
 
             <button
@@ -531,7 +564,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               }`}
             >
               <QrCode className="w-4 h-4" />
-              <span>QR Binding</span>
+              <span>{t.builderModule.tabs.qr}</span>
               {boundQr && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
             </button>
 
@@ -542,7 +575,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               }`}
             >
               <Globe className="w-4 h-4" />
-              <span>SEO</span>
+              <span>{t.builderModule.tabs.seo}</span>
             </button>
           </div>
 
@@ -550,9 +583,9 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           {activeTab === 'blocks' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Drag or reorder blocks to build your page</span>
+                <span className="text-xs text-slate-400">{t.builderModule.blocks.headerSubtitle}</span>
                 <Button size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} onClick={() => setIsAddBlockModalOpen(true)}>
-                  Add Block
+                  {t.builderModule.blocks.addBlock}
                 </Button>
               </div>
 
@@ -560,10 +593,10 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 {page.blocks.length === 0 ? (
                   <Card padding="lg" className="text-center py-10">
                     <Layers className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-white">No Blocks Added Yet</p>
-                    <p className="text-xs text-slate-400 mt-1 mb-4">Add a hero banner, vCard, menu, or buttons.</p>
+                    <p className="text-sm font-semibold text-white">{t.builderModule.blocks.noBlocksTitle}</p>
+                    <p className="text-xs text-slate-400 mt-1 mb-4">{t.builderModule.blocks.noBlocksDesc}</p>
                     <Button size="sm" onClick={() => setIsAddBlockModalOpen(true)}>
-                      Add First Block
+                      {t.builderModule.blocks.addBlock}
                     </Button>
                   </Card>
                 ) : (
@@ -607,9 +640,9 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
                         <div className="min-w-0">
                           <h4 className="text-xs font-semibold text-white truncate">
-                            {block.content?.title || block.content?.name || block.content?.fullName || block.content?.label || block.type}
+                            {block.content?.title || block.content?.name || block.content?.fullName || block.content?.label || getBlockTypeLabel(block.type)}
                           </h4>
-                          <span className="text-[10px] text-slate-400 capitalize">{block.type.replace(/_/g, ' ')}</span>
+                          <span className="text-[10px] text-slate-400 capitalize">{getBlockTypeLabel(block.type)}</span>
                         </div>
                       </div>
 
@@ -640,14 +673,14 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                         <button
                           onClick={() => setEditingBlock(block)}
                           className="p-1 rounded text-slate-400 hover:text-blue-400"
-                          title="Edit Block Content"
+                          title={t.actions.edit}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => deleteBlock(block.id)}
                           className="p-1 rounded text-slate-400 hover:text-rose-400"
-                          title="Delete Block"
+                          title={t.actions.delete}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -663,14 +696,14 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           {activeTab === 'brand' && (
             <Card padding="md" className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-white">Client CRM Brand Association</h3>
+                <h3 className="text-sm font-semibold text-white">{t.builderModule.brand.title}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Link this page to a client account to auto-populate brand logos, contacts, and palette styling.
+                  {t.builderModule.brand.subtitle}
                 </p>
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 mb-1.5 block">Select Associated Client</label>
+                <label className="text-xs text-slate-300 mb-1.5 block">{t.builderModule.brand.selectClient}</label>
                 <select
                   value={page.clientId}
                   onChange={e => setPage({ ...page, clientId: e.target.value })}
@@ -707,7 +740,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
                   <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#1c2030]">
                     <div>
-                      <span className="text-[10px] text-slate-500 block">Primary Color</span>
+                      <span className="text-[10px] text-slate-500 block">{t.clientsModule.primaryColor}</span>
                       <div className="flex items-center gap-1.5 mt-1">
                         <div
                           className="w-4 h-4 rounded border border-white/20"
@@ -718,7 +751,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-500 block">Secondary</span>
+                      <span className="text-[10px] text-slate-500 block">{t.clientsModule.secondaryColor}</span>
                       <div className="flex items-center gap-1.5 mt-1">
                         <div
                           className="w-4 h-4 rounded border border-white/20"
@@ -729,7 +762,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-500 block">Accent</span>
+                      <span className="text-[10px] text-slate-500 block">{t.clientsModule.accentColor}</span>
                       <div className="flex items-center gap-1.5 mt-1">
                         <div
                           className="w-4 h-4 rounded border border-white/20"
@@ -748,7 +781,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       leftIcon={<Palette className="w-4 h-4 text-blue-400" />}
                       onClick={handleApplyClientBrandTheme}
                     >
-                      Apply Client Brand Theme to This Page
+                      {t.builderModule.brand.applyColorsLogo}
                     </Button>
                   </div>
                 </div>
@@ -760,9 +793,9 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           {activeTab === 'theme' && (
             <Card padding="md" className="space-y-5">
               <div>
-                <h3 className="text-sm font-semibold text-white">Theme &amp; Typography Presets</h3>
+                <h3 className="text-sm font-semibold text-white">{t.builderModule.theme.title}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Select a refined corporate aesthetic or customize granular colors and border radii.
+                  {t.builderModule.theme.subtitle}
                 </p>
               </div>
 
@@ -780,7 +813,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   <div className="w-full h-8 rounded-lg bg-[#090a0f] border border-[#24293d] flex items-center justify-center mb-2">
                     <Moon className="w-4 h-4 text-blue-400" />
                   </div>
-                  <div className="text-xs font-bold text-white">Dark Luxury</div>
+                  <div className="text-xs font-bold text-white">{t.builderModule.theme.darkLuxury}</div>
                   <div className="text-[10px] text-slate-400">Obsidian slate</div>
                 </button>
 
@@ -796,7 +829,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   <div className="w-full h-8 rounded-lg bg-[#f8fafc] border border-slate-300 flex items-center justify-center mb-2">
                     <Sun className="w-4 h-4 text-amber-500" />
                   </div>
-                  <div className="text-xs font-bold text-white">Crisp Light</div>
+                  <div className="text-xs font-bold text-white">{t.builderModule.theme.crispLight}</div>
                   <div className="text-[10px] text-slate-400">High contrast white</div>
                 </button>
 
@@ -812,18 +845,18 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   <div className="w-full h-8 rounded-lg bg-[#f6f3eb] border border-[#dfd7cb] flex items-center justify-center mb-2">
                     <Coffee className="w-4 h-4 text-amber-700" />
                   </div>
-                  <div className="text-xs font-bold text-white">Warm Beige</div>
+                  <div className="text-xs font-bold text-white">{t.builderModule.theme.warmBeige}</div>
                   <div className="text-[10px] text-slate-400">Stone &amp; linen tones</div>
                 </button>
               </div>
 
               {/* Granular Color Overrides */}
               <div className="space-y-3 pt-3 border-t border-[#1c2030]">
-                <h4 className="text-xs font-semibold text-slate-300">Custom Palette Overrides</h4>
+                <h4 className="text-xs font-semibold text-slate-300">{t.builderModule.theme.customPalette}</h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] text-slate-400 block mb-1">Primary Action</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">{t.builderModule.theme.primaryAction}</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
@@ -846,7 +879,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 block mb-1">Background</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">{t.builderModule.theme.background}</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
@@ -867,7 +900,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 block mb-1">Card Surface</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">{t.builderModule.theme.cardSurface}</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
@@ -893,7 +926,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
               {/* Border Radius */}
               <div className="space-y-1.5 pt-3 border-t border-[#1c2030]">
-                <label className="text-xs text-slate-300">Corner Radius</label>
+                <label className="text-xs text-slate-300">{t.builderModule.theme.cornerRadius}</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['none', 'sm', 'md', 'lg', 'full'] as const).map(radius => (
                     <button
@@ -922,9 +955,9 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           {activeTab === 'qr' && (
             <Card padding="md" className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-white">Dynamic QR Code Synchronization</h3>
+                <h3 className="text-sm font-semibold text-white">{t.builderModule.qr.title}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Bind this page to a dynamic shortcode (/q/:slug). Any physical scans will immediately redirect to this published page.
+                  {t.builderModule.qr.subtitle}
                 </p>
               </div>
 
@@ -938,15 +971,15 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-white">{boundQr.name}</h4>
-                          <Badge variant="success">Bound</Badge>
+                          <Badge variant="success">{t.builderModule.qr.bound}</Badge>
                         </div>
                         <p className="text-xs font-mono text-blue-400 mt-0.5">/q/{boundQr.publicCode}</p>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-emerald-400 font-bold">Grade {boundQr.styleConfig?.scannabilityGrade || 'A'}</span>
-                      <p className="text-[10px] text-slate-400">{boundQr.totalScans} total scans</p>
+                      <span className="text-xs text-emerald-400 font-bold">{t.builderModule.qr.grade} {boundQr.styleConfig?.scannabilityGrade || 'A'}</span>
+                      <p className="text-[10px] text-slate-400">{boundQr.totalScans} {t.qrModule.totalScans}</p>
                     </div>
                   </div>
 
@@ -957,7 +990,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
                       onClick={() => window.open(`/q/${boundQr.publicCode}`, '_blank')}
                     >
-                      Test Redirect
+                      {t.qrModule.testRedirect}
                     </Button>
                     <Button
                       variant="ghost"
@@ -965,7 +998,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       className="text-rose-400 hover:text-rose-300"
                       onClick={() => pageService.unbindQrFromPage(page.id).then(() => setPage({ ...page, qrCodeId: null }))}
                     >
-                      Unbind QR
+                      {t.builderModule.qr.unbindBtn}
                     </Button>
                   </div>
                 </div>
@@ -974,9 +1007,9 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   <div className="p-4 rounded-xl bg-[#0e1017] border border-dashed border-[#24293d] text-center space-y-3">
                     <QrCode className="w-8 h-8 text-blue-400 mx-auto" />
                     <div>
-                      <h4 className="text-xs font-bold text-white">No Dynamic QR Code Bound</h4>
+                      <h4 className="text-xs font-bold text-white">{t.builderModule.qr.noQrBound}</h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Generate a new high-speed QR code or connect an existing code from your fleet.
+                        {t.builderModule.qr.noQrDesc}
                       </p>
                     </div>
 
@@ -986,13 +1019,13 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                       onClick={handleCreateAndBindQr}
                     >
-                      1-Click Generate &amp; Bind Dynamic QR
+                      {t.builderModule.qr.generateBtn}
                     </Button>
                   </div>
 
                   {/* Or select existing */}
                   <div>
-                    <label className="text-xs text-slate-400 block mb-1">Or Bind Existing QR from Fleet</label>
+                    <label className="text-xs text-slate-400 block mb-1">{t.builderModule.qr.bindExisting}</label>
                     <select
                       onChange={e => {
                         if (e.target.value) {
@@ -1006,7 +1039,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       className="w-full px-3 py-2 rounded-xl bg-[#0e1017] border border-[#24293d] text-xs text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="" disabled>
-                        Choose an existing QR code...
+                        {t.builderModule.qr.chooseExisting}
                       </option>
                       {qrCodes.map(q => (
                         <option key={q.id} value={q.id}>
@@ -1024,19 +1057,19 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           {activeTab === 'seo' && (
             <Card padding="md" className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-white">Search Engine Optimization (SEO)</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Configure meta tags for WhatsApp, iMessage, and Google Search snippets.</p>
+                <h3 className="text-sm font-semibold text-white">{t.builderModule.seo.title}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{t.builderModule.seo.subtitle}</p>
               </div>
 
               <Input
                 id="seo-title"
-                label="Meta Title"
+                label={t.builderModule.seo.metaTitle}
                 value={page.seo.metaTitle}
                 onChange={e => setPage({ ...page, seo: { ...page.seo, metaTitle: e.target.value } })}
               />
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Meta Description</label>
+                <label className="text-xs font-medium text-slate-300">{t.builderModule.seo.metaDesc}</label>
                 <textarea
                   rows={3}
                   value={page.seo.metaDescription}
@@ -1047,7 +1080,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
               <Input
                 id="seo-og-image"
-                label="OpenGraph Social Share Image URL"
+                label={t.builderModule.seo.ogImageUrl}
                 placeholder="https://images.unsplash.com/..."
                 value={page.seo.ogImageUrl || ''}
                 onChange={e => setPage({ ...page, seo: { ...page.seo, ogImageUrl: e.target.value } })}
@@ -1062,7 +1095,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           <div className="flex items-center justify-between w-full max-w-sm mb-3 px-2">
             <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-              Live Mobile Simulator
+              {t.builderModule.preview.simulator}
             </span>
 
             <div className="flex items-center gap-1.5 text-xs">
@@ -1072,7 +1105,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   previewDevice === 'iphone' ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-400 border-transparent'
                 }`}
               >
-                iPhone
+                {t.builderModule.preview.iphone}
               </button>
               <button
                 onClick={() => setPreviewDevice('android')}
@@ -1080,7 +1113,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   previewDevice === 'android' ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-400 border-transparent'
                 }`}
               >
-                Android
+                {t.builderModule.preview.android}
               </button>
             </div>
           </div>
@@ -1284,21 +1317,21 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
       <Modal
         isOpen={isAddBlockModalOpen}
         onClose={() => setIsAddBlockModalOpen(false)}
-        title="Add Block to Page"
-        description="Select a structural or interactive component to insert into your landing experience."
+        title={t.builderModule.blocks.modalAddTitle}
+        description={t.builderModule.blocks.modalAddDesc}
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           {/* Section: Essentials */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Essential Brand Blocks</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.builderModule.blocks.categories.identity}</h4>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAddBlock('hero')}
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Sparkles className="w-4 h-4 text-blue-400 mb-1" />
-                <div className="text-xs font-bold text-white">Hero Banner</div>
-                <div className="text-[10px] text-slate-400">Header with logo, title &amp; cover</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.hero}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.heroDesc}</div>
               </button>
 
               <button
@@ -1306,23 +1339,23 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <ExternalLink className="w-4 h-4 text-indigo-400 mb-1" />
-                <div className="text-xs font-bold text-white">Action Button</div>
-                <div className="text-[10px] text-slate-400">External link or deep action</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.button}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.buttonDesc}</div>
               </button>
             </div>
           </div>
 
           {/* Section: Contacts & vCards */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Digital Business Card &amp; Contact</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.builderModule.blocks.categories.actions}</h4>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAddBlock('vcard_header')}
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Download className="w-4 h-4 text-emerald-400 mb-1" />
-                <div className="text-xs font-bold text-white">vCard (.vcf) Header</div>
-                <div className="text-[10px] text-slate-400">Executive contact card with 1-tap save</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.vcard}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.vcardDesc}</div>
               </button>
 
               <button
@@ -1330,8 +1363,8 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <MessageCircle className="w-4 h-4 text-emerald-500 mb-1" />
-                <div className="text-xs font-bold text-white">WhatsApp Chat</div>
-                <div className="text-[10px] text-slate-400">Pre-filled WhatsApp messenger</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.whatsapp}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.whatsappDesc}</div>
               </button>
 
               <button
@@ -1339,8 +1372,8 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Phone className="w-4 h-4 text-blue-400 mb-1" />
-                <div className="text-xs font-bold text-white">Click-to-Call</div>
-                <div className="text-[10px] text-slate-400">Direct telephone dialing</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.phone}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.phoneDesc}</div>
               </button>
 
               <button
@@ -1348,23 +1381,23 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Globe className="w-4 h-4 text-cyan-400 mb-1" />
-                <div className="text-xs font-bold text-white">Social Icons</div>
-                <div className="text-[10px] text-slate-400">LinkedIn, Instagram, X, etc.</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.social}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.socialDesc}</div>
               </button>
             </div>
           </div>
 
           {/* Section: F&B & Menus */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Food, Beverage &amp; Catalog</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.builderModule.blocks.categories.commerce}</h4>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAddBlock('menu_category')}
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Utensils className="w-4 h-4 text-amber-500 mb-1" />
-                <div className="text-xs font-bold text-white">Menu Category</div>
-                <div className="text-[10px] text-slate-400">Category divider (e.g. Espresso Bar)</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.fields.categoryName}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.menuDesc}</div>
               </button>
 
               <button
@@ -1372,23 +1405,23 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Coffee className="w-4 h-4 text-amber-600 mb-1" />
-                <div className="text-xs font-bold text-white">Menu Dish / Drink</div>
-                <div className="text-[10px] text-slate-400">Price, dietary badges &amp; ordering</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.menu}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.menuDesc}</div>
               </button>
             </div>
           </div>
 
           {/* Section: Local & Forms */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location &amp; Engagement</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.builderModule.blocks.categories.media}</h4>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAddBlock('business_hours')}
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Clock className="w-4 h-4 text-purple-400 mb-1" />
-                <div className="text-xs font-bold text-white">Business Hours</div>
-                <div className="text-[10px] text-slate-400">Schedule with live Open Now status</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.hours}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.hoursDesc}</div>
               </button>
 
               <button
@@ -1396,8 +1429,8 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <MapPin className="w-4 h-4 text-rose-400 mb-1" />
-                <div className="text-xs font-bold text-white">Location &amp; Maps</div>
-                <div className="text-[10px] text-slate-400">Address &amp; Google Maps directions</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.location}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.locationDesc}</div>
               </button>
 
               <button
@@ -1405,8 +1438,8 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
               >
                 <Send className="w-4 h-4 text-emerald-400 mb-1" />
-                <div className="text-xs font-bold text-white">Lead Inquiry Form</div>
-                <div className="text-[10px] text-slate-400">Capture name, email &amp; inquiries</div>
+                <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.contactForm}</div>
+                <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.contactFormDesc}</div>
               </button>
             </div>
           </div>
@@ -1418,8 +1451,8 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
         <Modal
           isOpen={Boolean(editingBlock)}
           onClose={() => setEditingBlock(null)}
-          title={`Edit ${editingBlock.type.replace(/_/g, ' ').toUpperCase()}`}
-          description="Update block text, media URLs, and operational fields."
+          title={`${t.builderModule.blocks.editBlock}: ${getBlockTypeLabel(editingBlock.type)}`}
+          description={t.builderModule.blocks.modalEditDesc}
         >
           <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
             {/* HERO BLOCK FIELDS */}
@@ -1427,7 +1460,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-hero-title"
-                  label="Hero Headline Title"
+                  label={t.builderModule.blocks.fields.headline}
                   value={editingBlock.content.title || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1438,7 +1471,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-hero-sub"
-                  label="Subtitle / Bio"
+                  label={t.builderModule.blocks.fields.subtitleBio}
                   value={editingBlock.content.subtitle || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1449,7 +1482,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-hero-badge"
-                  label="Top Badge / Tag"
+                  label={t.builderModule.blocks.fields.badge}
                   value={editingBlock.content.badge || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1460,7 +1493,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-hero-avatar"
-                  label="Logo / Avatar Image URL"
+                  label={t.builderModule.blocks.fields.avatarUrl}
                   value={editingBlock.content.avatarUrl || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1471,7 +1504,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-hero-cover"
-                  label="Cover Banner Image URL"
+                  label={t.builderModule.blocks.fields.coverUrl}
                   value={editingBlock.content.coverUrl || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1488,7 +1521,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-vc-name"
-                  label="Full Name"
+                  label={t.builderModule.blocks.fields.fullName}
                   value={editingBlock.content.fullName || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1499,7 +1532,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-title"
-                  label="Job Title / Role"
+                  label={t.builderModule.blocks.fields.jobTitle}
                   value={editingBlock.content.jobTitle || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1510,7 +1543,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-company"
-                  label="Company / Firm"
+                  label={t.builderModule.blocks.fields.company}
                   value={editingBlock.content.company || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1521,7 +1554,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-phone"
-                  label="Mobile Phone (for .vcf & dialing)"
+                  label={t.builderModule.blocks.fields.phone}
                   value={editingBlock.content.phone || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1532,7 +1565,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-email"
-                  label="Email Address"
+                  label={t.builderModule.blocks.fields.email}
                   value={editingBlock.content.email || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1543,7 +1576,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-wa"
-                  label="WhatsApp Number"
+                  label={t.builderModule.blocks.fields.whatsappNumber}
                   value={editingBlock.content.whatsapp || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1554,7 +1587,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-vc-web"
-                  label="Website URL"
+                  label={t.builderModule.blocks.fields.websiteUrl}
                   value={editingBlock.content.website || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1571,7 +1604,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-btn-label"
-                  label="Button Label"
+                  label={t.builderModule.blocks.fields.buttonLabel}
                   value={editingBlock.content.label || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1582,7 +1615,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-btn-sub"
-                  label="Subtext"
+                  label={t.builderModule.blocks.fields.subtext}
                   value={editingBlock.content.subtext || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1593,7 +1626,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-btn-url"
-                  label="Target URL"
+                  label={t.builderModule.blocks.fields.targetUrl}
                   value={editingBlock.content.url || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1610,7 +1643,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-wa-num"
-                  label="WhatsApp Phone Number (with country code)"
+                  label={t.builderModule.blocks.fields.whatsappNumber}
                   value={editingBlock.content.phoneNumber || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1621,7 +1654,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-wa-text"
-                  label="Button Text"
+                  label={t.builderModule.blocks.fields.buttonText}
                   value={editingBlock.content.buttonText || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1631,7 +1664,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   }
                 />
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-300">Pre-filled Message</label>
+                  <label className="text-xs text-slate-300">{t.builderModule.blocks.fields.prefilledMessage}</label>
                   <textarea
                     rows={2}
                     value={editingBlock.content.prefilledMessage || ''}
@@ -1652,7 +1685,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-mi-name"
-                  label="Item Name"
+                  label={t.builderModule.blocks.fields.itemName}
                   value={editingBlock.content.name || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1663,7 +1696,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-mi-desc"
-                  label="Description / Ingredients"
+                  label={t.builderModule.blocks.fields.description}
                   value={editingBlock.content.description || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1675,7 +1708,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     id="eb-mi-price"
-                    label="Price"
+                    label={t.builderModule.blocks.fields.price}
                     type="number"
                     value={editingBlock.content.price || 0}
                     onChange={e =>
@@ -1687,7 +1720,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   />
                   <Input
                     id="eb-mi-curr"
-                    label="Currency"
+                    label={t.builderModule.blocks.fields.currency}
                     value={editingBlock.content.currency || 'EGP'}
                     onChange={e =>
                       setEditingBlock({
@@ -1699,7 +1732,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 </div>
                 <Input
                   id="eb-mi-cat"
-                  label="Category Name"
+                  label={t.builderModule.blocks.fields.categoryName}
                   value={editingBlock.content.category || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1710,7 +1743,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-mi-img"
-                  label="Dish Image URL"
+                  label={t.builderModule.blocks.fields.imageUrl}
                   value={editingBlock.content.imageUrl || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1727,7 +1760,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               <>
                 <Input
                   id="eb-loc-title"
-                  label="Location Title"
+                  label={t.builderModule.blocks.fields.locationTitle}
                   value={editingBlock.content.locationTitle || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1738,7 +1771,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-loc-address"
-                  label="Physical Address"
+                  label={t.builderModule.blocks.fields.physicalAddress}
                   value={editingBlock.content.address || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1749,7 +1782,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 />
                 <Input
                   id="eb-loc-dir"
-                  label="Google Maps Directions URL"
+                  label={t.builderModule.blocks.fields.googleMapsUrl}
                   value={editingBlock.content.directionsUrl || ''}
                   onChange={e =>
                     setEditingBlock({
@@ -1763,7 +1796,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="ghost" onClick={() => setEditingBlock(null)}>
-                Cancel
+                {t.builderModule.blocks.cancel}
               </Button>
               <Button
                 variant="primary"
@@ -1775,7 +1808,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   setEditingBlock(null);
                 }}
               >
-                Save Block
+                {t.builderModule.blocks.saveBlock}
               </Button>
             </div>
           </div>
