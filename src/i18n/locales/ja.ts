@@ -66,6 +66,7 @@ export const ja: TranslationSchema = {
     searchPlaceholder: '名前、コード、URLで検索...'
   },
   themes: {
+    ...en.themes,
     dark: 'ダークモード',
     light: 'ライトモード',
     beige: 'ウォームベージュ',

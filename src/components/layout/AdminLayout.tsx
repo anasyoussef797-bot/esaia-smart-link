@@ -26,7 +26,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     <div
       id="esaia-app-shell"
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="min-h-screen bg-[#090a0f] [data-theme=light]:bg-[#f4f6f9] [data-theme=beige]:bg-[#f6f3eb] flex flex-col lg:flex-row text-slate-100 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] transition-colors duration-150"
+      className="min-h-screen bg-[#090a0f] flex flex-col lg:flex-row text-slate-100 transition-colors duration-150"
     >
       {/* Sidebar Navigation */}
       <Sidebar

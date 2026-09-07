@@ -291,8 +291,22 @@ export const ar: TranslationSchema = {
   themes: {
     dark: 'الوضع الليلي (داكن)',
     light: 'الوضع النهاري (فاتح)',
-    beige: 'بيج كلاسيكي دافئ',
-    selectTheme: 'اختر المظهر'
+    beige: 'بيج صحراوي دافئ',
+    olive: 'الوضع الزيتي (عسكري وطبيعي)',
+    gray: 'الوضع الرمادي (جرافيت)',
+    custom: 'الوضع المخصص (ألوان حرة)',
+    selectTheme: 'اختر المظهر والوضع',
+    customizeTheme: 'تخصيص ألوان الوضع',
+    themeStudio: 'استوديو ألوان الواجهة',
+    canvasBackground: 'لون الخلفية الأساسية',
+    cardBackground: 'لون البطاقات والقوائم',
+    sidebarBackground: 'لون الشريط الجانبي والعلوي',
+    borderColor: 'لون الحدود والفواصل',
+    textColor: 'لون النصوص الرئيسي',
+    accentColor: 'لون التمييز والأزرار',
+    resetDefault: 'استعادة الألوان الافتراضية',
+    saveChanges: 'حفظ وتطبيق النمط',
+    quickPresets: 'نماذج وتدرجات جاهزة'
   },
   actions: {
     create: 'إنشاء',

@@ -291,8 +291,22 @@ export const en: TranslationSchema = {
   themes: {
     dark: 'Dark Slate',
     light: 'Light Clean',
-    beige: 'Warm Beige',
-    selectTheme: 'Select Theme'
+    beige: 'Warm Desert Beige',
+    olive: 'Olive Tactical & Sage',
+    gray: 'Charcoal & Slate Gray',
+    custom: 'Custom Theme Studio',
+    selectTheme: 'Select Theme Mode',
+    customizeTheme: 'Customize Theme Colors',
+    themeStudio: 'Color Palette Studio',
+    canvasBackground: 'Canvas Background',
+    cardBackground: 'Card & Panel Surface',
+    sidebarBackground: 'Sidebar & Header',
+    borderColor: 'Borders & Dividers',
+    textColor: 'Primary Text Color',
+    accentColor: 'Primary Accent & Action',
+    resetDefault: 'Reset to Defaults',
+    saveChanges: 'Apply & Save Theme',
+    quickPresets: 'Quick Curated Presets'
   },
   actions: {
     create: 'Create',

@@ -268,13 +268,15 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-tight">{name || 'QR Vector Customizer'}</h2>
+                <h2 className="text-lg font-bold text-white tracking-tight">{name || (isRtl ? 'مخصص متجهات QR' : 'QR Vector Customizer')}</h2>
                 <span className="px-2 py-0.5 text-xs font-mono rounded-md bg-neutral-800 text-neutral-300 border border-neutral-700">
                   /q/{publicCode}
                 </span>
               </div>
               <p className="text-xs text-neutral-400">
-                Vector SVG Engine &amp; 7-Stage Scannability Validation Pipeline
+                {isRtl
+                  ? 'محرك متجهات SVG وفحص مسح ضوئي شامل من 7 مراحل'
+                  : 'Vector SVG Engine & 7-Stage Scannability Validation Pipeline'}
               </p>
             </div>
           </div>
@@ -284,7 +286,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition"
             >
-              Cancel
+              {isRtl ? 'إلغاء' : 'Cancel'}
             </button>
             <button
               onClick={handleSave}
@@ -292,7 +294,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
               className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition flex items-center gap-2 shadow-lg shadow-rose-950/50"
             >
               {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              Save to Fleet
+              {isRtl ? 'حفظ في الأسطول' : 'Save to Fleet'}
             </button>
           </div>
         </div>
@@ -310,7 +312,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
-                Target &amp; Dynamics
+                {isRtl ? 'الهدف والروابط' : 'Target & Dynamics'}
               </button>
               <button
                 onClick={() => setActiveTab('style')}
@@ -319,7 +321,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <Palette className="w-3.5 h-3.5 text-rose-400" />
-                Modules &amp; Colors
+                {isRtl ? 'النقاط والألوان' : 'Modules & Colors'}
               </button>
               <button
                 onClick={() => setActiveTab('eyes')}
@@ -328,7 +330,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <Eye className="w-3.5 h-3.5 text-sky-400" />
-                Eye Patterns
+                {isRtl ? 'أنماط العيون' : 'Eye Patterns'}
               </button>
               <button
                 onClick={() => setActiveTab('logo')}
@@ -337,7 +339,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
-                Logo Punchout
+                {isRtl ? 'تفريغ الشعار' : 'Logo Punchout'}
               </button>
               <button
                 onClick={() => setActiveTab('frame')}
@@ -346,7 +348,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <Layout className="w-3.5 h-3.5 text-indigo-400" />
-                CTA Frame
+                {isRtl ? 'إطار الإجراء CTA' : 'CTA Frame'}
               </button>
               <button
                 onClick={() => setActiveTab('diagnostics')}
@@ -355,7 +357,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
-                7-Stage Audit ({healthScore}%)
+                {isRtl ? `تدقيق 7 مراحل (${healthScore}%)` : `7-Stage Audit (${healthScore}%)`}
               </button>
             </div>
 
@@ -366,7 +368,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 <div className="space-y-5">
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Campaign / QR Name
+                      {isRtl ? 'اسم الحملة / رمز QR' : 'Campaign / QR Name'}
                     </label>
                     <input
                       type="text"
@@ -378,7 +380,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
 
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Client CRM Assignment
+                      {isRtl ? 'تعيين العميل من CRM' : 'Client CRM Assignment'}
                     </label>
                     <select
                       value={clientId}
@@ -395,23 +397,36 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
 
                   <div className="p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-neutral-300">Dynamic Redirection Binding</span>
+                      <span className="text-xs font-semibold text-neutral-300">
+                        {isRtl ? 'ربط إعادة التوجيه الديناميكي' : 'Dynamic Redirection Binding'}
+                      </span>
                       <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                        Zero-Reprint Guarantee
+                        {isRtl ? 'ضمان عدم إعادة الطباعة' : 'Zero-Reprint Guarantee'}
                       </span>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      Physical QR prints always encode <code className="text-rose-400 font-mono">/q/{publicCode}</code>.
-                      You can modify the destination URL below at any time without breaking existing printed media.
+                      {isRtl ? (
+                        <>
+                          رموز QR المطبوعة تشفر دائماً الرابط الثابت <code className="text-rose-400 font-mono">/q/{publicCode}</code>.
+                          يمكنك تعديل الرابط المستهدف أدناه في أي وقت دون التأثير على المواد المطبوعة.
+                        </>
+                      ) : (
+                        <>
+                          Physical QR prints always encode <code className="text-rose-400 font-mono">/q/{publicCode}</code>.
+                          You can modify the destination URL below at any time without breaking existing printed media.
+                        </>
+                      )}
                     </p>
 
                     <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Destination Target URL</label>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        {isRtl ? 'رابط الوجهة المستهدف' : 'Destination Target URL'}
+                      </label>
                       <input
                         type="url"
                         value={destinationUrl}
                         onChange={e => setDestinationUrl(e.target.value)}
-                        placeholder="https://yourbrand.com/target"
+                        placeholder={isRtl ? 'https://example.com/target' : 'https://yourbrand.com/target'}
                         className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm font-mono focus:outline-none focus:border-rose-500"
                       />
                     </div>
@@ -425,7 +440,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                           className="px-2.5 py-1 text-xs rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200 flex items-center gap-1 transition"
                         >
                           {copiedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          Copy Link
+                          {isRtl ? 'نسخ الرابط' : 'Copy Link'}
                         </button>
                         <a
                           href={destinationUrl}
@@ -434,7 +449,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                           className="px-2.5 py-1 text-xs rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200 flex items-center gap-1 transition"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          Test Redirect
+                          {isRtl ? 'تجربة التوجيه' : 'Test Redirect'}
                         </a>
                       </div>
                     </div>
@@ -448,7 +463,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Module Shapes */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Custom Module Shape
+                      {isRtl ? 'شكل النقاط المخصص' : 'Custom Module Shape'}
                     </label>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                       {(['square', 'rounded', 'extra-rounded', 'dots', 'classy', 'diamond'] as QrModuleStyle[]).map(shape => (
@@ -470,7 +485,21 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                             {shape === 'classy' && <div className="w-4 h-4 rounded-tl-[6px] rounded-br-[6px] bg-current" />}
                             {shape === 'diamond' && <div className="w-3.5 h-3.5 rotate-45 bg-current" />}
                           </div>
-                          <span className="text-[11px] capitalize">{shape.replace('-', ' ')}</span>
+                          <span className="text-[11px] capitalize">
+                            {isRtl
+                              ? shape === 'square'
+                                ? 'مربع'
+                                : shape === 'rounded'
+                                ? 'دائري'
+                                : shape === 'extra-rounded'
+                                ? 'دائري ناعم'
+                                : shape === 'dots'
+                                ? 'نقاط'
+                                : shape === 'classy'
+                                ? 'كلاسيكي'
+                                : 'ماسي'
+                              : shape.replace('-', ' ')}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -479,7 +508,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Curated Color Presets */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      High-Contrast Presets
+                      {isRtl ? 'نماذج ألوان عالية التباين' : 'High-Contrast Presets'}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {COLOR_PRESETS.map(preset => (
@@ -512,7 +541,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Manual Color Pickers */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Foreground (Modules)</label>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        {isRtl ? 'لون النقاط (Foreground)' : 'Foreground (Modules)'}
+                      </label>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-neutral-950 border border-neutral-800">
                         <input
                           type="color"
@@ -536,7 +567,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Background Canvas</label>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        {isRtl ? 'لون الخلفية (Background)' : 'Background Canvas'}
+                      </label>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-neutral-950 border border-neutral-800">
                         <input
                           type="color"
@@ -557,16 +590,18 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Error Correction Level Guard */}
                   <div className="p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-neutral-300">Error Correction Level</span>
+                      <span className="text-xs font-semibold text-neutral-300">
+                        {isRtl ? 'مستوى تصحيح الأخطاء (ECC)' : 'Error Correction Level'}
+                      </span>
                       <span className="text-xs text-rose-400 font-mono">
-                        Level {styleConfig.errorCorrectionLevel} (
+                        {isRtl ? 'المستوى' : 'Level'} {styleConfig.errorCorrectionLevel} (
                         {styleConfig.errorCorrectionLevel === 'H'
-                          ? '30% recovery'
+                          ? isRtl ? 'استرداد 30%' : '30% recovery'
                           : styleConfig.errorCorrectionLevel === 'Q'
-                          ? '25% recovery'
+                          ? isRtl ? 'استرداد 25%' : '25% recovery'
                           : styleConfig.errorCorrectionLevel === 'M'
-                          ? '15% recovery'
-                          : '7% recovery'}
+                          ? isRtl ? 'استرداد 15%' : '15% recovery'
+                          : isRtl ? 'استرداد 7%' : '7% recovery'}
                         )
                       </span>
                     </div>
@@ -582,7 +617,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                               : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'
                           }`}
                         >
-                          Level {lvl}
+                          {isRtl ? 'مستوى' : 'Level'} {lvl}
                         </button>
                       ))}
                     </div>
@@ -596,7 +631,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Outer Frame Shape */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Outer Eye Frame Shape
+                      {isRtl ? 'شكل إطار العين الخارجي' : 'Outer Eye Frame Shape'}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {(['square', 'rounded', 'circle', 'leaf', 'diamond'] as QrEyeStyle[]).map(shape => (
@@ -614,7 +649,19 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                             {shape === 'rounded' && <div className="w-full h-full rounded-[4px] border-2 border-current" />}
                             {shape === 'circle' && <div className="w-full h-full rounded-full border-2 border-current" />}
                           </div>
-                          <span className="text-[11px] capitalize">{shape}</span>
+                          <span className="text-[11px] capitalize">
+                            {isRtl
+                              ? shape === 'square'
+                                ? 'مربع'
+                                : shape === 'rounded'
+                                ? 'دائري'
+                                : shape === 'circle'
+                                ? 'حلقة'
+                                : shape === 'leaf'
+                                ? 'ورقة شجر'
+                                : 'ماسي'
+                              : shape}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -623,7 +670,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Inner Eye Ball Shape */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Inner Eye Ball Shape
+                      {isRtl ? 'شكل بؤبؤ العين الداخلي' : 'Inner Eye Ball Shape'}
                     </label>
                     <div className="grid grid-cols-4 gap-2">
                       {(['square', 'rounded', 'circle', 'diamond'] as QrEyeBallStyle[]).map(shape => (
@@ -642,7 +689,17 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                             {shape === 'circle' && <div className="w-full h-full rounded-full bg-current" />}
                             {shape === 'diamond' && <div className="w-full h-full rotate-45 bg-current" />}
                           </div>
-                          <span className="text-[11px] capitalize">{shape}</span>
+                          <span className="text-[11px] capitalize">
+                            {isRtl
+                              ? shape === 'square'
+                                ? 'مربع'
+                                : shape === 'rounded'
+                                ? 'دائري'
+                                : shape === 'circle'
+                                ? 'نقطة دائرية'
+                                : 'ماسي'
+                              : shape}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -651,7 +708,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Custom Eye Colors */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Outer Eye Frame Color</label>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        {isRtl ? 'لون إطار العين الخارجي' : 'Outer Eye Frame Color'}
+                      </label>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-neutral-950 border border-neutral-800">
                         <input
                           type="color"
@@ -669,7 +728,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Inner Eye Ball Color</label>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        {isRtl ? 'لون بؤبؤ العين الداخلي' : 'Inner Eye Ball Color'}
+                      </label>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-neutral-950 border border-neutral-800">
                         <input
                           type="color"
@@ -694,7 +755,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 <div className="space-y-6">
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Logo Emblem URL (PNG / SVG)
+                      {isRtl ? 'رابط أيقونة الشعار (PNG / SVG)' : 'Logo Emblem URL (PNG / SVG)'}
                     </label>
                     <input
                       type="url"
@@ -716,7 +777,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {/* Pick from CRM client logos */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-400 mb-2">
-                      Or Select from Client Brand Assets:
+                      {isRtl ? 'أو اختر مباشرة من أصول هوية العميل:' : 'Or Select from Client Brand Assets:'}
                     </label>
                     <div className="flex items-center gap-3 overflow-x-auto pb-2">
                       {clients
@@ -752,7 +813,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                           onClick={() => setStyleConfig(prev => ({ ...prev, logoUrl: null }))}
                           className="px-3 py-1.5 rounded-xl border border-neutral-800 text-xs text-rose-400 hover:bg-neutral-800 transition whitespace-nowrap"
                         >
-                          Remove Logo
+                          {isRtl ? 'إزالة الشعار' : 'Remove Logo'}
                         </button>
                       )}
                     </div>
@@ -762,9 +823,11 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {styleConfig.logoUrl && (
                     <div className="p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-3">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-neutral-300">Logo Size Ratio</span>
+                        <span className="font-semibold text-neutral-300">
+                          {isRtl ? 'نسبة حجم الشعار' : 'Logo Size Ratio'}
+                        </span>
                         <span className="text-rose-400 font-mono">
-                          {Math.round((styleConfig.logoSizeRatio || 0.16) * 100)}% (Max safe: 22%)
+                          {Math.round((styleConfig.logoSizeRatio || 0.16) * 100)}% ({isRtl ? 'الحد الأقصى الآمن: 22%' : 'Max safe: 22%'})
                         </span>
                       </div>
                       <input
@@ -783,7 +846,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                       />
 
                       <div className="flex items-center justify-between pt-2">
-                        <span className="text-xs text-neutral-300">Background Module Punchout</span>
+                        <span className="text-xs text-neutral-300">
+                          {isRtl ? 'تفريغ الخلفية أسفل الشعار' : 'Background Module Punchout'}
+                        </span>
                         <input
                           type="checkbox"
                           checked={styleConfig.logoBackgroundPunchout}
@@ -806,7 +871,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 <div className="space-y-6">
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      Frame Template
+                      {isRtl ? 'قالب الإطار' : 'Frame Template'}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {(['none', 'banner_bottom', 'badge_top', 'card_border'] as QrFrameStyle[]).map(frame => (
@@ -820,7 +885,17 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                               : 'border-neutral-800 bg-neutral-950/60 text-neutral-400 hover:border-neutral-700'
                           }`}
                         >
-                          <span className="text-xs font-medium capitalize">{frame.replace('_', ' ')}</span>
+                          <span className="text-xs font-medium capitalize">
+                            {isRtl
+                              ? frame === 'none'
+                                ? 'بدون إطار'
+                                : frame === 'banner_bottom'
+                                ? 'شريط سفلي'
+                                : frame === 'badge_top'
+                                ? 'شارة علوية'
+                                : 'إطار بطاقة'
+                              : frame.replace('_', ' ')}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -829,19 +904,23 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {styleConfig.frameStyle !== 'none' && (
                     <div className="space-y-4 p-4 rounded-xl bg-neutral-950/80 border border-neutral-800">
                       <div>
-                        <label className="block text-xs text-neutral-300 mb-1">Call to Action Text</label>
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          {isRtl ? 'نص الحث على الإجراء (CTA)' : 'Call to Action Text'}
+                        </label>
                         <input
                           type="text"
                           value={styleConfig.frameText || ''}
                           onChange={e => setStyleConfig(prev => ({ ...prev, frameText: e.target.value }))}
-                          placeholder="SCAN ME"
+                          placeholder={isRtl ? 'امسح الرمز ضوئياً' : 'SCAN ME'}
                           className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-indigo-500"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-neutral-300 mb-1">Frame Background</label>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            {isRtl ? 'لون خلفية الإطار' : 'Frame Background'}
+                          </label>
                           <div className="flex items-center gap-2 p-1.5 rounded-lg bg-neutral-900 border border-neutral-700">
                             <input
                               type="color"
@@ -855,7 +934,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs text-neutral-300 mb-1">Frame Text Color</label>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            {isRtl ? 'لون نص الإطار' : 'Frame Text Color'}
+                          </label>
                           <div className="flex items-center gap-2 p-1.5 rounded-lg bg-neutral-900 border border-neutral-700">
                             <input
                               type="color"
@@ -891,12 +972,20 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                         {grade}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white">Scannability Health Score: {healthScore}%</h4>
+                        <h4 className="text-sm font-bold text-white">
+                          {isRtl ? `درجة كفاءة المسح الضوئي: ${healthScore}%` : `Scannability Health Score: ${healthScore}%`}
+                        </h4>
                         <p className="text-xs text-neutral-400">
                           {grade === 'A'
-                            ? 'Optimal camera sensor capture speed under all lighting conditions.'
+                            ? isRtl
+                              ? 'سرعة مسح واستجابة مثالية لكاميرات الهواتف في جميع ظروف الإضاءة.'
+                              : 'Optimal camera sensor capture speed under all lighting conditions.'
                             : grade === 'B'
-                            ? 'Acceptable capture speed with minor sub-optimal contrast or ratio.'
+                            ? isRtl
+                              ? 'سرعة مسح مقبولة مع تباين أو نسبة ألوان طفيفة دون المثالية.'
+                              : 'Acceptable capture speed with minor sub-optimal contrast or ratio.'
+                            : isRtl
+                            ? 'خطر مرتفع في بطء أو فشل المسح بكاميرا الهاتف. يرجى تعديل المراحل المحددة.'
                             : 'High risk of camera scan degradation. Correct highlighted stages.'}
                         </p>
                       </div>
@@ -918,7 +1007,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-white">
-                              Stage {stage.id}: {stage.name}
+                              {isRtl ? `المرحلة ${stage.id}: ${stage.name}` : `Stage ${stage.id}: ${stage.name}`}
                             </span>
                             <span
                               className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
@@ -929,7 +1018,13 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                                   : 'bg-rose-950 text-rose-400'
                               }`}
                             >
-                              {stage.status}
+                              {isRtl
+                                ? stage.status === 'passed'
+                                  ? 'ناجح'
+                                  : stage.status === 'warning'
+                                  ? 'تحذير'
+                                  : 'فشل'
+                                : stage.status}
                             </span>
                           </div>
                           <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">{stage.description}</p>
@@ -942,7 +1037,8 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   {validationReport && validationReport.recommendations.length > 0 && (
                     <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-800/40">
                       <h5 className="text-xs font-bold text-amber-300 mb-1 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" /> Actionable Recommendations:
+                        <Sparkles className="w-3.5 h-3.5" />
+                        {isRtl ? 'توصيات وإجراءات مقترحة لتحسين المسح:' : 'Actionable Recommendations:'}
                       </h5>
                       <ul className="text-xs text-amber-200/80 space-y-1 list-disc list-inside">
                         {validationReport.recommendations.map((rec, i) => (
@@ -961,7 +1057,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             {/* Top Toolbar */}
             <div className="w-full flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-neutral-400">Live Scannability:</span>
+                <span className="text-xs font-semibold text-neutral-400">
+                  {isRtl ? 'المسح المباشر:' : 'Live Scannability:'}
+                </span>
                 <span
                   className={`text-xs px-2 py-0.5 rounded-md font-bold font-mono border ${
                     grade === 'A'
@@ -971,7 +1069,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                       : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                   }`}
                 >
-                  Grade {grade} ({healthScore}%)
+                  {isRtl ? `الدرجة ${grade} (${healthScore}%)` : `Grade ${grade} (${healthScore}%)`}
                 </span>
               </div>
 
@@ -980,7 +1078,9 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 onClick={() => setPreviewDarkBg(!previewDarkBg)}
                 className="text-xs text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded bg-neutral-900 border border-neutral-800"
               >
-                {previewDarkBg ? 'White Canvas' : 'Dark Backdrop'}
+                {previewDarkBg
+                  ? isRtl ? 'خلفية بيضاء' : 'White Canvas'
+                  : isRtl ? 'خلفية داكنة' : 'Dark Backdrop'}
               </button>
             </div>
 
@@ -1000,14 +1100,16 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             <div className="w-full mt-6 space-y-3">
               <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between">
                 <div className="truncate mr-2">
-                  <span className="text-[11px] text-neutral-400 block">Shortcode Target:</span>
+                  <span className="text-[11px] text-neutral-400 block">
+                    {isRtl ? 'الرابط المختصر المستهدف:' : 'Shortcode Target:'}
+                  </span>
                   <span className="text-xs font-mono text-white truncate block">{redirectUrl}</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyLink}
                   className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
-                  title="Copy dynamic link"
+                  title={isRtl ? 'نسخ الرابط الديناميكي' : 'Copy dynamic link'}
                 >
                   {copiedUrl ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
@@ -1021,7 +1123,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                   className="px-3 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow"
                 >
                   <Download className="w-3.5 h-3.5 text-rose-400" />
-                  Download Vector SVG
+                  {isRtl ? 'تحميل متجه SVG' : 'Download Vector SVG'}
                 </button>
                 <div className="flex gap-1">
                   <button
@@ -1030,13 +1132,13 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                     className="flex-1 px-3 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow"
                   >
                     <Download className="w-3.5 h-3.5 text-sky-400" />
-                    PNG Print
+                    {isRtl ? 'PNG للطباعة' : 'PNG Print'}
                   </button>
                   <select
                     value={pngResolution}
                     onChange={e => setPngResolution(Number(e.target.value))}
                     className="px-2 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs focus:outline-none"
-                    title="PNG Resolution"
+                    title={isRtl ? 'دقة صورة PNG' : 'PNG Resolution'}
                   >
                     <option value={2}>2x</option>
                     <option value={3}>3x</option>

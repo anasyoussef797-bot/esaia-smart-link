@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { Tag, Check, RefreshCw } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface BulkTagModalProps {
   selectedCount: number;
@@ -20,6 +21,7 @@ export const BulkTagModal: React.FC<BulkTagModalProps> = ({
   onAssign
 }) => {
   const { showToast } = useNotification();
+  const { isRtl } = useLanguage();
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,17 +35,22 @@ export const BulkTagModal: React.FC<BulkTagModalProps> = ({
       .filter(Boolean);
 
     if (tags.length === 0) {
-      showToast('Please enter at least one tag', 'error');
+      showToast(isRtl ? 'يرجى إدخال وسم واحد على الأقل' : 'Please enter at least one tag', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onAssign(tags);
-      showToast(`Assigned ${tags.length} tag(s) to ${selectedCount} QR codes`, 'success');
+      showToast(
+        isRtl
+          ? `تم تعيين ${tags.length} وسم إلى ${selectedCount} من رموز QR المحددة`
+          : `Assigned ${tags.length} tag(s) to ${selectedCount} QR codes`,
+        'success'
+      );
       onClose();
     } catch (err) {
-      showToast('Failed to assign tags', 'error');
+      showToast(isRtl ? 'فشل في تعيين الوسوم' : 'Failed to assign tags', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -58,30 +65,34 @@ export const BulkTagModal: React.FC<BulkTagModalProps> = ({
               <Tag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Assign Tags</h3>
-              <p className="text-xs text-neutral-400">Applying to {selectedCount} selected QR code(s)</p>
+              <h3 className="text-sm font-bold text-white">{isRtl ? 'تعيين الوسوم' : 'Assign Tags'}</h3>
+              <p className="text-xs text-neutral-400">
+                {isRtl ? `تطبيق على ${selectedCount} من رموز QR المحددة` : `Applying to ${selectedCount} selected QR code(s)`}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="text-neutral-400 hover:text-white text-xs">
-            Esc
+            {isRtl ? 'إغلاق Esc' : 'Esc'}
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-              Tags (comma separated)
+              {isRtl ? 'الوسوم (مفصولة بفاصلة)' : 'Tags (comma separated)'}
             </label>
             <input
               type="text"
               autoFocus
               value={tagInput}
               onChange={e => setTagInput(e.target.value)}
-              placeholder="e.g. Retail, Summer 2026, VIP, Acrylic Stand"
+              placeholder={isRtl ? 'مثال: تجزئة، صيف 2026، كبار الشخصيات VIP' : 'e.g. Retail, Summer 2026, VIP, Acrylic Stand'}
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-sm focus:outline-none focus:border-sky-500"
             />
             <p className="text-[11px] text-neutral-400 mt-1">
-              Existing tags will be preserved and new tags will be appended.
+              {isRtl
+                ? 'سيتم الاحتفاظ بالوسوم الحالية وإضافة الوسوم الجديدة إليها.'
+                : 'Existing tags will be preserved and new tags will be appended.'}
             </p>
           </div>
 
@@ -91,7 +102,7 @@ export const BulkTagModal: React.FC<BulkTagModalProps> = ({
               onClick={onClose}
               className="px-3 py-2 text-xs text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition"
             >
-              Cancel
+              {isRtl ? 'إلغاء' : 'Cancel'}
             </button>
             <button
               type="submit"
@@ -99,7 +110,7 @@ export const BulkTagModal: React.FC<BulkTagModalProps> = ({
               className="px-4 py-2 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1.5 shadow-lg shadow-sky-950/40"
             >
               {isSubmitting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              Assign Tags
+              {isRtl ? 'حفظ وتعيين الوسوم' : 'Assign Tags'}
             </button>
           </div>
         </form>

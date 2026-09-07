@@ -313,7 +313,21 @@ export interface TranslationSchema {
     dark: string;
     light: string;
     beige: string;
+    olive: string;
+    gray: string;
+    custom: string;
     selectTheme: string;
+    customizeTheme: string;
+    themeStudio: string;
+    canvasBackground: string;
+    cardBackground: string;
+    sidebarBackground: string;
+    borderColor: string;
+    textColor: string;
+    accentColor: string;
+    resetDefault: string;
+    saveChanges: string;
+    quickPresets: string;
   };
   actions: {
     create: string;

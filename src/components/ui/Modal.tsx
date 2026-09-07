@@ -59,21 +59,21 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         id="modal-container"
         className={clsx(
-          'w-full rounded-2xl border border-[#24293d] [data-theme=light]:border-[#e2e8f0] [data-theme=beige]:border-[#dfd7cb] bg-[#141722] [data-theme=light]:bg-white [data-theme=beige]:bg-white text-[#f8fafc] [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]',
+          'w-full rounded-2xl border border-[#24293d] bg-[#141722] text-[#f8fafc] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]',
           sizeClasses[size]
         )}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-[#1c2030] [data-theme=light]:border-[#edf2f7] [data-theme=beige]:border-[#eae4d9]">
+        <div className="flex items-start justify-between p-5 border-b border-[#1c2030]">
           <div>
-            <h2 className="text-base font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">{title}</h2>
-            {description && <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#847a72] mt-0.5">{description}</p>}
+            <h2 className="text-base font-semibold text-white tracking-tight">{title}</h2>
+            {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
           </div>
           <button
             id="modal-close-btn"
             onClick={onClose}
-            className="text-slate-400 hover:text-white [data-theme=light]:hover:text-slate-900 [data-theme=beige]:hover:text-[#231f1d] p-1 rounded-lg hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-100 [data-theme=beige]:hover:bg-[#eee9df] transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#1a1e2d] transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -84,7 +84,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className="p-6 overflow-y-auto flex-1">{children}</div>
 
         {/* Footer */}
-        {footer && <div className="p-4 bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#fbf9f4] border-t border-[#1c2030] [data-theme=light]:border-[#edf2f7] [data-theme=beige]:border-[#eae4d9] flex justify-end gap-2.5">{footer}</div>}
+        {footer && <div className="p-4 bg-[#0e1017] border-t border-[#1c2030] flex justify-end gap-2.5">{footer}</div>}
       </div>
     </div>
   );

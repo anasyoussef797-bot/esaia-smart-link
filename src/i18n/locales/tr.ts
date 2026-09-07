@@ -66,6 +66,7 @@ export const tr: TranslationSchema = {
     searchPlaceholder: 'İsim, kod veya hedefe göre ara...'
   },
   themes: {
+    ...en.themes,
     dark: 'Koyu Arduvaz',
     light: 'Açık Temiz',
     beige: 'Sıcak Bej',

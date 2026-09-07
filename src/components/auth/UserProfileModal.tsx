@@ -117,42 +117,42 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               onClick={() => handleRoleSwitch('org_admin')}
               className={`p-2.5 rounded-lg border text-left rtl:text-right transition-colors text-xs ${
                 currentMembership?.role === 'org_admin'
-                  ? 'bg-emerald-600/10 [data-theme=light]:bg-emerald-50 [data-theme=beige]:bg-emerald-50 border-emerald-500/50 [data-theme=light]:border-emerald-300 [data-theme=beige]:border-emerald-300 text-emerald-300 [data-theme=light]:text-emerald-800 [data-theme=beige]:text-emerald-900'
-                  : 'bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-white border-[#24293d] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#4a423d] hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-100 [data-theme=beige]:hover:bg-[#eee9df]'
+                  ? 'bg-emerald-600/10 border-emerald-500/50 text-emerald-300'
+                  : 'bg-[#0e1017] border-[#24293d] text-slate-300 hover:bg-[#1a1e2d]'
               }`}
             >
-              <div className="font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{t.rbac.orgAdmin}</div>
-              <div className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#847a72]">Workspace management</div>
+              <div className="font-semibold text-white">{t.rbac.orgAdmin}</div>
+              <div className="text-[10px] text-slate-400">Workspace management</div>
             </button>
 
             <button
               onClick={() => handleRoleSwitch('staff_editor')}
               className={`p-2.5 rounded-lg border text-left rtl:text-right transition-colors text-xs ${
                 currentMembership?.role === 'staff_editor'
-                  ? 'bg-amber-600/10 [data-theme=light]:bg-amber-50 [data-theme=beige]:bg-amber-50 border-amber-500/50 [data-theme=light]:border-amber-300 [data-theme=beige]:border-amber-300 text-amber-300 [data-theme=light]:text-amber-800 [data-theme=beige]:text-amber-900'
-                  : 'bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-white border-[#24293d] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#4a423d] hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-100 [data-theme=beige]:hover:bg-[#eee9df]'
+                  ? 'bg-amber-600/10 border-amber-500/50 text-amber-300'
+                  : 'bg-[#0e1017] border-[#24293d] text-slate-300 hover:bg-[#1a1e2d]'
               }`}
             >
-              <div className="font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{t.rbac.staffEditor}</div>
-              <div className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#847a72]">QR &amp; page creation</div>
+              <div className="font-semibold text-white">{t.rbac.staffEditor}</div>
+              <div className="text-[10px] text-slate-400">QR &amp; page creation</div>
             </button>
 
             <button
               onClick={() => handleRoleSwitch('client_viewer')}
               className={`p-2.5 rounded-lg border text-left rtl:text-right transition-colors text-xs ${
                 currentMembership?.role === 'client_viewer'
-                  ? 'bg-purple-600/10 [data-theme=light]:bg-purple-50 [data-theme=beige]:bg-purple-50 border-purple-500/50 [data-theme=light]:border-purple-300 [data-theme=beige]:border-purple-300 text-purple-300 [data-theme=light]:text-purple-800 [data-theme=beige]:text-purple-900'
-                  : 'bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-white border-[#24293d] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#4a423d] hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-100 [data-theme=beige]:hover:bg-[#eee9df]'
+                  ? 'bg-purple-600/10 border-purple-500/50 text-purple-300'
+                  : 'bg-[#0e1017] border-[#24293d] text-slate-300 hover:bg-[#1a1e2d]'
               }`}
             >
-              <div className="font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{t.rbac.clientViewer}</div>
-              <div className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#847a72]">Read-only analytics</div>
+              <div className="font-semibold text-white">{t.rbac.clientViewer}</div>
+              <div className="text-[10px] text-slate-400">Read-only analytics</div>
             </button>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] flex items-center justify-between">
+        <div className="pt-4 border-t border-[#1c2030] flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"

@@ -66,6 +66,7 @@ export const it: TranslationSchema = {
     searchPlaceholder: 'Cerca per nome, codice o destinazione...'
   },
   themes: {
+    ...en.themes,
     dark: 'Ardesia Scura',
     light: 'Chiaro Pulito',
     beige: 'Beige Caldo',

@@ -66,6 +66,7 @@ export const fr: TranslationSchema = {
     searchPlaceholder: 'Rechercher un QR code par nom, code ou URL...'
   },
   themes: {
+    ...en.themes,
     dark: 'Sombre Ardoise',
     light: 'Clair Moderne',
     beige: 'Beige Chaleureux',

@@ -66,6 +66,7 @@ export const ru: TranslationSchema = {
     searchPlaceholder: 'Поиск по названию, коду или адресу...'
   },
   themes: {
+    ...en.themes,
     dark: 'Темный сланец',
     light: 'Светлый чистый',
     beige: 'Теплый бежевый',

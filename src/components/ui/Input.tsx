@@ -20,7 +20,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-medium text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#3d3733] mb-1.5">
+          <label htmlFor={inputId} className="block text-xs font-medium text-slate-300 mb-1.5">
             {label}
           </label>
         )}
@@ -35,11 +35,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             disabled={disabled}
             className={clsx(
-              'w-full rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-white border text-sm text-slate-100 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] placeholder-slate-500 [data-theme=light]:placeholder-slate-400 [data-theme=beige]:placeholder-[#a89d94] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed',
+              'w-full rounded-lg bg-[#0e1017] border text-sm text-slate-100 placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed',
               leftIcon ? 'pl-9 rtl:pl-3.5 rtl:pr-9' : 'pl-3.5',
               rightIcon ? 'pr-9 rtl:pr-3.5 rtl:pl-9' : 'pr-3.5',
               'py-2',
-              errorMessage ? 'border-rose-500/80 focus:ring-rose-500' : 'border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] hover:border-[#333a54] [data-theme=light]:hover:border-slate-400 [data-theme=beige]:hover:border-[#cec3b1]',
+              errorMessage ? 'border-rose-500/80 focus:ring-rose-500' : 'border-[#24293d] hover:border-[#333a54]',
               className
             )}
             {...props}

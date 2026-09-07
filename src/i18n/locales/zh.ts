@@ -91,6 +91,7 @@ export const zh: TranslationSchema = {
     testRedirect: '测试跳转'
   },
   themes: {
+    ...en.themes,
     dark: '暗黑模式',
     light: '明亮洁净',
     beige: '温暖米色',
