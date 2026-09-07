@@ -1,5 +1,7 @@
 /**
  * ESAIA - Reusable Card Component
+ * Responsive layout container with smooth transitions, subtle lift on hover,
+ * and adaptive padding across Mobile, Tablet, and Desktop.
  */
 
 import React, { HTMLAttributes, ReactNode } from 'react';
@@ -8,6 +10,7 @@ import clsx from 'clsx';
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  hoverable?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -15,20 +18,22 @@ export const Card: React.FC<CardProps> = ({
   children,
   className,
   padding = 'md',
+  hoverable = false,
   ...props
 }) => {
   const paddingMap = {
     none: 'p-0',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8'
+    sm: 'p-3.5 sm:p-4',
+    md: 'p-4 sm:p-6',
+    lg: 'p-5 sm:p-7 md:p-8'
   };
 
   return (
     <div
       id={id}
       className={clsx(
-        'rounded-xl border border-[#24293d] bg-[#141722] text-[#f8fafc] shadow-sm transition-colors duration-150',
+        'rounded-2xl border border-[#24293d] bg-[#141722] text-[#f8fafc] shadow-sm transition-all duration-200',
+        hoverable && 'hover:border-slate-700/80 hover:shadow-md hover:-translate-y-0.5',
         paddingMap[padding],
         className
       )}
@@ -46,11 +51,11 @@ export const CardHeader: React.FC<{
   action?: ReactNode;
   className?: string;
 }> = ({ id, title, description, action, className }) => (
-  <div id={id} className={clsx('flex items-start justify-between gap-4 mb-4', className)}>
-    <div>
-      <h3 className="text-base font-semibold text-white tracking-tight">{title}</h3>
+  <div id={id} className={clsx('flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4', className)}>
+    <div className="min-w-0">
+      <h3 className="text-base font-semibold text-white tracking-tight leading-tight">{title}</h3>
       {description && <p className="text-xs text-slate-400 mt-1 leading-relaxed">{description}</p>}
     </div>
-    {action && <div className="shrink-0">{action}</div>}
+    {action && <div className="shrink-0 self-start sm:self-auto">{action}</div>}
   </div>
 );

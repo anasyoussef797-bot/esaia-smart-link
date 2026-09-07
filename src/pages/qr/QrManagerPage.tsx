@@ -412,13 +412,13 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 pt-2">
           {/* Search Box */}
           <div className="lg:col-span-5 relative">
-            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={isRtl ? 'ابحث بالحملة، الرمز المختصر /q/، رابط الوجهة، أو الوسوم...' : 'Search campaigns, /q/slug, destination URL, or tags...'}
-              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
+              className="w-full pl-9 rtl:pl-3.5 rtl:pr-9 pr-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             />
           </div>
 
@@ -723,7 +723,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
       {viewMode === 'table' && (
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/90 overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left rtl:text-right text-xs">
               <thead className="bg-neutral-950/80 text-neutral-400 uppercase tracking-wider text-[11px] border-b border-neutral-800">
                 <tr>
                   <th className="p-4 w-10">
@@ -741,8 +741,8 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   <th className="p-4">{isRtl ? 'العميل' : 'Client'}</th>
                   <th className="p-4 text-center">{isRtl ? 'الحالة' : 'Status'}</th>
                   <th className="p-4 text-center">{isRtl ? 'الجودة' : 'Health'}</th>
-                  <th className="p-4 text-right">{isRtl ? 'إجمالي المسح' : 'Total Scans'}</th>
-                  <th className="p-4 text-right">{isRtl ? 'إجراءات' : 'Actions'}</th>
+                  <th className="p-4 text-right rtl:text-left">{isRtl ? 'إجمالي المسح' : 'Total Scans'}</th>
+                  <th className="p-4 text-right rtl:text-left">{isRtl ? 'إجراءات' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800">
