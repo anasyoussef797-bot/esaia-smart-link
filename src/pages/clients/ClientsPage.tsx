@@ -226,7 +226,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
               {t.clientsModule.title}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              {clients.length} {clients.length === 1 ? 'Client' : 'Clients'}
+              {clients.length} {t.nav.clients}
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">{t.clientsModule.subtitle}</p>
@@ -299,9 +299,9 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
             value={sortBy}
             onChange={e => setSortBy(e.target.value as SortField)}
             options={[
-              { value: 'newest', label: 'Newest First' },
-              { value: 'name', label: 'Company (A-Z)' },
-              { value: 'scans', label: 'Most Scans' }
+              { value: 'newest', label: t.clientsModule.sortNewest },
+              { value: 'name', label: t.clientsModule.sortName },
+              { value: 'scans', label: t.clientsModule.sortScans }
             ]}
             className="w-36 text-xs"
           />
@@ -314,7 +314,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white [data-theme=light]:hover:text-slate-900 [data-theme=beige]:hover:text-[#231f1d]'
               }`}
-              title="Grid View"
+              title={t.clientsModule.gridView}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -325,7 +325,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white [data-theme=light]:hover:text-slate-900 [data-theme=beige]:hover:text-[#231f1d]'
               }`}
-              title="Table View"
+              title={t.clientsModule.tableView}
             >
               <List className="w-4 h-4" />
             </button>
@@ -465,17 +465,17 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                       <span
                         className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
                         style={{ backgroundColor: client.brandColors?.primary || '#2563eb' }}
-                        title="Primary Color"
+                        title={t.clientsModule.primaryColor}
                       />
                       <span
                         className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
                         style={{ backgroundColor: client.brandColors?.secondary || '#1e293b' }}
-                        title="Secondary Color"
+                        title={t.clientsModule.secondaryColor}
                       />
                       <span
                         className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
                         style={{ backgroundColor: client.brandColors?.accent || '#f59e0b' }}
-                        title="Accent Color"
+                        title={t.clientsModule.accentColor}
                       />
                     </div>
 
@@ -489,7 +489,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
                   {/* Mini Stats Grid */}
                   <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#fdfbf7] border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9] text-center">
                     <div>
-                      <p className="text-[10px] text-slate-500 uppercase font-semibold">QRs</p>
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">{t.clientsModule.qrFleetTab || 'QRs'}</p>
                       <p className="text-xs font-bold text-slate-200 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] mt-0.5">
                         {client.stats?.totalQrCodes || 0}
                       </p>
@@ -555,14 +555,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
             <table className="w-full text-left text-xs">
               <thead className="bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#fdfbf7] border-b border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9] text-slate-400 uppercase font-semibold">
                 <tr>
-                  <th className="p-3.5 pl-5">Client / Brand</th>
-                  <th className="p-3.5">Contact Info</th>
-                  <th className="p-3.5">Brand Colors</th>
-                  <th className="p-3.5 text-center">QR Fleet</th>
-                  <th className="p-3.5 text-center">Pages</th>
-                  <th className="p-3.5 text-center">All-Time Scans</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 pr-5 text-right">Actions</th>
+                  <th className="p-3.5 pl-5">{t.clientsModule.thClientBrand}</th>
+                  <th className="p-3.5">{t.clientsModule.thContact}</th>
+                  <th className="p-3.5">{t.clientsModule.thColors}</th>
+                  <th className="p-3.5 text-center">{t.clientsModule.thQrFleet}</th>
+                  <th className="p-3.5 text-center">{t.clientsModule.thPages}</th>
+                  <th className="p-3.5 text-center">{t.clientsModule.thAllTimeScans}</th>
+                  <th className="p-3.5">{t.clientsModule.thStatus}</th>
+                  <th className="p-3.5 pr-5 text-right">{t.clientsModule.thActions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1c2030] [data-theme=light]:divide-slate-200 [data-theme=beige]:divide-[#eae4d9]">
@@ -666,9 +666,9 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ onNavigate }) => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
           <span className="text-xs text-slate-400">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-            {Math.min(currentPage * itemsPerPage, filteredAndSortedClients.length)} of{' '}
-            {filteredAndSortedClients.length} clients
+            {t.pagination.showing} {(currentPage - 1) * itemsPerPage + 1} {t.pagination.to}{' '}
+            {Math.min(currentPage * itemsPerPage, filteredAndSortedClients.length)} {t.pagination.of}{' '}
+            {filteredAndSortedClients.length} {t.nav.clients}
           </span>
 
           <div className="flex items-center gap-1.5">

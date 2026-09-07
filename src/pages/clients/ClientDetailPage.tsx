@@ -387,7 +387,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
               <p className="text-2xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                 {qrs.length || client.stats?.totalQrCodes || 0}
               </p>
-              <span className="text-[11px] text-slate-400 mt-1 block">Dynamic Fleet Entities</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">{t.clientsModule.fleetEntities}</span>
             </Card>
 
             <Card className="p-5 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
@@ -402,7 +402,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
               <p className="text-2xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                 {pages.length || client.stats?.totalPages || 0}
               </p>
-              <span className="text-[11px] text-slate-400 mt-1 block">Live Landing Micro-sites</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">{t.clientsModule.liveMicrosites}</span>
             </Card>
 
             <Card className="p-5 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
@@ -417,13 +417,13 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
               <p className="text-2xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                 {(client.stats?.totalScansAllTime || 42100).toLocaleString()}
               </p>
-              <span className="text-[11px] text-emerald-400 mt-1 block">+18.4% growth vs prior period</span>
+              <span className="text-[11px] text-emerald-400 mt-1 block">+18.4% {t.clientsModule.growthVsPrior}</span>
             </Card>
 
             <Card className="p-5 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  30-Day Scan Velocity
+                  {t.clientsModule.scanVelocity30d}
                 </span>
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                   <BarChart2 className="w-4 h-4" />
@@ -432,7 +432,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
               <p className="text-2xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                 {(client.stats?.scansLast30Days || 14820).toLocaleString()}
               </p>
-              <span className="text-[11px] text-slate-400 mt-1 block">Active Telemetry Scans</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">{t.clientsModule.activeTelemetryScans}</span>
             </Card>
           </div>
 
@@ -442,14 +442,14 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
             <Card className="p-6 lg:col-span-2 space-y-4 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
               <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-400" />
-                Client Profile &amp; Contact Dossier
+                {t.clientsModule.profileDossier}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-3 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#fdfbf7] border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
                   <span className="text-[11px] font-medium text-slate-400 block">{t.clientsModule.contactPersonLabel}</span>
                   <span className="text-sm font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] flex items-center gap-2 mt-1">
-                    {client.contactPerson || 'Not specified'}
+                    {client.contactPerson || t.clientsModule.notSpecified}
                   </span>
                 </div>
 
@@ -460,7 +460,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     className="text-sm font-semibold text-blue-400 hover:underline flex items-center gap-1.5 mt-1"
                   >
                     <Mail className="w-3.5 h-3.5" />
-                    {client.email || 'None'}
+                    {client.email || t.clientsModule.none}
                   </a>
                 </div>
 
@@ -471,7 +471,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     className="text-sm font-semibold text-emerald-400 hover:underline flex items-center gap-1.5 mt-1"
                   >
                     <Phone className="w-3.5 h-3.5" />
-                    {client.phone || 'None'}
+                    {client.phone || t.clientsModule.none}
                   </a>
                 </div>
 
@@ -488,7 +488,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       {client.whatsapp}
                     </a>
                   ) : (
-                    <span className="text-sm text-slate-500 mt-1 block">None</span>
+                    <span className="text-sm text-slate-500 mt-1 block">{t.clientsModule.none}</span>
                   )}
                 </div>
               </div>
@@ -616,7 +616,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] opacity-75" style={{ color: client.brandColors?.text || '#0f172a' }}>
-                  Auto-branded dynamic landing and QR assets
+                  {t.clientsModule.liveMockupDesc}
                 </p>
               </div>
             </Card>
@@ -630,10 +630,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                {client.companyName} QR Code Fleet
+                {client.companyName} {t.clientsModule.qrFleetTitle}
               </h3>
               <p className="text-xs text-slate-400">
-                Dynamic QR codes assigned exclusively to this client.
+                {t.clientsModule.qrFleetSubtitle}
               </p>
             </div>
             {canManage && (
@@ -648,10 +648,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
             <Card className="p-12 text-center space-y-3">
               <QrIcon className="w-10 h-10 text-slate-500 mx-auto" />
               <p className="text-sm font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                No QR codes created for this client yet
+                {t.clientsModule.noQrsYet}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Generate dynamic QR codes with this client's brand palette and logo automatically injected.
+                {t.clientsModule.noQrsYetDesc}
               </p>
               {canManage && (
                 <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/qr')} className="mt-2">
@@ -692,15 +692,15 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     </div>
 
                     <div className="p-2.5 rounded-lg bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#fdfbf7] border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
-                      <span className="text-[10px] text-slate-400 block">Target Destination:</span>
+                      <span className="text-[10px] text-slate-400 block">{t.clientsModule.targetDestination}:</span>
                       <p className="text-xs font-medium text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d] truncate">
                         {qr.destinationUrl}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
-                      <span>Total Scans: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{qr.totalScans.toLocaleString()}</strong></span>
-                      <span>Unique: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{qr.uniqueScans.toLocaleString()}</strong></span>
+                      <span>{t.clientsModule.totalScans}: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{qr.totalScans.toLocaleString()}</strong></span>
+                      <span>{t.clientsModule.unique}: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{qr.uniqueScans.toLocaleString()}</strong></span>
                     </div>
                   </div>
 
@@ -712,7 +712,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       className="text-xs text-blue-400 hover:underline flex items-center gap-1"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Test URL
+                      {t.clientsModule.testUrl}
                     </a>
                     <button
                       onClick={() => copyToClipboard(`https://esaia.app/r/${qr.publicCode}`, 'link')}
@@ -723,7 +723,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
-                      Copy Link
+                      {t.clientsModule.copyLink}
                     </button>
                   </div>
                 </Card>
@@ -739,10 +739,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                {client.companyName} Landing Pages &amp; vCards
+                {client.companyName} {t.clientsModule.pagesTitle}
               </h3>
               <p className="text-xs text-slate-400">
-                Custom branded mobile micro-sites, digital business cards, and menus.
+                {t.clientsModule.pagesSubtitle}
               </p>
             </div>
             {canManage && (
@@ -757,10 +757,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
             <Card className="p-12 text-center space-y-3">
               <Globe className="w-10 h-10 text-slate-500 mx-auto" />
               <p className="text-sm font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                No landing pages published for this client yet
+                {t.clientsModule.noPagesYet}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Create modern mobile landing pages, vCard portfolios, or interactive menus with live analytics.
+                {t.clientsModule.noPagesYetDesc}
               </p>
               {canManage && (
                 <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/pages')} className="mt-2">
@@ -801,8 +801,8 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-400 pt-2">
-                      <span>Type: <strong className="capitalize text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d]">{page.pageType.replace('_', ' ')}</strong></span>
-                      <span>Views: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{page.viewCount.toLocaleString()}</strong></span>
+                      <span>{t.clientsModule.type}: <strong className="capitalize text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d]">{page.pageType.replace('_', ' ')}</strong></span>
+                      <span>{t.clientsModule.views}: <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">{page.viewCount.toLocaleString()}</strong></span>
                     </div>
                   </div>
 
@@ -839,10 +839,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
           <Card className="p-6 space-y-6 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
             <div>
               <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                Brand Color Palette
+                {t.clientsModule.brandColorPalette}
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Exact brand color specifications used across all QR codes and digital pages.
+                {t.clientsModule.brandColorPaletteDesc}
               </p>
             </div>
 
@@ -852,10 +852,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                 <div className="w-16 h-16 rounded-xl shadow-md shrink-0" style={{ backgroundColor: primaryColor }} />
                 <div className="space-y-1 flex-1">
                   <span className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                    Primary Brand Color
+                    {t.clientsModule.primaryColor}
                   </span>
                   <p className="font-mono text-xs text-slate-400">{primaryColor}</p>
-                  <p className="text-[11px] text-slate-500">Used for QR finder patterns, CTA buttons, active accents.</p>
+                  <p className="text-[11px] text-slate-500">{t.clientsModule.primaryColorDesc}</p>
                 </div>
               </div>
 
@@ -864,10 +864,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                 <div className="w-16 h-16 rounded-xl shadow-md shrink-0" style={{ backgroundColor: secondaryColor }} />
                 <div className="space-y-1 flex-1">
                   <span className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                    Secondary Accent Color
+                    {t.clientsModule.secondaryColor}
                   </span>
                   <p className="font-mono text-xs text-slate-400">{secondaryColor}</p>
-                  <p className="text-[11px] text-slate-500">Used for card containers, contrast borders, dark elements.</p>
+                  <p className="text-[11px] text-slate-500">{t.clientsModule.secondaryColorDesc}</p>
                 </div>
               </div>
 
@@ -876,10 +876,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                 <div className="w-16 h-16 rounded-xl shadow-md shrink-0" style={{ backgroundColor: accentColor }} />
                 <div className="space-y-1 flex-1">
                   <span className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                    Highlight Accent Color
+                    {t.clientsModule.accentColor}
                   </span>
                   <p className="font-mono text-xs text-slate-400">{accentColor}</p>
-                  <p className="text-[11px] text-slate-500">Used for badges, highlights, and secondary attention cues.</p>
+                  <p className="text-[11px] text-slate-500">{t.clientsModule.accentColorDesc}</p>
                 </div>
               </div>
             </div>
@@ -889,10 +889,10 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
           <Card className="p-6 space-y-6 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
             <div>
               <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                Brand Emblem &amp; Logo Asset
+                {t.clientsModule.brandEmblemTitle}
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Centralized asset used for QR code centers and page headers.
+                {t.clientsModule.brandEmblemDesc}
               </p>
             </div>
 
@@ -916,7 +916,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
               <h4 className="font-bold text-base text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                 {client.companyName}
               </h4>
-              <p className="text-xs text-slate-400 mt-1">Vector Logo &amp; Brand Emblem</p>
+              <p className="text-xs text-slate-400 mt-1">{t.clientsModule.vectorLogoEmblem}</p>
 
               {client.logoUrl && (
                 <a
@@ -927,7 +927,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                   className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Download High-Res Logo
+                  {t.clientsModule.downloadLogo}
                 </a>
               )}
             </div>
@@ -939,18 +939,18 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
       {activeTab === 'activity' && (
         <Card className="p-6 space-y-4 border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#eae4d9]">
           <h3 className="text-base font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-            Client Audit &amp; Event Trail
+            {t.clientsModule.auditTrailTitle}
           </h3>
           <p className="text-xs text-slate-400">
-            Immutable log of client lifecycle, status changes, and asset generation events.
+            {t.clientsModule.auditTrailDesc}
           </p>
 
           <div className="space-y-3 pt-2">
             {[
-              { event: 'Client Account Initialized', date: client.createdAt, user: 'Workspace Admin', icon: Sparkles },
-              { event: 'Brand Color Palette & Logo Synchronized', date: client.updatedAt, user: 'Karim Mansour', icon: Palette },
-              { event: `${qrs.length} Dynamic QR Codes Provisioned`, date: client.updatedAt, user: 'System Engine', icon: QrIcon },
-              { event: `${pages.length} Responsive Pages Published`, date: client.updatedAt, user: 'Content Editor', icon: Globe }
+              { event: t.clientsModule.accountInitialized, date: client.createdAt, user: t.clientsModule.initiatedBy, icon: Sparkles },
+              { event: t.clientsModule.brandSynced, date: client.updatedAt, user: 'Admin', icon: Palette },
+              { event: `${qrs.length} ${t.clientsModule.dynamicQrsProvisioned}`, date: client.updatedAt, user: 'System', icon: QrIcon },
+              { event: `${pages.length} ${t.clientsModule.responsivePagesPublished}`, date: client.updatedAt, user: 'Editor', icon: Globe }
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -966,7 +966,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                         {item.event}
                       </p>
-                      <p className="text-[11px] text-slate-400">Initiated by {item.user}</p>
+                      <p className="text-[11px] text-slate-400">{item.user}</p>
                     </div>
                   </div>
                   <span className="text-[11px] font-mono text-slate-500">

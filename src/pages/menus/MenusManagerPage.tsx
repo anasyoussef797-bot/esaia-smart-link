@@ -40,7 +40,7 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t.menusModule.title}</h1>
           <p className="text-xs text-slate-400 mt-1">
-            Table-side digital menus, dietary categorization, and WhatsApp contactless ordering.
+            {t.menusModule.tableSideDesc}
           </p>
         </div>
         <Button
@@ -55,15 +55,15 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-xs font-mono">Loading Digital Menus...</p>
+          <p className="text-xs font-mono">{t.menusModule.loadingMenus}</p>
         </div>
       ) : menus.length === 0 ? (
         <Card padding="lg" className="text-center py-16">
           <UtensilsCrossed className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-white">No Digital Menus Found</h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4">Create your first contactless menu with WhatsApp ordering.</p>
+          <h3 className="text-base font-semibold text-white">{t.menusModule.noMenus}</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-4">{t.menusModule.noMenusDesc}</p>
           <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/pages')}>
-            Create Menu
+            {t.menusModule.createMenuBtn}
           </Button>
         </Card>
       ) : (
@@ -83,7 +83,7 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                       <h3 className="text-base font-semibold text-white tracking-tight">{menu.title}</h3>
                       <p className="text-xs font-mono text-blue-400 mt-1">/p/{menu.slug}</p>
                     </div>
-                    <Badge variant="success">Active</Badge>
+                    <Badge variant="success">{t.menusModule.activeBadge}</Badge>
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mt-3">
@@ -97,15 +97,15 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                         </span>
                       ))
                     ) : (
-                      <span className="text-[10px] text-slate-500">Specialty Menu</span>
+                      <span className="text-[10px] text-slate-500">{t.menusModule.specialtyMenu}</span>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between mt-5 p-2.5 rounded-lg bg-[#0e1017] border border-[#1c2030] text-xs">
-                    <span className="text-slate-400">{itemCount} Menu Items</span>
+                    <span className="text-slate-400">{itemCount} {t.menusModule.dishesItems}</span>
                     <div className="flex items-center gap-1.5 text-blue-400 font-bold">
                       <Eye className="w-3.5 h-3.5" />
-                      <span>{(menu.viewCount || 0).toLocaleString()} views</span>
+                      <span>{(menu.viewCount || 0).toLocaleString()} {t.menusModule.liveVisits}</span>
                     </div>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                     leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
                     onClick={() => window.open(`/p/${menu.slug}`, '_blank')}
                   >
-                    Preview
+                    {t.menusModule.preview}
                   </Button>
                   <Button
                     variant="primary"
@@ -125,7 +125,7 @@ export const MenusManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                     leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                     onClick={() => onNavigate && onNavigate(`/admin/pages/builder/${menu.id}`)}
                   >
-                    Builder
+                    {t.menusModule.openBuilder}
                   </Button>
                 </div>
               </Card>

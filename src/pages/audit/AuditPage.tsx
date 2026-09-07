@@ -38,7 +38,7 @@ import { AuditLog, AuditAction, ResourceType } from '../../types/audit';
 
 export const AuditPage: React.FC = () => {
   const { currentOrg, isOrgAdmin } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const { showToast } = useNotification();
 
   const [logs, setLogs] = useState<AuditLog[]>([]);

@@ -39,7 +39,7 @@ import { qrService } from '../../services/firebase/qrService';
 
 export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { showToast } = useNotification();
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
 
   const [pages, setPages] = useState<Page[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -267,7 +267,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
             leftIcon={<Sparkles className="w-4 h-4 text-amber-400" />}
             onClick={() => onNavigate('/admin/templates')}
           >
-            {isRTL ? 'النماذج الجاهزة' : 'Ready-Made Templates'}
+            {t.pagesModule.browseTemplates}
           </Button>
           <Button
             id="new-page-btn"
@@ -300,7 +300,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
               selectedTypeFilter === 'all' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
             }`}
           >
-            All Types
+            {t.pagesModule.filterAll}
           </button>
           <button
             onClick={() => setSelectedTypeFilter('business_card')}
@@ -309,7 +309,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>vCards</span>
+            <span>{t.pagesModule.filterVcards}</span>
           </button>
           <button
             onClick={() => setSelectedTypeFilter('menu')}
@@ -318,7 +318,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
             }`}
           >
             <Utensils className="w-3.5 h-3.5" />
-            <span>Menus</span>
+            <span>{t.pagesModule.filterMenus}</span>
           </button>
           <button
             onClick={() => setSelectedTypeFilter('landing')}
@@ -327,7 +327,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Portals</span>
+            <span>{t.pagesModule.filterPortals}</span>
           </button>
         </div>
 
@@ -337,7 +337,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
           onChange={e => setSelectedClientFilter(e.target.value)}
           className="px-3 py-2 rounded-xl bg-[#141722] border border-[#24293d] text-xs text-white focus:outline-none focus:border-blue-500"
         >
-          <option value="all">All Clients</option>
+          <option value="all">{t.pagesModule.filterAllClients}</option>
           {clients.map(c => (
             <option key={c.id} value={c.id}>
               {c.companyName}
@@ -350,15 +350,15 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-xs font-mono">Loading Page Fleet...</p>
+          <p className="text-xs font-mono">{t.pagesModule.loadingFleet}</p>
         </div>
       ) : filteredPages.length === 0 ? (
         <Card padding="lg" className="text-center py-16">
           <Layers className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-white">No Pages Found</h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4">Try adjusting your filters or create a new landing page.</p>
+          <h3 className="text-base font-semibold text-white">{t.pagesModule.noPagesFound}</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-4">{t.pagesModule.noPagesFoundDesc}</p>
           <Button size="sm" onClick={() => setIsNewPageModalOpen(true)}>
-            Create New Page
+            {t.pagesModule.createPage}
           </Button>
         </Card>
       ) : (
@@ -380,7 +380,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                         {page.qrCodeId && (
                           <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
                             <QrCode className="w-3 h-3" />
-                            <span>Linked QR</span>
+                            <span>{t.pagesModule.linkedQr}</span>
                           </span>
                         )}
                       </div>
@@ -432,7 +432,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                     <Button
                       variant="ghost"
                       size="sm"
-                      title="Copy Public Link"
+                      title={t.pagesModule.copyPublicLink}
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/p/${page.slug}`);
                         showToast('success', 'Public Link Copied to Clipboard');
@@ -443,7 +443,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                     <Button
                       variant="ghost"
                       size="sm"
-                      title="Duplicate Page"
+                      title={t.pagesModule.duplicatePage}
                       onClick={() => handleDuplicate(page.id)}
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -451,7 +451,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                     <Button
                       variant="ghost"
                       size="sm"
-                      title="Delete Page"
+                      title={t.pagesModule.deletePage}
                       className="text-rose-400 hover:text-rose-300"
                       onClick={() => handleDelete(page.id)}
                     >
@@ -466,7 +466,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                       leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
                       onClick={() => window.open(`/p/${page.slug}`, '_blank')}
                     >
-                      Preview
+                      {t.pagesModule.preview}
                     </Button>
                     <Button
                       variant="primary"
@@ -474,7 +474,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                       leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                       onClick={() => onNavigate(`/admin/pages/builder/${page.id}`)}
                     >
-                      Builder
+                      {t.pagesModule.builder}
                     </Button>
                   </div>
                 </div>
@@ -494,7 +494,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
         <form onSubmit={handleCreatePage} className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-slate-300">Choose Quick-Start Template</label>
+              <label className="text-xs font-semibold text-slate-300">{t.pagesModule.chooseTemplate}</label>
               <button
                 type="button"
                 onClick={() => {
@@ -504,7 +504,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                 className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
               >
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                <span>{isRTL ? 'تصفح كافة النماذج (22 مجالاً) ->' : 'Full Gallery (22 Categories) ->'}</span>
+                <span>{t.pagesModule.fullGallery}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -521,8 +521,8 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                 }`}
               >
                 <CreditCard className="w-4 h-4 text-emerald-400 mb-1" />
-                <div className="text-xs font-bold text-white">Executive vCard</div>
-                <div className="text-[10px]">.vcf save &amp; contact links</div>
+                <div className="text-xs font-bold text-white">{t.pagesModule.templateVcardTitle}</div>
+                <div className="text-[10px]">{t.pagesModule.templateVcardDesc}</div>
               </button>
 
               <button
@@ -538,8 +538,8 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                 }`}
               >
                 <Utensils className="w-4 h-4 text-amber-500 mb-1" />
-                <div className="text-xs font-bold text-white">Specialty Menu</div>
-                <div className="text-[10px]">Categories &amp; WhatsApp ordering</div>
+                <div className="text-xs font-bold text-white">{t.pagesModule.templateMenuTitle}</div>
+                <div className="text-[10px]">{t.pagesModule.templateMenuDesc}</div>
               </button>
 
               <button
@@ -555,8 +555,8 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                 }`}
               >
                 <Layers className="w-4 h-4 text-blue-400 mb-1" />
-                <div className="text-xs font-bold text-white">Welcome Portal</div>
-                <div className="text-[10px]">WiFi, hours, booking &amp; maps</div>
+                <div className="text-xs font-bold text-white">{t.pagesModule.templatePortalTitle}</div>
+                <div className="text-[10px]">{t.pagesModule.templatePortalDesc}</div>
               </button>
 
               <button
@@ -572,14 +572,14 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
                 }`}
               >
                 <Sparkles className="w-4 h-4 text-purple-400 mb-1" />
-                <div className="text-xs font-bold text-white">Custom Blank</div>
-                <div className="text-[10px]">Build from scratch</div>
+                <div className="text-xs font-bold text-white">{t.pagesModule.templateBlankTitle}</div>
+                <div className="text-[10px]">{t.pagesModule.templateBlankDesc}</div>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">Associated Client Brand</label>
+            <label className="text-xs font-medium text-slate-300 block mb-1">{t.pagesModule.associatedClient}</label>
             <select
               value={newPageClientId}
               onChange={e => setNewPageClientId(e.target.value)}
@@ -621,7 +621,7 @@ export const PagesManagerPage: React.FC<{ onNavigate: (path: string) => void }> 
               {t.actions.cancel}
             </Button>
             <Button type="submit" variant="primary">
-              Create &amp; Launch Studio
+              {t.pagesModule.createLaunch}
             </Button>
           </div>
         </form>

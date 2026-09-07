@@ -265,13 +265,13 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 {t.clientsModule.brandColorsTitle}
               </span>
             </div>
-            <span className="text-[11px] text-slate-400">Hex color tokens & brand identity</span>
+            <span className="text-[11px] text-slate-400">{t.clientsModule.hexTokens}</span>
           </div>
 
           {/* Quick Preset Palettes */}
           <div>
             <p className="text-xs font-medium text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#453e37] mb-2">
-              Quick Palettes
+              {t.clientsModule.quickPalettes}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PRESET_PALETTES.map(palette => (
@@ -414,16 +414,16 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   <Upload className="w-5 h-5" />
                 </div>
                 <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                  Click or drag &amp; drop logo image
+                  {t.clientsModule.dragDropLogo}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-1">PNG, SVG, JPG (Max 5MB)</p>
+                <p className="text-[11px] text-slate-400 mt-1">{t.clientsModule.logoFormatNotice}</p>
               </div>
 
               {/* Direct URL input */}
               <div className="mt-2">
                 <Input
                   id="client-form-logo-url"
-                  placeholder="Or paste direct image URL (https://...)"
+                  placeholder={t.clientsModule.pasteLogoUrl}
                   value={logoUrl}
                   onChange={e => setLogoUrl(e.target.value)}
                   className="text-xs"

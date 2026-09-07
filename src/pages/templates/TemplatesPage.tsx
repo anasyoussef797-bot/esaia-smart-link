@@ -84,8 +84,8 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
       }
       showToast(
         exists
-          ? (isRTL ? 'تمت إزالة النموذج من نماذجي' : 'Removed from My Templates')
-          : (isRTL ? 'تم حفظ النموذج في نماذجي بنجاح' : 'Saved to My Templates')
+          ? (t.templatesModule.removedFromMyTemplates || 'Removed from My Templates')
+          : (t.templatesModule.savedToMyTemplates || 'Saved to My Templates')
       );
       return next;
     });
@@ -94,7 +94,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
   // 1-Click Launch: Instantiate template into actual editable Page and route to Page Builder
   const handleUseTemplate = async (template: TemplateItem) => {
     try {
-      showToast(isRTL ? 'جاري تهيئة النموذج والتحويل إلى المحرر...' : 'Initializing template & launching editor...');
+      showToast(t.templatesModule.initializingTemplate || 'Initializing template & launching editor...');
       const cleanSlug = `${template.id.replace('tpl_', '')}-${Math.random().toString(36).substring(2, 6)}`;
 
       const newPageId = await pageService.createPage({
@@ -123,13 +123,13 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
   // Create Blank Template from scratch
   const handleCreateBlank = async () => {
     try {
-      showToast(isRTL ? 'جاري إنشاء صفحة فارغة جديدة...' : 'Creating blank custom page...');
+      showToast(t.templatesModule.creatingBlankPage || 'Creating blank custom page...');
       const cleanSlug = `custom-${Math.random().toString(36).substring(2, 6)}`;
       const newPageId = await pageService.createPage({
         orgId: currentOrg?.id || 'org_esaia_main',
         clientId: null,
         qrCodeId: null,
-        title: isRTL ? 'صفحة جديدة مخصصة' : 'Custom Blank Page',
+        title: t.templatesModule.customBlankPage || 'Custom Blank Page',
         slug: cleanSlug,
         pageType: 'landing',
         status: 'draft',
@@ -146,8 +146,8 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
             isVisible: true,
             orderIndex: 0,
             content: {
-              title: isRTL ? 'عنوان صفحتك الجديدة' : 'Your New Page Title',
-              subtitle: isRTL ? 'أضف وصفاً جذاباً لنشاطك التجاري أو خدماتك هنا.' : 'Add an engaging description of your business or services here.',
+              title: t.templatesModule.newPageTitle || 'Your New Page Title',
+              subtitle: t.templatesModule.newPageDesc || 'Add an engaging description of your business or services here.',
               badge: 'CUSTOM PAGE',
               alignment: 'center'
             }
@@ -242,7 +242,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
           <h1 className="text-2xl font-black text-slate-100 tracking-tight flex items-center gap-2.5">
             <span>{t.templatesModule.title}</span>
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-              {READY_MADE_TEMPLATES.length} {isRTL ? 'نموذجاً جاهزاً' : 'Templates'}
+              {READY_MADE_TEMPLATES.length} {t.templatesModule.templatesCountBadge || 'Templates'}
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
@@ -256,7 +256,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
           className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-95 shrink-0"
         >
           <Wand2 className="w-4 h-4 text-amber-300" />
-          <span>{isRTL ? 'توليد صفحة بالذكاء الاصطناعي' : 'Generate with AI'}</span>
+          <span>{t.templatesModule.generateWithAi || 'Generate with AI'}</span>
         </button>
       </div>
 
@@ -389,7 +389,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   onClick={() => setSelectedCategory('all')}
                   className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
                 >
-                  {isRTL ? 'عرض كافة النماذج' : 'Show all categories'}
+                  {t.templatesModule.showAllCategories || 'Show all categories'}
                 </button>
               )}
             </div>
@@ -406,7 +406,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
                 <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
                   <Layers className="w-3.5 h-3.5 text-indigo-400" />
                 </div>
-                <span className="truncate">{isRTL ? 'الكل' : 'All'}</span>
+                <span className="truncate">{t.templatesModule.allFilter || 'All'}</span>
               </button>
 
               {CATEGORY_DEFINITIONS.map(cat => {
@@ -491,7 +491,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
 
               <div className="mt-8 px-4 py-2 rounded-xl bg-slate-800 group-hover:bg-indigo-600 text-slate-200 group-hover:text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm">
                 <Plus className="w-3.5 h-3.5" />
-                <span>{isRTL ? 'ابدأ من الصفر' : 'Create from scratch'}</span>
+                <span>{t.templatesModule.createFromScratch || 'Create from scratch'}</span>
               </div>
             </div>
           )}
@@ -517,20 +517,20 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
             </div>
             <h3 className="text-sm font-bold text-slate-200">
               {activeTab === 'my_templates'
-                ? (isRTL ? 'لم تحفظ أي نماذج بعد' : 'No saved templates')
+                ? labels.sections.noSavedTemplates
                 : labels.sections.noTemplatesFound}
             </h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               {activeTab === 'my_templates'
                 ? labels.sections.noSavedTemplates
-                : (isRTL ? 'جرب البحث باسم آخر أو إزالة التصنيف لتصفح كافة القوالب المتاحة.' : 'Try adjusting your search terms or clearing the category filter to see all templates.')}
+                : labels.sections.noTemplatesFound}
             </p>
             {selectedCategory !== 'all' && (
               <button
                 onClick={() => setSelectedCategory('all')}
                 className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs"
               >
-                {isRTL ? 'عرض جميع النماذج' : 'View all templates'}
+                {t.templatesModule.viewAllTemplates || 'View all templates'}
               </button>
             )}
           </div>

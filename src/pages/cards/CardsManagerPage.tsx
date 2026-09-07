@@ -41,7 +41,7 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">{t.cardsModule.title}</h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage executive contact profiles, NFC digital cards, and instant RFC 6350 .vcf downloads.
+            {t.cardsModule.manageProfiles || t.cardsModule.subtitle}
           </p>
         </div>
         <Button
@@ -56,15 +56,15 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-xs font-mono">Loading Digital Cards...</p>
+          <p className="text-xs font-mono">{t.cardsModule.loadingCards || 'Loading Digital Cards...'}</p>
         </div>
       ) : cards.length === 0 ? (
         <Card padding="lg" className="text-center py-16">
           <CreditCard className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-white">No Digital Business Cards</h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4">Create your first executive vCard in seconds.</p>
+          <h3 className="text-base font-semibold text-white">{t.cardsModule.noCards}</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-4">{t.cardsModule.noCardsDesc}</p>
           <Button size="sm" onClick={() => onNavigate && onNavigate('/admin/pages')}>
-            Create vCard
+            {t.cardsModule.createVCard}
           </Button>
         </Card>
       ) : (
@@ -91,7 +91,7 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                       <h3 className="text-base font-semibold text-white tracking-tight truncate">
                         {vcardBlock.fullName || card.title}
                       </h3>
-                      <p className="text-xs text-blue-400 truncate">{vcardBlock.jobTitle || 'Executive'}</p>
+                      <p className="text-xs text-blue-400 truncate">{vcardBlock.jobTitle || t.cardsModule.executive}</p>
                     </div>
                   </div>
 
@@ -116,7 +116,7 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
 
                   <div className="flex items-center justify-between mt-5 p-2.5 rounded-lg bg-[#0e1017] border border-[#1c2030] text-xs">
                     <span className="text-slate-400 font-mono">/p/{card.slug}</span>
-                    <span className="text-blue-400 font-bold">{(card.viewCount || 0).toLocaleString()} views</span>
+                    <span className="text-blue-400 font-bold">{(card.viewCount || 0).toLocaleString()} {t.pagesModule.viewsCount}</span>
                   </div>
                 </div>
 
@@ -147,7 +147,7 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                       leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
                       onClick={() => window.open(`/p/${card.slug}`, '_blank')}
                     >
-                      Preview
+                      {t.cardsModule.preview}
                     </Button>
                     <Button
                       variant="primary"
@@ -155,7 +155,7 @@ export const CardsManagerPage: React.FC<{ onNavigate?: (path: string) => void }>
                       leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                       onClick={() => onNavigate && onNavigate(`/admin/pages/builder/${card.id}`)}
                     >
-                      Builder
+                      {t.cardsModule.builder}
                     </Button>
                   </div>
                 </div>

@@ -39,7 +39,7 @@ import { QrCode as QrCodeType } from '../../types/qr';
 
 export const AnalyticsPage: React.FC = () => {
   const { currentOrg } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const { showToast } = useNotification();
 
   const [timeRange, setTimeRange] = useState<'7d' | '14d' | '30d'>('30d');
@@ -198,7 +198,11 @@ export const AnalyticsPage: React.FC = () => {
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {range === '7d' ? '7 Days' : range === '14d' ? '14 Days' : '30 Days'}
+                {range === '7d'
+                  ? (t.analyticsModule.sevenDays || '7 Days')
+                  : range === '14d'
+                  ? (t.analyticsModule.fourteenDays || '14 Days')
+                  : (t.analyticsModule.thirtyDays || '30 Days')}
               </button>
             ))}
           </div>

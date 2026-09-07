@@ -45,7 +45,7 @@ import { CreateQrModal } from './CreateQrModal';
 
 export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { showToast } = useNotification();
-  const { t, isRtl } = useLanguage();
+  const { t } = useLanguage();
 
   // State
   const [qrs, setQrs] = useState<QrCodeType[]>([]);
@@ -254,12 +254,10 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-white">
-                {isRtl ? 'محرك وأسطول رموز QR الديناميكية' : 'Dynamic QR Engine & Fleet'}
+                {t.qrModule.dynamicQrEngine}
               </h1>
               <p className="text-xs text-neutral-400">
-                {isRtl
-                  ? 'استوديو رسومات SVG المتجهة، إعادة التوجيه الفوري بدون إعادة طباعة مع فحص جودة المسح'
-                  : 'Vector SVG Studio, Instant Dynamic Redirection Binding & 7-Stage Scannability Guard'}
+                {t.qrModule.dynamicQrEngineSubtitle}
               </p>
             </div>
           </div>
@@ -271,14 +269,14 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
             className="px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-700 hover:border-neutral-600 text-neutral-200 text-xs font-semibold flex items-center gap-2 transition"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-            {isRtl ? 'تصدير CSV' : 'Export CSV'}
+            {t.qrModule.exportCsv}
           </button>
           <button
             onClick={() => setIsCreateOpen(true)}
             className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-2 transition shadow-lg shadow-rose-950/50"
           >
             <Plus className="w-4 h-4" />
-            {isRtl ? 'رمز QR ديناميكي جديد' : 'New Dynamic QR'}
+            {t.qrModule.newDynamicQr}
           </button>
         </div>
       </div>
@@ -288,7 +286,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-neutral-400">
-              {isRtl ? 'إجمالي عمليات المسح' : 'Total Scans Captured'}
+              {t.qrModule.totalScansCaptured}
             </span>
             <div className="text-xl font-bold text-white font-mono mt-0.5">
               {metrics.totalScans.toLocaleString()}
@@ -302,10 +300,10 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-neutral-400">
-              {isRtl ? 'رموز التوجيه النشطة' : 'Active Routing QRs'}
+              {t.qrModule.activeRoutingQrs}
             </span>
             <div className="text-xl font-bold text-emerald-400 font-mono mt-0.5">
-              {metrics.activeCount} <span className="text-xs text-neutral-500 font-normal">{isRtl ? 'من' : 'of'} {qrs.length}</span>
+              {metrics.activeCount} <span className="text-xs text-neutral-500 font-normal">{t.qrModule.of} {qrs.length}</span>
             </div>
           </div>
           <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -316,7 +314,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-neutral-400">
-              {isRtl ? 'الحملات المتوقفة مؤقتاً' : 'Paused Campaigns'}
+              {t.qrModule.pausedCampaigns}
             </span>
             <div className="text-xl font-bold text-amber-400 font-mono mt-0.5">{metrics.pausedCount}</div>
           </div>
@@ -328,7 +326,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-neutral-400">
-              {isRtl ? 'مؤشر كفاءة وجودة المسح' : 'Fleet Health Index'}
+              {t.qrModule.fleetHealthIndex}
             </span>
             <div className="text-xl font-bold text-sky-400 font-mono mt-0.5">{metrics.avgHealth}% A+</div>
           </div>
@@ -351,7 +349,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              {isRtl ? 'الكل' : 'All'} ({qrs.length})
+              {t.qrModule.filterAll} ({qrs.length})
             </button>
             <button
               onClick={() => setStatusFilter('active')}
@@ -361,7 +359,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              {isRtl ? 'نشط' : 'Active'} ({qrs.filter(q => q.status === 'active').length})
+              {t.qrModule.filterActive} ({qrs.filter(q => q.status === 'active').length})
             </button>
             <button
               onClick={() => setStatusFilter('paused')}
@@ -371,7 +369,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              {isRtl ? 'متوقف' : 'Paused'} ({qrs.filter(q => q.status === 'paused').length})
+              {t.qrModule.filterPaused} ({qrs.filter(q => q.status === 'paused').length})
             </button>
             <button
               onClick={() => setStatusFilter('archived')}
@@ -381,7 +379,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              {isRtl ? 'مؤرشف' : 'Archived'} ({qrs.filter(q => q.status === 'archived').length})
+              {t.qrModule.filterArchived} ({qrs.filter(q => q.status === 'archived').length})
             </button>
           </div>
 
@@ -392,7 +390,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               className={`p-1.5 rounded-lg transition ${
                 viewMode === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-neutral-200'
               }`}
-              title={isRtl ? 'عرض شبكي' : 'Grid View'}
+              title={t.clientsModule.gridView}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -401,7 +399,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               className={`p-1.5 rounded-lg transition ${
                 viewMode === 'table' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-neutral-200'
               }`}
-              title={isRtl ? 'عرض جدول' : 'Table View'}
+              title={t.clientsModule.tableView}
             >
               <List className="w-4 h-4" />
             </button>
@@ -417,7 +415,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={isRtl ? 'ابحث بالحملة، الرمز المختصر /q/، رابط الوجهة، أو الوسوم...' : 'Search campaigns, /q/slug, destination URL, or tags...'}
+              placeholder={t.qrModule.searchPlaceholderLong}
               className="w-full pl-9 rtl:pl-3.5 rtl:pr-9 pr-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             />
           </div>
@@ -429,7 +427,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               onChange={e => setClientFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             >
-              <option value="all">{isRtl ? `كافة العملاء (${clients.length})` : `All Clients (${clients.length})`}</option>
+              <option value="all">{t.qrModule.allClientsCount} ({clients.length})</option>
               {clients.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.companyName}
@@ -445,10 +443,10 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               onChange={e => setTagFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             >
-              <option value="all">{isRtl ? `كافة الوسوم (${allTags.length})` : `All Tags (${allTags.length})`}</option>
-              {allTags.map(t => (
-                <option key={t} value={t}>
-                  {t}
+              <option value="all">{t.qrModule.allTagsCount} ({allTags.length})</option>
+              {allTags.map(tItem => (
+                <option key={tItem} value={tItem}>
+                  {tItem}
                 </option>
               ))}
             </select>
@@ -461,10 +459,10 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               onChange={e => setSortBy(e.target.value as any)}
               className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             >
-              <option value="scans">{isRtl ? 'الأكثر مسحاً' : 'Most Scans'}</option>
-              <option value="newest">{isRtl ? 'الأحدث إنشاءً' : 'Newest Created'}</option>
-              <option value="name">{isRtl ? 'أبجدياً (أ-ي)' : 'Alphabetical (A-Z)'}</option>
-              <option value="health">{isRtl ? 'معدل جودة القراءة' : 'Scannability Score'}</option>
+              <option value="scans">{t.qrModule.sortMostScans}</option>
+              <option value="newest">{t.qrModule.sortNewest}</option>
+              <option value="name">{t.qrModule.sortName}</option>
+              <option value="health">{t.qrModule.sortHealth}</option>
             </select>
           </div>
         </div>
@@ -475,13 +473,13 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/60 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-rose-300">
-              {isRtl ? `تم تحديد ${selectedIds.length} عنصر` : `${selectedIds.length} item(s) selected`}
+              {selectedIds.length} {t.qrModule.selected}
             </span>
             <button
               onClick={() => setSelectedIds([])}
               className="text-[11px] text-neutral-400 hover:text-white underline ml-2"
             >
-              {isRtl ? 'إلغاء التحديد' : 'Deselect All'}
+              {t.actions.cancel}
             </button>
           </div>
 
@@ -491,35 +489,35 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               className="px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-300 hover:bg-emerald-900 text-xs flex items-center gap-1.5"
             >
               <Play className="w-3.5 h-3.5" />
-              {isRtl ? 'تفعيل' : 'Set Active'}
+              {t.qrModule.resumeSelected}
             </button>
             <button
               onClick={() => handleBulkStatusChange('paused')}
               className="px-2.5 py-1.5 rounded-lg bg-amber-950/80 border border-amber-800 text-amber-300 hover:bg-amber-900 text-xs flex items-center gap-1.5"
             >
               <Pause className="w-3.5 h-3.5" />
-              {isRtl ? 'إيقاف مؤقت' : 'Pause'}
+              {t.qrModule.pauseSelected}
             </button>
             <button
               onClick={() => setIsBulkTagOpen(true)}
               className="px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:bg-neutral-800 text-xs flex items-center gap-1.5"
             >
               <Tag className="w-3.5 h-3.5 text-sky-400" />
-              {isRtl ? 'تعيين وسوم' : 'Assign Tags'}
+              {t.qrModule.bulkTags}
             </button>
             <button
               onClick={() => handleExportCsv(true)}
               className="px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:bg-neutral-800 text-xs flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5 text-rose-400" />
-              {isRtl ? 'تصدير المحدد' : 'Export Selected'}
+              {t.qrModule.exportSelected}
             </button>
             <button
               onClick={handleBulkDelete}
               className="px-2.5 py-1.5 rounded-lg bg-rose-900/60 border border-rose-700 text-rose-200 hover:bg-rose-900 text-xs flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              {isRtl ? 'حذف' : 'Delete'}
+              {t.qrModule.deleteSelected}
             </button>
           </div>
         </div>
@@ -562,7 +560,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                       )}
                     </button>
                     <span className="text-xs font-semibold text-neutral-300 truncate max-w-[170px]">
-                      {qr.clientName || (isRtl ? 'عميل مباشر' : 'Direct Client')}
+                      {qr.clientName || t.qrModule.directClient}
                     </span>
                   </div>
 
@@ -576,9 +574,9 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                           ? 'bg-amber-950/80 text-amber-400 border-amber-800'
                           : 'bg-rose-950/80 text-rose-400 border-rose-800'
                       }`}
-                      title={isRtl ? `معدل جودة القراءة: ${health}%` : `Scannability Health Score: ${health}%`}
+                      title={`${t.qrModule.scannabilityHealthScore}: ${health}%`}
                     >
-                      {isRtl ? `درجة ${grade} (${health}%)` : `Grade ${grade} (${health}%)`}
+                      {t.qrModule.gradeBadge} {grade} ({health}%)
                     </span>
 
                     {/* Status Pill */}
@@ -594,7 +592,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                       }`}
                     >
                       {qr.status === 'active' ? <Play className="w-2.5 h-2.5 fill-current" /> : <Pause className="w-2.5 h-2.5" />}
-                      {isRtl ? (qr.status === 'active' ? 'نشط' : qr.status === 'paused' ? 'متوقف' : 'مؤرشف') : qr.status}
+                      {qr.status === 'active' ? t.qrModule.filterActive : qr.status === 'paused' ? t.qrModule.filterPaused : t.qrModule.filterArchived}
                     </button>
                   </div>
                 </div>
@@ -627,7 +625,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                         type="button"
                         onClick={() => handleCopyLink(qr.publicCode)}
                         className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition"
-                        title={isRtl ? 'نسخ رابط التوجيه' : 'Copy redirect URL'}
+                        title={t.qrModule.copyDynamicLink}
                       >
                         {copiedId === qr.publicCode ? (
                           <Check className="w-3 h-3 text-emerald-400" />
@@ -647,13 +645,13 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                     {/* Scan counters */}
                     <div className="flex items-center gap-3 pt-1 text-xs">
                       <div>
-                        <span className="text-neutral-500 text-[10px] block">{isRtl ? 'إجمالي المسح' : 'Total Scans'}</span>
+                        <span className="text-neutral-500 text-[10px] block">{t.qrModule.totalScans}</span>
                         <span className="font-mono font-bold text-white">
                           {(qr.totalScans || 0).toLocaleString()}
                         </span>
                       </div>
                       <div>
-                        <span className="text-neutral-500 text-[10px] block">{isRtl ? 'فريد' : 'Unique'}</span>
+                        <span className="text-neutral-500 text-[10px] block">{t.qrModule.uniqueScans}</span>
                         <span className="font-mono text-neutral-300">
                           {(qr.uniqueScans || 0).toLocaleString()}
                         </span>
@@ -687,7 +685,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                     className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-700 text-xs font-medium flex items-center gap-1.5 transition"
                   >
                     <ExternalLink className="w-3 h-3 text-rose-400" />
-                    {isRtl ? 'تحديث الوجهة' : 'Rebind URL'}
+                    {t.qrModule.quickEdit}
                   </button>
 
                   <div className="flex items-center gap-1.5">
@@ -699,7 +697,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                         showToast(`Downloaded SVG (${filename})`, 'success');
                       }}
                       className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
-                      title={isRtl ? 'تحميل كملف SVG متوافق للطباعة' : 'Download Vector SVG'}
+                      title={t.qrModule.exportVectorSvg}
                     >
                       <Download className="w-3.5 h-3.5" />
                     </button>
@@ -709,7 +707,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                       className="px-3 py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition"
                     >
                       <Sliders className="w-3 h-3" />
-                      {isRtl ? 'استوديو التصميم' : 'Studio Design'}
+                      {t.qrModule.styleStudio}
                     </button>
                   </div>
                 </div>
@@ -735,14 +733,14 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                       )}
                     </button>
                   </th>
-                  <th className="p-4">{isRtl ? 'المعاينة والحملة' : 'QR Preview & Campaign'}</th>
-                  <th className="p-4">{isRtl ? 'الرمز المختصر' : 'Dynamic Shortcode'}</th>
-                  <th className="p-4">{isRtl ? 'الوجهة المستهدفة' : 'Target Destination'}</th>
-                  <th className="p-4">{isRtl ? 'العميل' : 'Client'}</th>
-                  <th className="p-4 text-center">{isRtl ? 'الحالة' : 'Status'}</th>
-                  <th className="p-4 text-center">{isRtl ? 'الجودة' : 'Health'}</th>
-                  <th className="p-4 text-right rtl:text-left">{isRtl ? 'إجمالي المسح' : 'Total Scans'}</th>
-                  <th className="p-4 text-right rtl:text-left">{isRtl ? 'إجراءات' : 'Actions'}</th>
+                  <th className="p-4">{t.qrModule.thQrCode}</th>
+                  <th className="p-4">/q/:code</th>
+                  <th className="p-4">{t.qrModule.thTargetDestination}</th>
+                  <th className="p-4">{t.qrModule.thClientBrand}</th>
+                  <th className="p-4 text-center">{t.qrModule.thStatus}</th>
+                  <th className="p-4 text-center">{t.qrModule.thQuality}</th>
+                  <th className="p-4 text-right rtl:text-left">{t.qrModule.thScans}</th>
+                  <th className="p-4 text-right rtl:text-left">{t.qrModule.thActions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800">
@@ -791,7 +789,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                               {qr.name}
                             </span>
                             <span className="text-[11px] text-neutral-400 capitalize">
-                              {isRtl ? `النمط: ${qr.styleConfig?.moduleStyle || 'دائري'}` : `Shape: ${qr.styleConfig?.moduleStyle || 'rounded'}`}
+                              {t.qrModule.initialModuleShape}: {qr.styleConfig?.moduleStyle || 'rounded'}
                             </span>
                           </div>
                         </div>
@@ -802,7 +800,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                           <button
                             onClick={() => handleCopyLink(qr.publicCode)}
                             className="text-neutral-400 hover:text-white p-1 rounded"
-                            title={isRtl ? 'نسخ الرابط' : 'Copy link'}
+                            title={t.qrModule.copyDynamicLink}
                           >
                             {copiedId === qr.publicCode ? (
                               <Check className="w-3 h-3 text-emerald-400" />
@@ -820,7 +818,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                           onClick={() => setQuickEditQr(qr)}
                           className="text-[10px] text-rose-400 hover:underline mt-0.5 inline-block"
                         >
-                          {isRtl ? 'تحديث الوجهة' : 'Rebind URL'}
+                          {t.qrModule.quickEdit}
                         </button>
                       </td>
                       <td className="p-4 text-neutral-300">{qr.clientName || '-'}</td>
@@ -836,7 +834,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                           }`}
                         >
                           {qr.status === 'active' ? <Play className="w-2 h-2 fill-current" /> : <Pause className="w-2 h-2" />}
-                          {isRtl ? (qr.status === 'active' ? 'نشط' : qr.status === 'paused' ? 'متوقف' : 'مؤرشف') : qr.status}
+                          {qr.status === 'active' ? t.qrModule.filterActive : qr.status === 'paused' ? t.qrModule.filterPaused : t.qrModule.filterArchived}
                         </button>
                       </td>
                       <td className="p-4 text-center">
@@ -849,7 +847,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                               : 'bg-rose-950 text-rose-400 border-rose-800'
                           }`}
                         >
-                          {isRtl ? `درجة ${grade} (${health}%)` : `${grade} (${health}%)`}
+                          {grade} ({health}%)
                         </span>
                       </td>
                       <td className="p-4 text-right font-mono font-bold text-white">
@@ -861,7 +859,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                             onClick={() => setEditingQr(qr)}
                             className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium"
                           >
-                            {isRtl ? 'تعديل' : 'Edit'}
+                            {t.actions.edit}
                           </button>
                           <button
                             onClick={() => {
@@ -869,7 +867,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                               qrVectorEngine.downloadSvg(svgPreview, filename);
                             }}
                             className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"
-                            title={isRtl ? 'تحميل SVG' : 'Download SVG'}
+                            title={t.qrModule.exportVectorSvg}
                           >
                             <Download className="w-3.5 h-3.5" />
                           </button>
@@ -890,11 +888,9 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
           <div className="w-12 h-12 rounded-2xl bg-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
             <QrCodeIcon className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white">{isRtl ? 'لم يتم العثور على رموز QR' : 'No QR codes found'}</h3>
+          <h3 className="text-base font-bold text-white">{t.qrModule.noQrFound}</h3>
           <p className="text-xs text-neutral-400 max-w-sm mx-auto">
-            {isRtl
-              ? 'لا توجد رموز ديناميكية تطابق خيارات التصفية أو البحث الحالية. يمكنك إعادة ضبط المرشحات أو إنشاء رمز جديد.'
-              : 'No dynamic QR codes match the current filter or search criteria. Reset filters or create a new QR.'}
+            {t.qrModule.noQrFoundDesc}
           </p>
           <button
             onClick={() => {
@@ -905,7 +901,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
             }}
             className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition"
           >
-            {isRtl ? 'إعادة ضبط المرشحات' : 'Reset Filters'}
+            {t.cardsModule?.resetFilters || t.actions.reset}
           </button>
         </div>
       )}
