@@ -521,6 +521,8 @@ export interface TranslationSchema {
     assignedTagsSuccess: string;
     failedToAssignTags: string;
     enterAtLeastOneTag: string;
+    directClient?: string;
+    resetFilters?: string;
   };
   clientsModule: {
     title: string;
@@ -674,6 +676,7 @@ export interface TranslationSchema {
     builder: string;
     executive: string;
     enterprisePartner: string;
+    resetFilters?: string;
   };
   menusModule: {
     title: string;
@@ -849,6 +852,7 @@ export interface TranslationSchema {
     copyLink: string;
     preview: string;
     details: string;
+    reset?: string;
   };
   rbac: {
     superAdmin: string;

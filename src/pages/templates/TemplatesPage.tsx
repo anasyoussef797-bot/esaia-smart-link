@@ -166,7 +166,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
   const filteredTemplates = useMemo(() => {
     return READY_MADE_TEMPLATES.filter(tpl => {
       // Tab filter
-      if (activeTab === 'featured' && !tpl.isFeatured) return false;
+      if (activeTab === 'featured' && !tpl.isFeatured && selectedCategory === 'all') return false;
       if (activeTab === 'landing' && tpl.type !== 'landing') return false;
       if (activeTab === 'link_in_bio' && tpl.type !== 'link_in_bio') return false;
       if (activeTab === 'my_templates' && !savedTemplateIds.includes(tpl.id)) return false;

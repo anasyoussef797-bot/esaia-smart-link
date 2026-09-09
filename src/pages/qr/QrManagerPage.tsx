@@ -901,7 +901,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
             }}
             className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition"
           >
-            {t.cardsModule?.resetFilters || t.actions.reset}
+            {t.qrModule.resetFilters || t.actions.reset}
           </button>
         </div>
       )}

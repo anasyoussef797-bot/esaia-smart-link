@@ -499,7 +499,9 @@ export const ar: TranslationSchema = {
     failedToUpdateUrl: 'فشل في تحديث رابط الوجهة',
     assignedTagsSuccess: 'تم تعيين الوسوم بنجاح إلى الرموز المحددة',
     failedToAssignTags: 'فشل في تعيين الوسوم',
-    enterAtLeastOneTag: 'يرجى إدخال وسم واحد على الأقل'
+    enterAtLeastOneTag: 'يرجى إدخال وسم واحد على الأقل',
+    directClient: 'عميل مباشر (بدون جهة)',
+    resetFilters: 'إعادة ضبط الفلاتر'
   },
   clientsModule: {
     title: 'نظام إدارة العملاء CRM والعلامات التجارية',
@@ -827,7 +829,8 @@ export const ar: TranslationSchema = {
     download: 'تنزيل',
     copyLink: 'نسخ الرابط',
     preview: 'معاينة مباشرة',
-    details: 'عرض التفاصيل'
+    details: 'عرض التفاصيل',
+    reset: 'إعادة تعيين'
   },
   rbac: {
     superAdmin: 'مدير عام للنظام (Super Admin)',

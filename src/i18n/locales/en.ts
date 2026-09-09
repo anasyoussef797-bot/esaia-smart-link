@@ -499,7 +499,9 @@ export const en: TranslationSchema = {
     failedToUpdateUrl: 'Failed to update destination URL',
     assignedTagsSuccess: 'Assigned tag(s) to selected QR codes',
     failedToAssignTags: 'Failed to assign tags',
-    enterAtLeastOneTag: 'Please enter at least one tag'
+    enterAtLeastOneTag: 'Please enter at least one tag',
+    directClient: 'Direct Client',
+    resetFilters: 'Reset Filters'
   },
   clientsModule: {
     title: 'Client CRM & Multi-Brand Engine',
@@ -827,7 +829,8 @@ export const en: TranslationSchema = {
     download: 'Download',
     copyLink: 'Copy Link',
     preview: 'Live Preview',
-    details: 'View Details'
+    details: 'View Details',
+    reset: 'Reset'
   },
   rbac: {
     superAdmin: 'Super Admin',
