@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Tablet, Monitor, Sparkles, ExternalLink, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, Smartphone, Tablet, Monitor, Sparkles, ExternalLink, ArrowRight, ArrowLeft, Play, Video } from 'lucide-react';
 import { TemplateItem } from '../../data/templatesData';
 import { useLanguage } from '../../context/LanguageContext';
+import { getYouTubeEmbedUrl } from '../../utils/youtube';
 
 interface TemplatePreviewModalProps {
   template: TemplateItem | null;
@@ -265,6 +266,55 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
                             {block.content.description}
                           </p>
                         </div>
+                      </div>
+                    );
+                  }
+
+                  if (block.type === 'video_embed') {
+                    const embedUrl = getYouTubeEmbedUrl(block.content.url);
+                    const isShorts = block.content.aspectRatio === '9:16';
+                    return (
+                      <div
+                        key={block.id}
+                        className="p-3 rounded-2xl border text-center space-y-2 shadow-sm"
+                        style={{
+                          backgroundColor: theme.palette.cardBackground,
+                          borderColor: theme.palette.border
+                        }}
+                      >
+                        {block.content.title && (
+                          <div className="flex items-center justify-center gap-1.5 text-xs font-bold" style={{ color: theme.palette.textPrimary }}>
+                            <Play className="w-3 h-3 text-red-500 fill-current" />
+                            <span>{block.content.title}</span>
+                          </div>
+                        )}
+                        <div
+                          className="w-full rounded-xl overflow-hidden bg-black shadow-inner relative mx-auto"
+                          style={{
+                            aspectRatio: isShorts ? '9/16' : '16/9',
+                            maxWidth: isShorts ? '220px' : '100%'
+                          }}
+                        >
+                          {embedUrl ? (
+                            <iframe
+                              src={embedUrl}
+                              title={block.content.title || 'YouTube Video'}
+                              className="w-full h-full border-0 absolute inset-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <div className="w-full h-full min-h-[120px] flex items-center justify-center text-slate-500 text-xs">
+                              <Video className="w-5 h-5 text-red-500 mr-1.5" />
+                              <span>YouTube Video</span>
+                            </div>
+                          )}
+                        </div>
+                        {block.content.caption && (
+                          <p className="text-[11px] line-clamp-2 opacity-80" style={{ color: theme.palette.textSecondary }}>
+                            {block.content.caption}
+                          </p>
+                        )}
                       </div>
                     );
                   }

@@ -18,6 +18,9 @@ import {
 import { db, isFirebaseConfigured } from './config';
 import { QrCode, QrStatus, QrStyleConfig } from '../../types/qr';
 import { handleFirestoreError, OperationType } from './firestoreErrors';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
+
+const LOCAL_STORAGE_QR_KEY = 'esaia_qr_store';
 
 const INITIAL_DEMO_QRS: QrCode[] = [
   {
@@ -251,8 +254,43 @@ const INITIAL_DEMO_QRS: QrCode[] = [
   }
 ];
 
-// In-memory fallback cache
-let inMemoryQrs: QrCode[] = [...INITIAL_DEMO_QRS];
+// Load persisted QR fleet from localStorage if available, merging with demo fleet
+function loadInitialQrs(): QrCode[] {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(LOCAL_STORAGE_QR_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge with initial demo QRs so defaults remain intact
+          const merged = [...parsed];
+          INITIAL_DEMO_QRS.forEach(demo => {
+            if (!merged.some(m => m.id === demo.id || m.publicCode === demo.publicCode)) {
+              merged.push(demo);
+            }
+          });
+          return merged;
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore JSON error
+  }
+  return [...INITIAL_DEMO_QRS];
+}
+
+function persistQrs(qrs: QrCode[]) {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCAL_STORAGE_QR_KEY, JSON.stringify(qrs));
+    }
+  } catch (e) {
+    // Ignore storage quota
+  }
+}
+
+// In-memory fallback cache backed by localStorage
+let inMemoryQrs: QrCode[] = loadInitialQrs();
 
 export const qrService = {
   /**
@@ -313,7 +351,15 @@ export const qrService = {
   },
 
   async getQrCodeBySlug(publicCode: string): Promise<QrCode | null> {
-    const found = inMemoryQrs.find(q => q.publicCode === publicCode);
+    let found = inMemoryQrs.find(q => q.publicCode === publicCode || q.id === publicCode);
+    if (!found) {
+      const freshFleet = loadInitialQrs();
+      found = freshFleet.find(q => q.publicCode === publicCode || q.id === publicCode);
+      if (found) {
+        inMemoryQrs = freshFleet;
+        return found;
+      }
+    }
     if (found) return found;
 
     const colPath = 'qrCodes';
@@ -370,6 +416,7 @@ export const qrService = {
     };
 
     inMemoryQrs.unshift(fullQr);
+    persistQrs(inMemoryQrs);
     this.syncRedirectCache(fullQr);
 
     if (isFirebaseConfigured) {
@@ -402,6 +449,7 @@ export const qrService = {
         ...updates,
         updatedAt: new Date().toISOString()
       };
+      persistQrs(inMemoryQrs);
       this.syncRedirectCache(inMemoryQrs[idx]);
     }
 
@@ -448,11 +496,53 @@ export const qrService = {
   async deleteQrCode(qrId: string): Promise<void> {
     const docPath = `qrCodes/${qrId}`;
     inMemoryQrs = inMemoryQrs.filter(q => q.id !== qrId);
+    persistQrs(inMemoryQrs);
     try {
       await deleteDoc(doc(db, 'qrCodes', qrId));
     } catch (err) {
       console.warn('Offline delete stored in local state:', err);
     }
+  },
+
+  /**
+   * Records a live scan event from a phone camera or web redirect
+   */
+  async recordScan(qrIdOrCode: string): Promise<void> {
+    const idx = inMemoryQrs.findIndex(q => q.id === qrIdOrCode || q.publicCode === qrIdOrCode);
+    if (idx >= 0) {
+      const now = new Date().toISOString();
+      inMemoryQrs[idx].totalScans = (inMemoryQrs[idx].totalScans || 0) + 1;
+      inMemoryQrs[idx].lastScannedAt = now;
+      persistQrs(inMemoryQrs);
+
+      if (isFirebaseConfigured) {
+        try {
+          await updateDoc(doc(db, 'qrCodes', inMemoryQrs[idx].id), {
+            totalScans: inMemoryQrs[idx].totalScans,
+            lastScannedAt: now,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          // Ignore offline
+        }
+      }
+
+      // Also notify server telemetry if available
+      try {
+        fetch('/api/qr/telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ publicCode: inMemoryQrs[idx].publicCode, qrId: inMemoryQrs[idx].id })
+        }).catch(() => {});
+      } catch (e) {}
+    }
+  },
+
+  /**
+   * Finds a QR code by its public code with multi-tier resolution
+   */
+  async getQrByPublicCode(publicCode: string): Promise<QrCode | null> {
+    return this.getQrCodeBySlug(publicCode);
   },
 
   /**
@@ -480,7 +570,7 @@ export const qrService = {
       `"${q.id}"`,
       `"${(q.name || '').replace(/"/g, '""')}"`,
       `"${q.publicCode}"`,
-      `"https://esaia.app/q/${q.publicCode}"`,
+      `"${getQrRedirectUrl(q.publicCode)}"`,
       `"${q.destinationType}"`,
       `"${(q.destinationUrl || '').replace(/"/g, '""')}"`,
       `"${(q.clientName || '').replace(/"/g, '""')}"`,

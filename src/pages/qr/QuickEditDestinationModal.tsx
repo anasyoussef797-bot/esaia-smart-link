@@ -6,6 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Link2, Check, RefreshCw, AlertCircle } from 'lucide-react';
 import { QrCode, QrDestinationType } from '../../types/qr';
+import { LandingPage } from '../../types/page';
+import { pageService } from '../../services/firebase/pageService';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -27,6 +30,13 @@ export const QuickEditDestinationModal: React.FC<QuickEditDestinationModalProps>
   const [destinationUrl, setDestinationUrl] = useState('');
   const [destinationType, setDestinationType] = useState<QrDestinationType>('url');
   const [isSaving, setIsSaving] = useState(false);
+  const [availablePages, setAvailablePages] = useState<LandingPage[]>([]);
+
+  useEffect(() => {
+    pageService.getPagesByOrg('org_esaia_main')
+      .then(pages => setAvailablePages(pages))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (qr) {
@@ -99,31 +109,62 @@ export const QuickEditDestinationModal: React.FC<QuickEditDestinationModalProps>
             </label>
             <select
               value={destinationType}
-              onChange={e => setDestinationType(e.target.value as QrDestinationType)}
+              onChange={e => {
+                const newType = e.target.value as QrDestinationType;
+                setDestinationType(newType);
+                if (newType === 'page' && availablePages.length > 0 && !destinationUrl.startsWith('/p/')) {
+                  setDestinationUrl(`/p/${availablePages[0].slug}`);
+                }
+              }}
               className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
             >
               <option value="url">{t.qrModule.destTypeUrl}</option>
+              <option value="page">{t.qrModule.destTypePage}</option>
               <option value="dynamic_url">{t.qrModule.destTypeDynamic}</option>
               <option value="menu">{t.qrModule.destTypeMenu}</option>
               <option value="vcard">{t.qrModule.destTypeVcard}</option>
-              <option value="page">{t.qrModule.destTypePage}</option>
               <option value="whatsapp">{t.qrModule.destTypeWhatsapp}</option>
               <option value="wifi">{t.qrModule.destTypeWifi}</option>
             </select>
           </div>
+
+          {destinationType === 'page' && availablePages.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                ربط مباشر بصفحة هبوط (Landing Page)
+              </label>
+              <select
+                value={destinationUrl}
+                onChange={e => setDestinationUrl(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
+              >
+                <option value="">اختر صفحة الهبوط...</option>
+                {availablePages.map(p => (
+                  <option key={p.id} value={`/p/${p.slug}`}>
+                    {p.title} (/p/{p.slug})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
               {t.qrModule.destinationTargetUrl}
             </label>
             <input
-              type="url"
+              type="text"
               required
               value={destinationUrl}
               onChange={e => setDestinationUrl(e.target.value)}
-              placeholder="https://example.com/target"
+              placeholder="https://example.com/target أو /p/page-slug"
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-sm font-mono focus:outline-none focus:border-rose-500"
             />
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+            <span className="text-neutral-400">رابط المسح الفعلي بالكاميرا:</span>{' '}
+            <code className="text-emerald-400 font-mono select-all">{getQrRedirectUrl(qr.publicCode)}</code>
           </div>
 
           <div className="flex items-center justify-between pt-2">

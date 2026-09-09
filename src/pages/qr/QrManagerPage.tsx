@@ -42,6 +42,7 @@ import { QrDesignModal } from './QrDesignModal';
 import { QuickEditDestinationModal } from './QuickEditDestinationModal';
 import { BulkTagModal } from './BulkTagModal';
 import { CreateQrModal } from './CreateQrModal';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
 
 export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { showToast } = useNotification();
@@ -207,7 +208,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
 
   // Quick Copy
   const handleCopyLink = (code: string) => {
-    const url = `https://esaia.app/q/${code}`;
+    const url = getQrRedirectUrl(code);
     navigator.clipboard.writeText(url);
     setCopiedId(code);
     showToast('Copied redirect link to clipboard', 'success');
@@ -528,7 +529,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredQrs.map(qr => {
             const isSelected = selectedIds.includes(qr.id);
-            const redirectUrl = `https://esaia.app/q/${qr.publicCode}`;
+            const redirectUrl = getQrRedirectUrl(qr.publicCode);
             const svgPreview = qrVectorEngine.generateSvgString({
               value: redirectUrl,
               size: 200,
@@ -746,7 +747,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
               <tbody className="divide-y divide-neutral-800">
                 {filteredQrs.map(qr => {
                   const isSelected = selectedIds.includes(qr.id);
-                  const redirectUrl = `https://esaia.app/q/${qr.publicCode}`;
+                  const redirectUrl = getQrRedirectUrl(qr.publicCode);
                   const svgPreview = qrVectorEngine.generateSvgString({
                     value: redirectUrl,
                     size: 80,

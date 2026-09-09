@@ -122,6 +122,28 @@ export function createWhatsAppBlock(
   };
 }
 
+export function createVideoBlock(
+  id: string,
+  url: string,
+  title?: string,
+  caption?: string,
+  orderIndex: number = 2
+): PageBlock {
+  return {
+    id,
+    type: 'video_embed',
+    title: title || 'Video Showcase',
+    isVisible: true,
+    orderIndex,
+    content: {
+      url,
+      title,
+      caption,
+      aspectRatio: '16:9'
+    }
+  };
+}
+
 export function createThemeConfig(
   preset: PageThemePreset,
   bg: string,

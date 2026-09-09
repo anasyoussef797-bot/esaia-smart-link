@@ -131,6 +131,14 @@ export interface ContactFormBlockContent {
   recipientEmail?: string;
 }
 
+export interface VideoBlockContent {
+  url: string;
+  title?: string;
+  caption?: string;
+  aspectRatio?: '16:9' | '9:16' | '4:3';
+  autoPlay?: boolean;
+}
+
 export interface PageBlock {
   id: string;
   type: BlockType;

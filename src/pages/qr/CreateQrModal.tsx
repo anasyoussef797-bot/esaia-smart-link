@@ -7,9 +7,12 @@ import React, { useState } from 'react';
 import { QrCode, Plus, Check, RefreshCw, Sparkles, Link2 } from 'lucide-react';
 import { Client } from '../../types/client';
 import { QrCode as QrCodeType, QrDestinationType, QrModuleStyle } from '../../types/qr';
+import { LandingPage } from '../../types/page';
 import { qrService } from '../../services/firebase/qrService';
+import { pageService } from '../../services/firebase/pageService';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { getAppBaseUrl } from '../../utils/qrUrl';
 
 interface CreateQrModalProps {
   isOpen: boolean;
@@ -33,6 +36,13 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
   const [customSlug, setCustomSlug] = useState('');
   const [moduleStyle, setModuleStyle] = useState<QrModuleStyle>('rounded');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availablePages, setAvailablePages] = useState<LandingPage[]>([]);
+
+  React.useEffect(() => {
+    pageService.getPagesByOrg('org_esaia_main')
+      .then(pages => setAvailablePages(pages))
+      .catch(() => {});
+  }, []);
 
   if (!isOpen) return null;
 
@@ -164,29 +174,55 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
               </label>
               <select
                 value={destinationType}
-                onChange={e => setDestinationType(e.target.value as QrDestinationType)}
+                onChange={e => {
+                  const newType = e.target.value as QrDestinationType;
+                  setDestinationType(newType);
+                  if (newType === 'page' && availablePages.length > 0 && !destinationUrl.startsWith('/p/')) {
+                    setDestinationUrl(`/p/${availablePages[0].slug}`);
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
               >
                 <option value="url">{t.qrModule.destTypeUrl}</option>
+                <option value="page">{t.qrModule.destTypePage}</option>
                 <option value="menu">{t.qrModule.destTypeMenu}</option>
                 <option value="vcard">{t.qrModule.destTypeVcard}</option>
-                <option value="page">{t.qrModule.destTypePage}</option>
                 <option value="whatsapp">{t.qrModule.destTypeWhatsapp}</option>
                 <option value="wifi">{t.qrModule.destTypeWifi}</option>
               </select>
             </div>
           </div>
 
+          {destinationType === 'page' && availablePages.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                ربط مباشر بصفحة هبوط (Landing Page)
+              </label>
+              <select
+                value={destinationUrl}
+                onChange={e => setDestinationUrl(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
+              >
+                <option value="">اختر صفحة الهبوط...</option>
+                {availablePages.map(p => (
+                  <option key={p.id} value={`/p/${p.slug}`}>
+                    {p.title} (/p/{p.slug})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
               {t.qrModule.destinationTargetUrl} *
             </label>
             <input
-              type="url"
+              type="text"
               required
               value={destinationUrl}
               onChange={e => setDestinationUrl(e.target.value)}
-              placeholder="https://example.com/target"
+              placeholder="https://example.com/target أو /p/page-slug"
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-700 text-white text-sm font-mono focus:outline-none focus:border-rose-500"
             />
           </div>
@@ -196,7 +232,9 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
               {t.qrModule.customShortcodeOptional}
             </label>
             <div className="flex items-center rounded-xl bg-neutral-950 border border-neutral-700 overflow-hidden focus-within:border-rose-500">
-              <span className="px-3 text-xs text-neutral-500 font-mono select-none">esaia.app/q/</span>
+              <span className="px-3 text-xs text-neutral-500 font-mono select-none">
+                {getAppBaseUrl().replace(/^https?:\/\//, '')}/q/
+              </span>
               <input
                 type="text"
                 value={customSlug}

@@ -37,7 +37,11 @@ import {
   Sun,
   Moon,
   Coffee,
-  CheckCircle2
+  CheckCircle2,
+  Play,
+  Video,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -63,7 +67,11 @@ import {
 } from '../../services/firebase/pageService';
 import { clientService } from '../../services/firebase/clientService';
 import { qrService } from '../../services/firebase/qrService';
+import { storageService } from '../../services/firebase/storageService';
 import { downloadVCard } from '../../utils/vcard';
+import { extractYouTubeId, getYouTubeEmbedUrl, getYouTubeVideoId, isYouTubeUrl } from '../../utils/youtube';
+import { DirectImageUploader } from '../../components/ui/DirectImageUploader';
+import { InlineYouTubeVideo } from '../../components/ui/InlineYouTubeVideo';
 
 interface PageBuilderPageProps {
   pageId: string;
@@ -198,6 +206,69 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     }
   };
 
+  // Upload image helper (tries storageService first, falls back to local dataURL)
+  const uploadImageFile = async (file: File): Promise<string> => {
+    try {
+      if (page?.orgId) {
+        const res = await storageService.uploadFile(page.orgId, file, 'page-assets');
+        if (res.downloadUrl) return res.downloadUrl;
+      }
+    } catch (err) {
+      console.warn('Storage upload fallback to dataURL:', err);
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 1-Click Apply Logo to All Relevant Blocks
+  const handleApplyLogoToAllBlocks = (logoUrl: string) => {
+    if (!page || !logoUrl) return;
+    const newBlocks = page.blocks.map(b => {
+      if (b.type === 'hero' || b.type === 'vcard_header') {
+        return {
+          ...b,
+          content: {
+            ...b.content,
+            avatarUrl: logoUrl
+          }
+        };
+      }
+      return b;
+    });
+    setPage({
+      ...page,
+      blocks: newBlocks,
+      seo: { ...page.seo, ogImageUrl: logoUrl }
+    });
+    showToast('success', 'تم تطبيق الشعار بنجاح', 'تم تحديث الشعار في كتل البانر، وبطاقة الاتصال، وصورة المشاركة');
+  };
+
+  // 1-Click Apply Cover Banner to All Relevant Blocks
+  const handleApplyCoverToAllBlocks = (coverUrl: string) => {
+    if (!page || !coverUrl) return;
+    const newBlocks = page.blocks.map(b => {
+      if (b.type === 'hero' || b.type === 'vcard_header') {
+        return {
+          ...b,
+          content: {
+            ...b.content,
+            coverUrl: coverUrl
+          }
+        };
+      }
+      return b;
+    });
+    setPage({
+      ...page,
+      blocks: newBlocks
+    });
+    showToast('success', 'تم تطبيق صورة الغلاف بنجاح', 'تم تحديث صورة الغلاف في البانر الرئيسي وبطاقة الاتصال');
+  };
+
   // 1-Click Apply Client Brand Theme
   const handleApplyClientBrandTheme = () => {
     if (!selectedClient || !page) return;
@@ -226,8 +297,32 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
       backgroundStyle: 'solid'
     };
 
-    setPage(prev => (prev ? { ...prev, themeConfig: updatedTheme } : prev));
-    showToast('success', 'Client Brand Theme Applied', `Colors synced with ${selectedClient.companyName}`);
+    let updatedBlocks = page.blocks;
+    if (selectedClient.logoUrl) {
+      updatedBlocks = page.blocks.map(b => {
+        if (b.type === 'hero' || b.type === 'vcard_header') {
+          return {
+            ...b,
+            content: {
+              ...b.content,
+              avatarUrl: selectedClient.logoUrl
+            }
+          };
+        }
+        return b;
+      });
+    }
+
+    setPage(prev => (prev ? {
+      ...prev,
+      themeConfig: updatedTheme,
+      blocks: updatedBlocks,
+      seo: {
+        ...prev.seo,
+        ogImageUrl: selectedClient.logoUrl || prev.seo.ogImageUrl
+      }
+    } : prev));
+    showToast('success', 'Client Brand Theme Applied', `Colors and logo synced with ${selectedClient.companyName}`);
   };
 
   // 1-Click Dynamic QR Code Creation & Binding
@@ -397,6 +492,13 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           { platform: 'instagram', url: 'https://instagram.com' },
           { platform: 'website', url: selectedClient?.website || 'https://esaia.app' }
         ]
+      };
+    } else if (type === 'video_embed') {
+      defaultContent = {
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        title: 'فيديو تعريفي',
+        caption: 'شاهد نبذة تعريفية عن أعمالنا وخدماتنا مباشرة هنا.',
+        aspectRatio: '16:9'
       };
     }
 
@@ -786,6 +888,105 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   </div>
                 </div>
               )}
+
+              {/* BRAND ASSET 1: LOGO & PROFILE PICTURE */}
+              <div className="p-4 rounded-xl bg-[#0e1017] border border-[#24293d] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-blue-400" />
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                      شعار الصفحة أو الصورة الشخصية (Logo / Profile Avatar)
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-slate-400">يظهر في البانر وبطاقات التواصل ومشاركة الرابط</span>
+                </div>
+
+                {(() => {
+                  const currentAvatar =
+                    page.blocks.find(b => b.content?.avatarUrl)?.content?.avatarUrl ||
+                    page.seo?.ogImageUrl ||
+                    selectedClient?.logoUrl ||
+                    '';
+
+                  return (
+                    <DirectImageUploader
+                      label="شعار أو صورة الهوية للمؤسسة"
+                      sublabel="ارفع الشعار من جهازك ليتم تطبيقه فوراً على كافة قوالب وبطاقات الصفحة"
+                      value={currentAvatar}
+                      aspectRatio="1:1"
+                      orgId={page.orgId}
+                      onChange={url => handleApplyLogoToAllBlocks(url)}
+                      onClear={() => handleApplyLogoToAllBlocks('')}
+                    />
+                  );
+                })()}
+              </div>
+
+              {/* BRAND ASSET 2: COVER PHOTO BANNER */}
+              <div className="p-4 rounded-xl bg-[#0e1017] border border-[#24293d] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                      صورة الغلاف الرئيسية (Cover Banner Image)
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-slate-400">تظهر أعلى الصفحة كخلفية بانر عريضة</span>
+                </div>
+
+                {(() => {
+                  const currentCover =
+                    page.blocks.find(b => b.content?.coverUrl)?.content?.coverUrl ||
+                    '';
+
+                  const coverPresets = [
+                    { name: 'تنفيذي فخم', url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1000&auto=format&fit=crop&q=80' },
+                    { name: 'تدرج نيون عصري', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80' },
+                    { name: 'عمارة هندسية', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1000&auto=format&fit=crop&q=80' },
+                    { name: 'طبيعة ورمال', url: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1000&auto=format&fit=crop&q=80' },
+                    { name: 'أعمال وتقنية', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1000&auto=format&fit=crop&q=80' }
+                  ];
+
+                  return (
+                    <div className="space-y-3">
+                      <DirectImageUploader
+                        label="صورة الغلاف العريضة"
+                        sublabel="ارفع صورة الغلاف مباشرة من كمبيوترك أو هاتفك"
+                        value={currentCover}
+                        aspectRatio="banner"
+                        orgId={page.orgId}
+                        onChange={url => handleApplyCoverToAllBlocks(url)}
+                        onClear={() => handleApplyCoverToAllBlocks('')}
+                      />
+
+                      {/* Quick Presets */}
+                      <div>
+                        <span className="text-[11px] text-slate-400 block mb-1.5">أو اختر من خلفيات الغلاف الجاهزة عالية الدقة:</span>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {coverPresets.map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleApplyCoverToAllBlocks(preset.url)}
+                              className="group relative h-12 rounded-lg overflow-hidden border border-slate-700 hover:border-blue-400 transition-all text-left"
+                            >
+                              <img
+                                src={preset.url}
+                                alt={preset.name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 flex items-end p-1 transition-colors">
+                                <span className="text-[9px] font-bold text-white truncate drop-shadow">{preset.name}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </Card>
           )}
 
@@ -1268,6 +1469,23 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
                     // Buttons
                     if (block.type === 'button') {
+                      if (c.url && isYouTubeUrl(c.url)) {
+                        return (
+                          <div key={block.id} className="w-full">
+                            <InlineYouTubeVideo
+                              url={c.url}
+                              title={c.label}
+                              caption={c.subtext}
+                              cardBg={p.cardBackground}
+                              borderColor={p.border}
+                              textPrimary={p.textPrimary}
+                              textSecondary={p.textSecondary}
+                              primaryAction={p.primaryAction}
+                            />
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={block.id}
@@ -1287,6 +1505,25 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                         >
                           <MessageCircle className="w-3 h-3" />
                           <span>{c.buttonText || 'WhatsApp'}</span>
+                        </div>
+                      );
+                    }
+
+                    // Video Embed (YouTube)
+                    if (block.type === 'video_embed') {
+                      return (
+                        <div key={block.id} className="w-full">
+                          <InlineYouTubeVideo
+                            url={c.url}
+                            title={c.title}
+                            caption={c.caption}
+                            aspectRatio={c.aspectRatio || '16:9'}
+                            cardBg={p.cardBackground}
+                            borderColor={p.border}
+                            textPrimary={p.textPrimary}
+                            textSecondary={p.textSecondary}
+                            primaryAction={p.primaryAction}
+                          />
                         </div>
                       );
                     }
@@ -1441,6 +1678,18 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.contactForm}</div>
                 <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.contactFormDesc}</div>
               </button>
+
+              <button
+                onClick={() => handleAddBlock('video_embed')}
+                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-red-500 text-left transition-all group col-span-2 sm:col-span-1"
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Video className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">YouTube</span>
+                </div>
+                <div className="text-xs font-bold text-white">فيديو يوتيوب (YouTube)</div>
+                <div className="text-[10px] text-slate-400">تضمين وتشغيل فيديو يوتيوب تعريفي مباشرة داخل الصفحة</div>
+              </button>
             </div>
           </div>
         </div>
@@ -1491,25 +1740,45 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     })
                   }
                 />
-                <Input
-                  id="eb-hero-avatar"
-                  label={t.builderModule.blocks.fields.avatarUrl}
-                  value={editingBlock.content.avatarUrl || ''}
-                  onChange={e =>
+
+                {/* Avatar / Logo Direct Device Upload */}
+                <DirectImageUploader
+                  label={t.builderModule.blocks.fields.avatarUrl || 'صورة الشعار / الصورة الشخصية'}
+                  sublabel="ارفع الشعار أو صورتك من الكمبيوتر أو الهاتف مباشرة"
+                  value={editingBlock.content.avatarUrl}
+                  aspectRatio="1:1"
+                  orgId={page?.orgId}
+                  onChange={url =>
                     setEditingBlock({
                       ...editingBlock,
-                      content: { ...editingBlock.content, avatarUrl: e.target.value }
+                      content: { ...editingBlock.content, avatarUrl: url }
+                    })
+                  }
+                  onClear={() =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, avatarUrl: '' }
                     })
                   }
                 />
-                <Input
-                  id="eb-hero-cover"
-                  label={t.builderModule.blocks.fields.coverUrl}
-                  value={editingBlock.content.coverUrl || ''}
-                  onChange={e =>
+
+                {/* Cover Banner Direct Device Upload */}
+                <DirectImageUploader
+                  label={t.builderModule.blocks.fields.coverUrl || 'صورة الغلاف (Cover Banner)'}
+                  sublabel="ارفع صورة عريضة لتظهر كغلاف في أعلى الصفحة"
+                  value={editingBlock.content.coverUrl}
+                  aspectRatio="banner"
+                  orgId={page?.orgId}
+                  onChange={url =>
                     setEditingBlock({
                       ...editingBlock,
-                      content: { ...editingBlock.content, coverUrl: e.target.value }
+                      content: { ...editingBlock.content, coverUrl: url }
+                    })
+                  }
+                  onClear={() =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, coverUrl: '' }
                     })
                   }
                 />
@@ -1552,6 +1821,28 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     })
                   }
                 />
+
+                {/* Avatar / Logo Direct Device Upload for vCard */}
+                <DirectImageUploader
+                  label="الصورة الشخصية لبطاقة الاتصال (Avatar)"
+                  sublabel="ارفع صورتك من جهازك لتظهر لجهات الاتصال عند حفظ البطاقة"
+                  value={editingBlock.content.avatarUrl}
+                  aspectRatio="1:1"
+                  orgId={page?.orgId}
+                  onChange={url =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, avatarUrl: url }
+                    })
+                  }
+                  onClear={() =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, avatarUrl: '' }
+                    })
+                  }
+                />
+
                 <Input
                   id="eb-vc-phone"
                   label={t.builderModule.blocks.fields.phone}
@@ -1741,14 +2032,22 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     })
                   }
                 />
-                <Input
-                  id="eb-mi-img"
-                  label={t.builderModule.blocks.fields.imageUrl}
-                  value={editingBlock.content.imageUrl || ''}
-                  onChange={e =>
+                <DirectImageUploader
+                  label={t.builderModule.blocks.fields.imageUrl || 'صورة الطبق أو المنتج'}
+                  sublabel="ارفع صورة الطبق أو المنتج مباشرة من كمبيوترك أو هاتفك"
+                  value={editingBlock.content.imageUrl}
+                  aspectRatio="1:1"
+                  orgId={page?.orgId}
+                  onChange={url =>
                     setEditingBlock({
                       ...editingBlock,
-                      content: { ...editingBlock.content, imageUrl: e.target.value }
+                      content: { ...editingBlock.content, imageUrl: url }
+                    })
+                  }
+                  onClear={() =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, imageUrl: '' }
                     })
                   }
                 />
@@ -1791,6 +2090,157 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     })
                   }
                 />
+              </>
+            )}
+
+            {/* YOUTUBE VIDEO EMBED FIELDS */}
+            {editingBlock.type === 'video_embed' && (
+              <>
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-200 flex items-start gap-2">
+                  <Video className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block text-white">تضمين فيديو يوتيوب داخل الصفحة</span>
+                    ضع رابط الفيديو أو الـ Short من يوتيوب وسيتم عرضه وتشغيله مباشرة لزوار صفحتك دون مغادرتها.
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                    <span>رابط فيديو يوتيوب (YouTube URL)</span>
+                    {getYouTubeVideoId(editingBlock.content.url || '') ? (
+                      <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+                        <Check className="w-3 h-3" />
+                        رابط يوتيوب صالح
+                      </span>
+                    ) : editingBlock.content.url ? (
+                      <span className="text-[11px] text-amber-400 font-medium">
+                        يرجى التأكد من صيغة رابط يوتيوب
+                      </span>
+                    ) : null}
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=... أو https://youtu.be/..."
+                    value={editingBlock.content.url || ''}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, url: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-red-500"
+                  />
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] text-slate-400">أو جرب رابطاً نموذجياً:</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingBlock({
+                          ...editingBlock,
+                          content: {
+                            ...editingBlock.content,
+                            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                            title: 'فيديو تعريفي بالخدمات والمميزات',
+                            caption: 'تعرف على هويتنا ورؤيتنا المستقبلية وكيف نساعد عملاءنا على النجاح.'
+                          }
+                        })
+                      }
+                      className="text-[10px] text-blue-400 hover:text-blue-300 underline font-medium"
+                    >
+                      تعبئة فيديو تجريبي
+                    </button>
+                  </div>
+                </div>
+
+                <Input
+                  id="eb-video-title"
+                  label="عنوان الفيديو (Video Title)"
+                  placeholder="مثال: نبذة تعريفية عن أعمالنا وخدماتنا"
+                  value={editingBlock.content.title || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, title: e.target.value }
+                    })
+                  }
+                />
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">وصف / نبذة أسفل الفيديو</label>
+                  <textarea
+                    rows={2}
+                    placeholder="وصف مختصر يشرح محتوى الفيديو للزوار..."
+                    value={editingBlock.content.caption || ''}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, caption: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Aspect Ratio Toggle */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 block">أبعاد العرض (Aspect Ratio)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingBlock({
+                          ...editingBlock,
+                          content: { ...editingBlock.content, aspectRatio: '16:9' }
+                        })
+                      }
+                      className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all ${
+                        editingBlock.content.aspectRatio !== '9:16'
+                          ? 'border-red-500 bg-red-500/10 text-white font-bold'
+                          : 'border-[#24293d] bg-[#0e1017] text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      شاشة عريضة 16:9 (فيديو قياسي)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingBlock({
+                          ...editingBlock,
+                          content: { ...editingBlock.content, aspectRatio: '9:16' }
+                        })
+                      }
+                      className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all ${
+                        editingBlock.content.aspectRatio === '9:16'
+                          ? 'border-red-500 bg-red-500/10 text-white font-bold'
+                          : 'border-[#24293d] bg-[#0e1017] text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      طولي 9:16 (YouTube Shorts / ريلز)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Preview inside modal */}
+                {editingBlock.content.url && getYouTubeEmbedUrl(editingBlock.content.url) && (
+                  <div className="space-y-1.5 pt-2">
+                    <span className="text-xs font-semibold text-slate-400 block">معاينة فورية للفيديو:</span>
+                    <div
+                      className="w-full rounded-xl overflow-hidden bg-black shadow-lg mx-auto relative"
+                      style={{
+                        aspectRatio: editingBlock.content.aspectRatio === '9:16' ? '9/16' : '16/9',
+                        maxHeight: editingBlock.content.aspectRatio === '9:16' ? '320px' : '200px'
+                      }}
+                    >
+                      <iframe
+                        src={getYouTubeEmbedUrl(editingBlock.content.url) || ''}
+                        title="Live Video Preview"
+                        className="w-full h-full border-0 absolute inset-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             )}
 

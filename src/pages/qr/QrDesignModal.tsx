@@ -25,10 +25,13 @@ import {
 } from 'lucide-react';
 import { QrCode, QrStyleConfig, QrValidationReport, QrModuleStyle, QrEyeStyle, QrEyeBallStyle, QrFrameStyle, ErrorCorrectionLevel, QrDestinationType } from '../../types/qr';
 import { Client } from '../../types/client';
+import { LandingPage } from '../../types/page';
 import { qrVectorEngine } from '../../services/qr/qrVectorEngine';
 import { qrValidationService } from '../../services/qr/qrValidationService';
+import { pageService } from '../../services/firebase/pageService';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
 
 interface QrDesignModalProps {
   qr: QrCode | null;
@@ -94,6 +97,14 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
   // Offscreen canvas ref for synthetic software decode validation
   const testCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [validationReport, setValidationReport] = useState<QrValidationReport | null>(null);
+  const [availablePages, setAvailablePages] = useState<LandingPage[]>([]);
+
+  // Load registered pages for 1-click binding
+  useEffect(() => {
+    pageService.getPagesByOrg('org_esaia_main')
+      .then(pages => setAvailablePages(pages))
+      .catch(() => {});
+  }, []);
 
   // Initialize from props
   useEffect(() => {
@@ -101,7 +112,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
       setName(qr.name);
       setClientId(qr.clientId);
       setDestinationType(qr.destinationType || 'url');
-      setDestinationUrl(qr.destinationUrl || 'https://esaia.app');
+      setDestinationUrl(qr.destinationUrl || '');
       setPublicCode(qr.publicCode);
       setStyleConfig({
         ...qr.styleConfig,
@@ -129,7 +140,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
 
   // Target shortcode URL that physical cameras will read
   const redirectUrl = useMemo(() => {
-    return `https://esaia.app/q/${publicCode || 'demo'}`;
+    return getQrRedirectUrl(publicCode || 'demo');
   }, [publicCode]);
 
   // Generate real-time SVG string
@@ -407,21 +418,68 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                     </p>
 
                     <div>
+                      <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                        {t.qrModule.destinationTypeLabel}
+                      </label>
+                      <select
+                        value={destinationType}
+                        onChange={e => {
+                          const newType = e.target.value as QrDestinationType;
+                          setDestinationType(newType);
+                          if (newType === 'page' && availablePages.length > 0 && !destinationUrl.startsWith('/p/')) {
+                            setDestinationUrl(`/p/${availablePages[0].slug}`);
+                          }
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
+                      >
+                        <option value="url">{t.qrModule.destTypeUrl}</option>
+                        <option value="page">{t.qrModule.destTypePage}</option>
+                        <option value="menu">{t.qrModule.destTypeMenu}</option>
+                        <option value="vcard">{t.qrModule.destTypeVcard}</option>
+                        <option value="whatsapp">{t.qrModule.destTypeWhatsapp}</option>
+                        <option value="wifi">{t.qrModule.destTypeWifi}</option>
+                      </select>
+                    </div>
+
+                    {destinationType === 'page' && availablePages.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                          ربط مباشر بصفحة هبوط (Landing Page)
+                        </label>
+                        <select
+                          value={destinationUrl}
+                          onChange={e => setDestinationUrl(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-rose-500"
+                        >
+                          <option value="">اختر صفحة الهبوط...</option>
+                          {availablePages.map(p => (
+                            <option key={p.id} value={`/p/${p.slug}`}>
+                              {p.title} (/p/{p.slug})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div>
                       <label className="block text-xs text-neutral-300 mb-1">
                         {t.qrModule.destinationTargetUrl}
                       </label>
                       <input
-                        type="url"
+                        type="text"
                         value={destinationUrl}
                         onChange={e => setDestinationUrl(e.target.value)}
-                        placeholder="https://example.com/target"
+                        placeholder="https://example.com/target أو /p/page-slug"
                         className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm font-mono focus:outline-none focus:border-rose-500"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs text-neutral-400 font-mono">https://esaia.app/q/{publicCode}</span>
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-neutral-800">
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <span className="text-[11px] text-emerald-400 font-semibold shrink-0">رابط المسح الفعلي:</span>
+                        <span className="text-xs text-neutral-300 font-mono truncate">{redirectUrl}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
                           onClick={handleCopyLink}

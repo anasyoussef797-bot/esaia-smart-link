@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'motion/react';
 import {
   Phone,
   Mail,
@@ -28,13 +29,17 @@ import {
   Coffee,
   AlertCircle,
   Search,
-  ChevronRight
+  ChevronRight,
+  Play,
+  Video
 } from 'lucide-react';
 import { Page, PageBlock, PageThemeConfig } from '../../types/page';
 import { WhiteLabelBranding } from '../../types/auth';
 import { authService } from '../../services/firebase/authService';
 import { pageService, DEFAULT_THEME_DARK, DEFAULT_THEME_LIGHT, DEFAULT_THEME_BEIGE } from '../../services/firebase/pageService';
 import { downloadVCard } from '../../utils/vcard';
+import { extractYouTubeId, getYouTubeEmbedUrl, isYouTubeUrl } from '../../utils/youtube';
+import { InlineYouTubeVideo } from '../../components/ui/InlineYouTubeVideo';
 
 export interface PublicPageRendererProps {
   slug: string;
@@ -250,9 +255,10 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
         {page.blocks
           .filter(b => b.isVisible)
           .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map(block => {
+          .map((block, blockIndex) => {
             const content = block.content || {};
 
+            const renderBlockContent = () => {
             // 1. HERO BLOCK
             if (block.type === 'hero') {
               return (
@@ -594,6 +600,24 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
 
             // 5. STANDARD BUTTON BLOCK
             if (block.type === 'button') {
+              // If the button contains a YouTube link, display the video directly in place without exiting to YouTube
+              if (content.url && isYouTubeUrl(content.url)) {
+                return (
+                  <div key={block.id} className="w-full">
+                    <InlineYouTubeVideo
+                      url={content.url}
+                      title={content.label}
+                      caption={content.subtext}
+                      cardBg={p.cardBackground}
+                      borderColor={p.border}
+                      textPrimary={p.textPrimary}
+                      textSecondary={p.textSecondary}
+                      primaryAction={p.primaryAction}
+                    />
+                  </div>
+                );
+              }
+
               const isOutline = content.variant === 'outline';
               return (
                 <div key={block.id}>
@@ -909,8 +933,48 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
               return <hr key={block.id} className="my-2 border-t" style={{ borderColor: p.border }} />;
             }
 
+            // 15. YOUTUBE VIDEO EMBED
+            if (block.type === 'video_embed') {
+              return (
+                <div key={block.id} className="w-full">
+                  <InlineYouTubeVideo
+                    url={content.url}
+                    title={content.title}
+                    caption={content.caption}
+                    aspectRatio={content.aspectRatio || '16:9'}
+                    cardBg={p.cardBackground}
+                    borderColor={p.border}
+                    textPrimary={p.textPrimary}
+                    textSecondary={p.textSecondary}
+                    primaryAction={p.primaryAction}
+                  />
+                </div>
+              );
+            }
+
             return null;
-          })}
+          };
+
+          const body = renderBlockContent();
+          if (!body) return null;
+
+          return (
+            <motion.div
+              key={block.id}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.35,
+                delay: Math.min(blockIndex * 0.045, 0.4),
+                ease: [0.16, 1, 0.3, 1]
+              }}
+              whileHover={{ y: -2, transition: { duration: 0.15 } }}
+              className="w-full"
+            >
+              {body}
+            </motion.div>
+          );
+        })}
       </main>
 
       {/* White-Label / Platform Footer */}

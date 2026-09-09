@@ -37,6 +37,7 @@ const WhiteLabelPage = lazy(() => import('./pages/settings/WhiteLabelPage').then
 const NotFoundPage = lazy(() => import('./pages/errors/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('./pages/errors/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
 const PublicPageRenderer = lazy(() => import('./pages/public/PublicPageRenderer').then(m => ({ default: m.PublicPageRenderer })));
+const PublicQrRedirect = lazy(() => import('./pages/public/PublicQrRedirect').then(m => ({ default: m.PublicQrRedirect })));
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 
@@ -64,9 +65,19 @@ function AppRouter() {
     return <LoadingScreen message="Initializing ESAIA Workspace &amp; Security Layer..." />;
   }
 
-  // 1. Check for Public Landing Page Route: /p/:slug
+  // 1. Check for Public Dynamic QR Code Redirect Route: /q/:code, /go/:code, /r/:code
+  if (currentPath.startsWith('/q/') || currentPath.startsWith('/go/') || currentPath.startsWith('/r/')) {
+    const code = currentPath.replace(/^\/(q|go|r)\//, '').replace(/\/+$/, '');
+    return (
+      <Suspense fallback={<LoadingScreen message="Redirecting to destination..." />}>
+        <PublicQrRedirect code={code} />
+      </Suspense>
+    );
+  }
+
+  // 2. Check for Public Landing Page Route: /p/:slug
   if (currentPath.startsWith('/p/')) {
-    const slug = currentPath.replace('/p/', '');
+    const slug = currentPath.replace('/p/', '').replace(/\/+$/, '');
     return (
       <Suspense fallback={<LoadingScreen message="Loading Page..." />}>
         <PublicPageRenderer slug={slug} />
@@ -74,8 +85,9 @@ function AppRouter() {
     );
   }
 
-  // 2. Unauthenticated user route check
-  if (!isAuthenticated && !currentPath.startsWith('/p/')) {
+  // 3. Unauthenticated user route check
+  const isPublicRoute = currentPath.startsWith('/p/') || currentPath.startsWith('/q/') || currentPath.startsWith('/go/') || currentPath.startsWith('/r/');
+  if (!isAuthenticated && !isPublicRoute) {
     return <LoginPage onLoginSuccess={() => navigate('/admin/overview')} />;
   }
 
