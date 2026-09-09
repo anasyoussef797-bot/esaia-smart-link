@@ -384,9 +384,11 @@ export const qrVectorEngine = {
 
       img.onload = () => {
         try {
+          const width = (img.width || 400) * scaleMultiplier;
+          const height = (img.height || 400) * scaleMultiplier;
           const canvas = document.createElement('canvas');
-          canvas.width = img.width * scaleMultiplier;
-          canvas.height = img.height * scaleMultiplier;
+          canvas.width = width;
+          canvas.height = height;
           const ctx = canvas.getContext('2d');
           if (!ctx) throw new Error('Failed to obtain 2D canvas context');
 
@@ -406,13 +408,74 @@ export const qrVectorEngine = {
             const pngUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = pngUrl;
-            link.download = filename;
+            link.download = filename.endsWith('.png') ? filename : `${filename}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(pngUrl);
             resolve();
           }, 'image/png');
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load SVG into image element'));
+      };
+
+      img.src = url;
+    });
+  },
+
+  /**
+   * Converts SVG to High-Resolution JPEG image for easy mobile sharing and physical advertising print
+   */
+  async downloadJpeg(svgString: string, filename = 'qr-code.jpg', scaleMultiplier = 3, backgroundColor = '#ffffff') {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        try {
+          const width = (img.width || 400) * scaleMultiplier;
+          const height = (img.height || 400) * scaleMultiplier;
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Failed to obtain 2D canvas context');
+
+          // Fill solid background for JPEG (prevents black background artifact on transparent areas)
+          ctx.fillStyle = backgroundColor || '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+
+          // Smoothing for print-ready rasterization
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.scale(scaleMultiplier, scaleMultiplier);
+          ctx.drawImage(img, 0, 0);
+
+          URL.revokeObjectURL(url);
+
+          canvas.toBlob(blob => {
+            if (!blob) {
+              reject(new Error('Canvas to JPEG Blob conversion failed'));
+              return;
+            }
+            const jpegUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = jpegUrl;
+            link.download = filename.endsWith('.jpg') || filename.endsWith('.jpeg') ? filename : `${filename}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(jpegUrl);
+            resolve();
+          }, 'image/jpeg', 0.95);
         } catch (err) {
           URL.revokeObjectURL(url);
           reject(err);

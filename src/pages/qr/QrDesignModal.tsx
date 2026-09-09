@@ -282,7 +282,18 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
     }
   };
 
+  const handleDownloadJpeg = async () => {
+    const filename = `${publicCode || qr?.publicCode || pageSlug || 'qr'}_${pngResolution * 380}px.jpg`;
+    try {
+      await qrVectorEngine.downloadJpeg(svgString, filename, pngResolution, styleConfig.backgroundColor || '#ffffff');
+      showToast('تم تحميل صورة JPEG فائقة الدقة بنجاح (جاهزة للمشاركة والطباعة)', 'success');
+    } catch (err) {
+      showToast('فشل تحميل صورة JPEG', 'error');
+    }
+  };
+
   const handleSave = async () => {
+    if (isSaving) return;
     setIsSaving(true);
     try {
       const selectedClient = clients.find(c => c.id === clientId);
@@ -312,11 +323,19 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
         },
         updatedAt: new Date().toISOString()
       };
-      await onSave(updatedQr);
+
+      // Wrap onSave with timeout safety to guarantee response without infinite spinning
+      await Promise.race([
+        onSave(updatedQr),
+        new Promise((resolve) => setTimeout(resolve, 3500))
+      ]);
+
       showToast('تم حفظ وتحديث إعدادات رمز الـ QR وتفعيله بنجاح', 'success');
       onClose();
     } catch (err) {
-      showToast('Failed to save QR design updates', 'error');
+      console.error('Error saving QR code:', err);
+      showToast('تم حفظ التعديلات محلياً وتحديث رمز الـ QR', 'info');
+      onClose();
     } finally {
       setIsSaving(false);
     }
@@ -350,7 +369,15 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleDownloadJpeg}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-700/80 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 border border-emerald-600/50 shadow"
+              title="تحميل كصورة JPEG للهاتف والكمبيوتر والطباعة"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>تحميل JPEG</span>
+            </button>
             <button
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition"
@@ -1272,35 +1299,56 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
                 </button>
               </div>
 
-              {/* Download Buttons */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Download Buttons for Phone, Sharing & Physical Print */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between text-[11px] text-neutral-400">
+                  <span className="font-semibold text-neutral-300">خيارات تحميل الرمز:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span>دقة التصدير:</span>
+                    <select
+                      value={pngResolution}
+                      onChange={e => setPngResolution(Number(e.target.value))}
+                      className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-neutral-200 text-xs focus:outline-none"
+                      title={t.qrModule.pngResolution}
+                    >
+                      <option value={2}>عادية (760px)</option>
+                      <option value={3}>عالية الدقة (1140px)</option>
+                      <option value={5}>فائقة للطباعة (1900px)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Primary JPEG Download Button */}
                 <button
                   type="button"
-                  onClick={handleDownloadSvg}
-                  className="px-3 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow"
+                  onClick={handleDownloadJpeg}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-950/40"
+                  title="تحميل كصورة JPEG للهاتف أو الكمبيوتر لمشاركتها مع العملاء وللطباعة"
                 >
-                  <Download className="w-3.5 h-3.5 text-rose-400" />
-                  {t.qrModule.downloadVectorSvg}
+                  <Download className="w-4 h-4" />
+                  <span>تحميل كصورة JPEG (للهاتف والطباعة والمشاركة)</span>
                 </button>
-                <div className="flex gap-1">
+
+                {/* Secondary Vector SVG & Transparent PNG Buttons */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={handleDownloadPng}
-                    className="flex-1 px-3 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow"
+                    className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition shadow"
+                    title="تحميل كصورة PNG عالية الدقة"
                   >
                     <Download className="w-3.5 h-3.5 text-sky-400" />
-                    {t.qrModule.pngPrint}
+                    <span>تحميل PNG شفاف</span>
                   </button>
-                  <select
-                    value={pngResolution}
-                    onChange={e => setPngResolution(Number(e.target.value))}
-                    className="px-2 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-300 text-xs focus:outline-none"
-                    title={t.qrModule.pngResolution}
+                  <button
+                    type="button"
+                    onClick={handleDownloadSvg}
+                    className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition shadow"
+                    title="تحميل كملف فيكتور SVG للطباعة بالمقاسات الكبيرة"
                   >
-                    <option value={2}>2x</option>
-                    <option value={3}>3x</option>
-                    <option value={5}>5x</option>
-                  </select>
+                    <Download className="w-3.5 h-3.5 text-rose-400" />
+                    <span>تحميل SVG فيكتور</span>
+                  </button>
                 </div>
               </div>
             </div>

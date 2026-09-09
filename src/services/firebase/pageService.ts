@@ -890,10 +890,10 @@ export const pageService = {
    * Links a dynamic QR to this page and synchronizes the server redirect cache
    */
   async bindQrToPage(pageId: string, qrId: string, pageSlugFallback?: string): Promise<void> {
-    const page = await this.getPageById(pageId);
+    const page = inMemoryPages.find(p => p.id === pageId);
     const slug = page?.slug || pageSlugFallback || pageId;
 
-    // 1. Update Page
+    // 1. Update Page locally & in db
     await this.updatePage(pageId, { qrCodeId: qrId });
 
     // 2. Update QR destination to /p/:slug

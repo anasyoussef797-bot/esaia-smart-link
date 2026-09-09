@@ -453,13 +453,20 @@ export const qrService = {
       this.syncRedirectCache(inMemoryQrs[idx]);
     }
 
-    try {
-      await updateDoc(doc(db, 'qrCodes', qrId), {
-        ...updates,
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn('Offline update stored in local state:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await Promise.race([
+            setDoc(doc(db, 'qrCodes', qrId), {
+              ...updates,
+              updatedAt: serverTimestamp()
+            }, { merge: true }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+          ]);
+        } catch (err) {
+          console.warn('Offline update stored in local state:', err);
+        }
+      })();
     }
   },
 
@@ -494,13 +501,19 @@ export const qrService = {
   },
 
   async deleteQrCode(qrId: string): Promise<void> {
-    const docPath = `qrCodes/${qrId}`;
     inMemoryQrs = inMemoryQrs.filter(q => q.id !== qrId);
     persistQrs(inMemoryQrs);
-    try {
-      await deleteDoc(doc(db, 'qrCodes', qrId));
-    } catch (err) {
-      console.warn('Offline delete stored in local state:', err);
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await Promise.race([
+            deleteDoc(doc(db, 'qrCodes', qrId)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+          ]);
+        } catch (err) {
+          console.warn('Offline delete stored in local state:', err);
+        }
+      })();
     }
   },
 

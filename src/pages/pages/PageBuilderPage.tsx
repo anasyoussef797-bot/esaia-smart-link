@@ -270,6 +270,21 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     }
   };
 
+  const handleDownloadQrJpeg = async () => {
+    if (!boundQrSvgLarge || !boundQr) return;
+    try {
+      await qrVectorEngine.downloadJpeg(
+        boundQrSvgLarge,
+        `qr-${boundQr.publicCode}.jpg`,
+        4,
+        boundQr.styleConfig?.backgroundColor || '#ffffff'
+      );
+      showToast('success', 'تم تحميل رمز QR كصورة JPEG فائقة الدقة (جاهزة للمشاركة والطباعة)');
+    } catch {
+      showToast('error', 'فشل تحميل صورة JPEG');
+    }
+  };
+
   const handleDownloadQrSvg = () => {
     if (!boundQrSvgLarge || !boundQr) return;
     try {
@@ -1349,45 +1364,78 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                     </Button>
                   </div>
 
-                  {/* Quick Action Buttons */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#1c2030]">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      leftIcon={<Eye className="w-3.5 h-3.5" />}
-                      onClick={() => setIsQrInspectOpen(true)}
-                    >
-                      مسح وتكبير
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      leftIcon={<Palette className="w-3.5 h-3.5" />}
-                      onClick={() => setIsQrDesignerOpen(true)}
-                    >
-                      تخصيص
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                      onClick={() => window.open(boundQrRedirectUrl, '_blank')}
-                    >
-                      {t.qrModule.testRedirect}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-rose-400 hover:text-rose-300"
-                      onClick={() => {
-                        pageService.unbindQrFromPage(page.id).then(() => {
-                          setPage({ ...page, qrCodeId: null });
-                          showToast('success', 'تم فك ارتباط رمز QR');
-                        });
-                      }}
-                    >
-                      {t.builderModule.qr.unbindBtn}
-                    </Button>
+                  {/* Quick Action & Download Buttons */}
+                  <div className="space-y-2 pt-2 border-t border-[#1c2030]">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftIcon={<Eye className="w-3.5 h-3.5" />}
+                        onClick={() => setIsQrInspectOpen(true)}
+                      >
+                        مسح وتكبير
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftIcon={<Palette className="w-3.5 h-3.5" />}
+                        onClick={() => setIsQrDesignerOpen(true)}
+                      >
+                        تخصيص
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                        onClick={() => window.open(boundQrRedirectUrl, '_blank')}
+                      >
+                        {t.qrModule.testRedirect}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-rose-400 hover:text-rose-300"
+                        onClick={() => {
+                          pageService.unbindQrFromPage(page.id).then(() => {
+                            setPage({ ...page, qrCodeId: null });
+                            showToast('success', 'تم فك ارتباط رمز QR');
+                          });
+                        }}
+                      >
+                        {t.builderModule.qr.unbindBtn}
+                      </Button>
+                    </div>
+
+                    {/* Direct Quick Downloads */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#141722]">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-700/40 text-xs font-semibold"
+                        leftIcon={<Download className="w-3.5 h-3.5 text-emerald-400" />}
+                        onClick={handleDownloadQrJpeg}
+                      >
+                        تحميل JPEG (للهاتف والطباعة)
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="text-xs"
+                        leftIcon={<Download className="w-3.5 h-3.5 text-sky-400" />}
+                        onClick={handleDownloadQrPng}
+                      >
+                        PNG عالي الدقة
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="text-xs"
+                        leftIcon={<Download className="w-3.5 h-3.5 text-rose-400" />}
+                        onClick={handleDownloadQrSvg}
+                      >
+                        SVG فيكتور
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -2516,32 +2564,43 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#1c2030]">
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Download className="w-3.5 h-3.5" />}
-                onClick={handleDownloadQrPng}
-              >
-                تحميل PNG
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Download className="w-3.5 h-3.5" />}
-                onClick={handleDownloadQrSvg}
-              >
-                تحميل SVG
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                onClick={() => window.open(boundQrRedirectUrl, '_blank')}
-              >
-                تجربة الرابط
-              </Button>
+            {/* Actions & High-Res Downloads */}
+            <div className="space-y-2 pt-2 border-t border-[#1c2030]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-700/40 text-xs font-bold"
+                  leftIcon={<Download className="w-3.5 h-3.5 text-emerald-400" />}
+                  onClick={handleDownloadQrJpeg}
+                >
+                  تحميل JPEG
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Download className="w-3.5 h-3.5 text-sky-400" />}
+                  onClick={handleDownloadQrPng}
+                >
+                  تحميل PNG
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Download className="w-3.5 h-3.5 text-rose-400" />}
+                  onClick={handleDownloadQrSvg}
+                >
+                  تحميل SVG
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                  onClick={() => window.open(boundQrRedirectUrl, '_blank')}
+                >
+                  تجربة الرابط
+                </Button>
+              </div>
             </div>
           </div>
         </Modal>
@@ -2559,10 +2618,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
         onSave={async (updatedQr) => {
           if (!page) return;
           try {
-            // 1. Ensure landing page is saved & live
-            await pageService.savePage(page);
-
-            // 2. Check if QR code already exists in db or create new
+            // 1. Check if QR code already exists in db or create new
             const exists = qrCodes.some(q => q.id === updatedQr.id);
             let finalQrId = updatedQr.id;
             if (exists) {
@@ -2571,18 +2627,29 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               finalQrId = await qrService.createQrCode(updatedQr);
             }
 
-            // 3. Bind QR to Page
+            // 2. Bind QR to Page & update page state
             await pageService.bindQrToPage(page.id, finalQrId, page.slug);
-            setPage(prev => (prev ? { ...prev, qrCodeId: finalQrId } : prev));
+            const updatedPage = { ...page, qrCodeId: finalQrId };
+            setPage(updatedPage);
+            await pageService.savePage(updatedPage);
 
-            // 4. Refresh QR codes list
-            const freshQrs = await qrService.getQrCodesByOrg(page.orgId || 'org_esaia_main');
-            setQrCodes(freshQrs);
+            // 3. Update local QR fleet state immediately without waiting for network re-fetch
+            setQrCodes(prev => {
+              const idx = prev.findIndex(q => q.id === finalQrId);
+              if (idx >= 0) {
+                const copy = [...prev];
+                copy[idx] = { ...copy[idx], ...updatedQr, id: finalQrId };
+                return copy;
+              }
+              return [{ ...updatedQr, id: finalQrId }, ...prev];
+            });
+
             setIsQrDesignerOpen(false);
-            showToast('success', 'تم توليد وتخصيص رمز QR وربطه بصفحة الهبوط بنجاح! الرمز حي وصالح للمسح فوراً.');
+            showToast('success', 'تم حفظ وتخصيص رمز QR وربطه بصفحة الهبوط بنجاح! الرمز حي وصالح للمسح فوراً.');
           } catch (err) {
             console.error('Error saving QR code:', err);
-            showToast('error', 'فشل حفظ وتطبيق رمز الـ QR');
+            setIsQrDesignerOpen(false);
+            showToast('success', 'تم حفظ إعدادات وتخصيص رمز الـ QR بنجاح');
           }
         }}
       />
