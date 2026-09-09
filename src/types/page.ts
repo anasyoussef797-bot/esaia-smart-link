@@ -197,3 +197,5 @@ export interface Page {
   createdAt: string;
   updatedAt: string;
 }
+
+export type LandingPage = Page;

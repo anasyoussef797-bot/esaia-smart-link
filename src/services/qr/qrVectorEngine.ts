@@ -6,26 +6,47 @@
 
 import QRCode from 'qrcode';
 import { QrStyleConfig } from '../../types/qr';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
 
 export interface QrSvgRenderOptions {
   value: string;
   size?: number;
-  style: QrStyleConfig;
+  style?: QrStyleConfig;
+  styleConfig?: QrStyleConfig;
 }
+
+const DEFAULT_QR_STYLE: QrStyleConfig = {
+  foregroundColor: '#0f172a',
+  backgroundColor: '#ffffff',
+  moduleStyle: 'rounded',
+  eyeStyle: 'rounded',
+  eyeBallStyle: 'rounded',
+  eyeColor: '#0f172a',
+  eyeInnerColor: '#0f172a',
+  errorCorrectionLevel: 'H',
+  quietZoneModules: 4,
+  frameStyle: 'none',
+  logoSizeRatio: 0.16,
+  logoBackgroundPunchout: true,
+  scannabilityGrade: 'A',
+  healthScore: 98
+};
 
 export const qrVectorEngine = {
   /**
    * Generates a raw QR matrix
    */
   createMatrix(value: string, ecc: 'L' | 'M' | 'Q' | 'H' = 'M') {
-    return QRCode.create(value, { errorCorrectionLevel: ecc });
+    const cleanVal = value || getQrRedirectUrl('demo');
+    return QRCode.create(cleanVal, { errorCorrectionLevel: ecc });
   },
 
   /**
    * Generates full standalone vector SVG string
    */
   generateSvgString(options: QrSvgRenderOptions): string {
-    const { value, size = 400, style } = options;
+    const { value, size = 400 } = options;
+    const style = options.style || options.styleConfig || DEFAULT_QR_STYLE;
 
     // Auto-elevate error correction level if logo is present
     let effectiveEcc = style.errorCorrectionLevel || 'M';
@@ -33,7 +54,8 @@ export const qrVectorEngine = {
       effectiveEcc = 'H';
     }
 
-    const qrData = this.createMatrix(value || 'https://esaia.app', effectiveEcc);
+    const fallbackUrl = getQrRedirectUrl('demo');
+    const qrData = this.createMatrix(value || fallbackUrl, effectiveEcc);
     const modules = qrData.modules;
     const moduleCount = modules.size;
     const margin = Math.max(4, style.quietZoneModules ?? 4);

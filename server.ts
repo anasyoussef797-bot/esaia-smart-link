@@ -210,7 +210,7 @@ app.post('/api/qr/update-cache', (req: Request, res: Response) => {
     return;
   }
   qrMemoryCache.set(publicCode, {
-    destinationUrl: destinationUrl || 'https://esaia.app',
+    destinationUrl: destinationUrl || '/',
     status: status || 'active',
     expiresAt: expiresAt || null,
     targetEntityId: targetEntityId || null,
@@ -220,26 +220,39 @@ app.post('/api/qr/update-cache', (req: Request, res: Response) => {
   res.json({ success: true, publicCode, destinationUrl, status: status || 'active' });
 });
 
+// API: Check fast resolver endpoint
+app.get('/api/qr/resolve/:slug', (req: Request, res: Response) => {
+  const slug = req.params.slug?.trim();
+  if (!slug) {
+    res.status(400).json({ found: false, error: 'Missing slug' });
+    return;
+  }
+  const qr = qrMemoryCache.get(slug);
+  if (qr) {
+    let dest = qr.destinationUrl;
+    if (qr.destinationType === 'page' && !dest.startsWith('http') && !dest.startsWith('/p/')) {
+      dest = `/p/${dest}`;
+    }
+    res.json({
+      found: true,
+      publicCode: slug,
+      destinationUrl: dest,
+      destinationType: qr.destinationType,
+      status: qr.status
+    });
+    return;
+  }
+  res.status(404).json({ found: false, error: 'QR not found in fast cache' });
+});
+
 // ==============================================================================
 // 1. Ultra-Fast Dynamic QR Redirect Engine (Server-Side: /q/:slug)
 // ==============================================================================
-app.get('/q/:slug', async (req: Request, res: Response): Promise<void> => {
+app.get('/q/:slug', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const slug = req.params.slug?.trim();
 
   if (!slug) {
-    res.status(400).send(`
-      <!DOCTYPE html>
-      <html>
-        <head><title>Invalid QR - ESAIA</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-        <body style="font-family: sans-serif; background: #090a0f; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center;">
-          <div>
-            <h1 style="font-size: 24px;">Invalid QR Code</h1>
-            <p style="color: #94a3b8;">No public code specified.</p>
-          </div>
-        </body>
-      </html>
-    `);
-    return;
+    return next();
   }
 
   try {
@@ -249,83 +262,65 @@ app.get('/q/:slug', async (req: Request, res: Response): Promise<void> => {
     if (qr) {
       // Keep cached entry fresh
       qr.cachedAt = Date.now();
-    } else {
-      // Fallback destination for unknown codes
-      qr = {
-        destinationUrl: 'https://esaia.app',
-        status: 'active',
-        expiresAt: null,
-        targetEntityId: null,
-        destinationType: 'url',
-        cachedAt: Date.now()
-      };
-      qrMemoryCache.set(slug, qr);
-    }
 
-    // 2. Validate Status & Expiration
-    if (qr.status === 'paused') {
-      res.status(403).send(`
-        <!DOCTYPE html>
-        <html>
-          <head><title>Campaign Paused - ESAIA</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-          <body style="font-family: sans-serif; background: #090a0f; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center;">
-            <div style="max-width: 400px; padding: 24px; border: 1px solid #24293d; border-radius: 16px; background: #141722;">
-              <h2 style="font-size: 20px; color: #f59e0b;">QR Campaign Paused</h2>
-              <p style="color: #94a3b8; font-size: 14px; margin-top: 8px;">This QR campaign has been temporarily paused by the organization.</p>
-            </div>
-          </body>
-        </html>
-      `);
+      // Validate Status & Expiration
+      if (qr.status === 'paused') {
+        res.status(403).send(`
+          <!DOCTYPE html>
+          <html dir="rtl">
+            <head><title>الحملة متوقفة - ESAIA</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: system-ui, sans-serif; background: #090a0f; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px;">
+              <div style="max-width: 400px; padding: 32px; border: 1px solid #24293d; border-radius: 16px; background: #141722;">
+                <h2 style="font-size: 20px; color: #f59e0b; margin-top: 0;">الحملة متوقفة مؤقتاً</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin: 12px 0 0;">تم إيقاف حملة رمز الاستجابة السريعة هذه مؤقتاً من قبل المنشأة.</p>
+              </div>
+            </body>
+          </html>
+        `);
+        return;
+      }
+
+      if (qr.expiresAt && new Date(qr.expiresAt).getTime() < Date.now()) {
+        res.status(410).send(`
+          <!DOCTYPE html>
+          <html dir="rtl">
+            <head><title>الرمز منتهي الصلاحية - ESAIA</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: system-ui, sans-serif; background: #090a0f; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px;">
+              <div style="max-width: 400px; padding: 32px; border: 1px solid #24293d; border-radius: 16px; background: #141722;">
+                <h2 style="font-size: 20px; color: #f43f5e; margin-top: 0;">انتهت صلاحية الرمز</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin: 12px 0 0;">انتهت فترة صلاحية هذا الرابط الترويجي.</p>
+              </div>
+            </body>
+          </html>
+        `);
+        return;
+      }
+
+      // Return Immediate 302 Redirect
+      let destination = qr.destinationUrl || '/';
+      if (qr.destinationType === 'page' && !destination.startsWith('http') && !destination.startsWith('/p/')) {
+        destination = `/p/${destination}`;
+      }
+
+      res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.redirect(302, destination);
       return;
     }
 
-    if (qr.expiresAt && new Date(qr.expiresAt).getTime() < Date.now()) {
-      res.status(410).send(`
-        <!DOCTYPE html>
-        <html>
-          <head><title>Campaign Expired - ESAIA</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-          <body style="font-family: sans-serif; background: #090a0f; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center;">
-            <div style="max-width: 400px; padding: 24px; border: 1px solid #24293d; border-radius: 16px; background: #141722;">
-              <h2 style="font-size: 20px; color: #f43f5e;">QR Code Expired</h2>
-              <p style="color: #94a3b8; font-size: 14px; margin-top: 8px;">This promotional QR campaign has expired.</p>
-            </div>
-          </body>
-        </html>
-      `);
-      return;
-    }
-
-    // 3. Asynchronous Non-blocking telemetry
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '0.0.0.0';
-    const salt = new Date().toISOString().slice(0, 10);
-    const ipHash = crypto.createHash('sha256').update(`${ip}-${salt}`).digest('hex');
-    const userAgent = req.headers['user-agent'] || 'Unknown';
-
-    // Log telemetry asynchronously without blocking client redirect
-    setImmediate(() => {
-      // Async worker telemetry dispatch
-    });
-
-    // 4. Return Immediate 302 Redirect
-    let destination = qr.destinationUrl;
-    if (qr.destinationType === 'page' && !destination.startsWith('http') && !destination.startsWith('/p/')) {
-      destination = `/p/${destination}`;
-    }
-
-    res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-    res.redirect(302, destination);
+    // If not found in cache, pass to SPA middleware so PublicQrRedirect resolves it client-side
+    return next();
   } catch (error) {
     console.error('QR Redirect resolution failure:', error);
-    res.redirect(302, '/');
+    return next();
   }
 });
 
 // ==============================================================================
-// 2. Ultra-Fast Smart Link Redirect Engine (Server-Side: /go/:slug)
+// 2. Ultra-Fast Smart Link Redirect Engine (Server-Side: /go/:slug and /r/:slug)
 // ==============================================================================
-app.get('/go/:slug', (req: Request, res: Response) => {
+app.get(['/go/:slug', '/r/:slug'], (req: Request, res: Response) => {
   const slug = req.params.slug?.trim();
-  res.redirect(302, `https://esaia.app?ref=go_${slug}`);
+  res.redirect(302, `/q/${slug}`);
 });
 
 // ==============================================================================

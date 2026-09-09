@@ -72,6 +72,9 @@ import { downloadVCard } from '../../utils/vcard';
 import { extractYouTubeId, getYouTubeEmbedUrl, getYouTubeVideoId, isYouTubeUrl } from '../../utils/youtube';
 import { DirectImageUploader } from '../../components/ui/DirectImageUploader';
 import { InlineYouTubeVideo } from '../../components/ui/InlineYouTubeVideo';
+import { qrVectorEngine } from '../../services/qr/qrVectorEngine';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
+import { QrDesignModal } from '../qr/QrDesignModal';
 
 interface PageBuilderPageProps {
   pageId: string;
@@ -97,6 +100,10 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
   // Mobile Preview frame options
   const [previewDevice, setPreviewDevice] = useState<'iphone' | 'android'>('iphone');
   const [previewScale, setPreviewScale] = useState<'mobile' | 'wide'>('mobile');
+
+  // QR Inspection & Design Studio states
+  const [isQrInspectOpen, setIsQrInspectOpen] = useState(false);
+  const [isQrDesignerOpen, setIsQrDesignerOpen] = useState(false);
 
   // Load Page, Clients and QR Codes
   useEffect(() => {
@@ -175,6 +182,57 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     if (!page?.qrCodeId) return null;
     return qrCodes.find(q => q.id === page.qrCodeId) || null;
   }, [qrCodes, page]);
+
+  // Bound QR direct redirect URL
+  const boundQrRedirectUrl = useMemo(() => {
+    return boundQr ? getQrRedirectUrl(boundQr.publicCode) : '';
+  }, [boundQr]);
+
+  const boundQrSvgSmall = useMemo(() => {
+    if (!boundQr || !boundQrRedirectUrl) return '';
+    try {
+      return qrVectorEngine.generateSvgString({
+        value: boundQrRedirectUrl,
+        size: 140,
+        styleConfig: boundQr.styleConfig
+      });
+    } catch {
+      return '';
+    }
+  }, [boundQr, boundQrRedirectUrl]);
+
+  const boundQrSvgLarge = useMemo(() => {
+    if (!boundQr || !boundQrRedirectUrl) return '';
+    try {
+      return qrVectorEngine.generateSvgString({
+        value: boundQrRedirectUrl,
+        size: 320,
+        styleConfig: boundQr.styleConfig
+      });
+    } catch {
+      return '';
+    }
+  }, [boundQr, boundQrRedirectUrl]);
+
+  const handleDownloadQrPng = async () => {
+    if (!boundQrSvgLarge || !boundQr) return;
+    try {
+      await qrVectorEngine.downloadPng(boundQrSvgLarge, `qr-${boundQr.publicCode}.png`, 4);
+      showToast('success', 'تم تحميل رمز QR بدقة فائقة (PNG)');
+    } catch {
+      showToast('error', 'فشل تحميل صورة PNG');
+    }
+  };
+
+  const handleDownloadQrSvg = () => {
+    if (!boundQrSvgLarge || !boundQr) return;
+    try {
+      qrVectorEngine.downloadSvg(boundQrSvgLarge, `qr-${boundQr.publicCode}.svg`);
+      showToast('success', 'تم تحميل رمز QR كملف متجه (SVG)');
+    } catch {
+      showToast('error', 'فشل تحميل ملف SVG');
+    }
+  };
 
   // Save changes
   const handleSavePage = async (publish = false) => {
@@ -1163,33 +1221,86 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               </div>
 
               {boundQr ? (
-                <div className="p-4 rounded-xl bg-[#0e1017] border border-emerald-500/30 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div className="p-4 rounded-xl bg-[#0e1017] border border-emerald-500/30 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
-                        <QrCode className="w-10 h-10 text-slate-900" />
-                      </div>
+                      {/* Clickable Real Vector QR Code Thumbnail */}
+                      <button
+                        type="button"
+                        onClick={() => setIsQrInspectOpen(true)}
+                        className="w-16 h-16 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 cursor-pointer shadow-md hover:ring-2 hover:ring-emerald-400 transition-all group relative overflow-hidden text-left"
+                        title="انقر لتكبير رمز الـ QR والمسح المباشر بكاميرا هاتفك"
+                      >
+                        {boundQrSvgSmall ? (
+                          <div
+                            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
+                            dangerouslySetInnerHTML={{ __html: boundQrSvgSmall }}
+                          />
+                        ) : (
+                          <QrCode className="w-10 h-10 text-slate-900" />
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <Eye className="w-5 h-5 text-white" />
+                        </div>
+                      </button>
+
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="text-sm font-bold text-white">{boundQr.name}</h4>
                           <Badge variant="success">{t.builderModule.qr.bound}</Badge>
                         </div>
-                        <p className="text-xs font-mono text-blue-400 mt-0.5">/q/{boundQr.publicCode}</p>
+                        <p className="text-xs font-mono text-emerald-400 mt-0.5 select-all">/q/{boundQr.publicCode}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          الوجهة: <span className="font-mono text-slate-300">{boundQr.destinationUrl}</span>
+                        </p>
                       </div>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="text-xs text-emerald-400 font-bold">{t.builderModule.qr.grade} {boundQr.styleConfig?.scannabilityGrade || 'A'}</span>
                       <p className="text-[10px] text-slate-400">{boundQr.totalScans} {t.qrModule.totalScans}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#1c2030]">
+                  {/* Scannable Status Banner */}
+                  <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>الرمز مرتبط وجاهز للمسح المباشر بكاميرا أي هاتف ذكي.</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-emerald-400 hover:text-emerald-300 p-0 text-xs h-auto"
+                      onClick={() => setIsQrInspectOpen(true)}
+                    >
+                      تكبير للمسح
+                    </Button>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#1c2030]">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      onClick={() => setIsQrInspectOpen(true)}
+                    >
+                      مسح وتكبير
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<Palette className="w-3.5 h-3.5" />}
+                      onClick={() => setIsQrDesignerOpen(true)}
+                    >
+                      تخصيص
+                    </Button>
                     <Button
                       variant="secondary"
                       size="sm"
                       leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                      onClick={() => window.open(`/q/${boundQr.publicCode}`, '_blank')}
+                      onClick={() => window.open(boundQrRedirectUrl, '_blank')}
                     >
                       {t.qrModule.testRedirect}
                     </Button>
@@ -1197,7 +1308,12 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       variant="ghost"
                       size="sm"
                       className="text-rose-400 hover:text-rose-300"
-                      onClick={() => pageService.unbindQrFromPage(page.id).then(() => setPage({ ...page, qrCodeId: null }))}
+                      onClick={() => {
+                        pageService.unbindQrFromPage(page.id).then(() => {
+                          setPage({ ...page, qrCodeId: null });
+                          showToast('success', 'تم فك ارتباط رمز QR');
+                        });
+                      }}
                     >
                       {t.builderModule.qr.unbindBtn}
                     </Button>
@@ -2263,6 +2379,107 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Real-time Phone Scan Modal */}
+      {boundQr && (
+        <Modal
+          isOpen={isQrInspectOpen}
+          onClose={() => setIsQrInspectOpen(false)}
+          title={`مسح رمز الـ QR: ${boundQr.name}`}
+          size="md"
+        >
+          <div className="space-y-5 text-center p-2">
+            <div className="p-3 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-xs text-emerald-300">
+              📲 <strong>المسح الفعلي المباشر:</strong> وجّه كاميرا هاتفك المحمول الآن مباشرة نحو الرمز أدناه ليتم نقلك فوراً إلى صفحة الهبوط.
+            </div>
+
+            {/* High-Resolution Vector QR Box */}
+            <div className="mx-auto w-64 h-64 sm:w-72 sm:h-72 bg-white p-3 rounded-2xl shadow-2xl flex items-center justify-center ring-4 ring-slate-800">
+              {boundQrSvgLarge ? (
+                <div
+                  className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
+                  dangerouslySetInnerHTML={{ __html: boundQrSvgLarge }}
+                />
+              ) : (
+                <QrCode className="w-24 h-24 text-slate-900" />
+              )}
+            </div>
+
+            {/* Shortcode and Direct Link */}
+            <div className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] space-y-2 text-left">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">رابط المسح القصير:</span>
+                <span className="font-mono text-emerald-400 font-bold">/q/{boundQr.publicCode}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={boundQrRedirectUrl}
+                  className="w-full px-3 py-1.5 rounded-lg bg-[#141722] border border-[#24293d] text-xs font-mono text-slate-300 select-all"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Copy className="w-3.5 h-3.5" />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(boundQrRedirectUrl);
+                    showToast('success', 'تم نسخ الرابط بنجاح');
+                  }}
+                >
+                  نسخ
+                </Button>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#1c2030]">
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Download className="w-3.5 h-3.5" />}
+                onClick={handleDownloadQrPng}
+              >
+                تحميل PNG
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Download className="w-3.5 h-3.5" />}
+                onClick={handleDownloadQrSvg}
+              >
+                تحميل SVG
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                onClick={() => window.open(boundQrRedirectUrl, '_blank')}
+              >
+                تجربة الرابط
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* QR Design Modal */}
+      {boundQr && (
+        <QrDesignModal
+          qr={boundQr}
+          clients={clients}
+          isOpen={isQrDesignerOpen}
+          onClose={() => setIsQrDesignerOpen(false)}
+          onSave={async (updatedQr) => {
+            await qrService.updateQrCode(updatedQr.id, updatedQr);
+            // Refresh QR codes list
+            const freshQrs = await qrService.getQrCodesByOrg('org_esaia_main');
+            setQrCodes(freshQrs);
+            setIsQrDesignerOpen(false);
+            showToast('success', 'تم حفظ وتطبيق تصميم رمز QR بنجاح');
+          }}
+        />
       )}
     </div>
   );

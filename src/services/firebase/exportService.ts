@@ -4,6 +4,7 @@
  */
 
 import { clientService } from './clientService';
+import { getQrRedirectUrl } from '../../utils/qrUrl';
 import { qrService } from './qrService';
 import { pageService } from './pageService';
 import { analyticsService } from './analyticsService';
@@ -81,7 +82,7 @@ export const exportService = {
       Status: q.status,
       TotalScans: q.totalScans || 0,
       UniqueScans: q.uniqueScans || 0,
-      ShortUrl: `https://esaia.app/q/${q.publicCode}`,
+      ShortUrl: getQrRedirectUrl(q.publicCode),
       CreatedDate: q.createdAt
     }));
     return this.convertToCsv(rows);
