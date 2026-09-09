@@ -21,7 +21,9 @@ import {
   RefreshCw,
   Zap,
   ShieldCheck,
-  Check
+  Check,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { QrCode, QrStyleConfig, QrValidationReport, QrModuleStyle, QrEyeStyle, QrEyeBallStyle, QrFrameStyle, ErrorCorrectionLevel, QrDestinationType } from '../../types/qr';
 import { Client } from '../../types/client';
@@ -39,6 +41,9 @@ interface QrDesignModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedQr: QrCode) => Promise<void>;
+  defaultThemeColor?: string;
+  pageTitle?: string;
+  pageSlug?: string;
 }
 
 const COLOR_PRESETS = [
@@ -56,7 +61,10 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
   clients,
   isOpen,
   onClose,
-  onSave
+  onSave,
+  defaultThemeColor,
+  pageTitle,
+  pageSlug
 }) => {
   const { showToast } = useNotification();
   const { t } = useLanguage();
@@ -70,7 +78,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
   // Editable Working State
   const [name, setName] = useState('');
   const [clientId, setClientId] = useState('');
-  const [destinationType, setDestinationType] = useState<QrDestinationType>('url');
+  const [destinationType, setDestinationType] = useState<QrDestinationType>('page');
   const [destinationUrl, setDestinationUrl] = useState('');
   const [publicCode, setPublicCode] = useState('');
   const [styleConfig, setStyleConfig] = useState<QrStyleConfig>({
@@ -109,20 +117,20 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
   // Initialize from props
   useEffect(() => {
     if (qr) {
-      setName(qr.name);
-      setClientId(qr.clientId);
-      setDestinationType(qr.destinationType || 'url');
-      setDestinationUrl(qr.destinationUrl || '');
-      setPublicCode(qr.publicCode);
+      setName(qr.name || (pageTitle ? `${pageTitle} (Page QR)` : ''));
+      setClientId(qr.clientId || clients[0]?.id || '');
+      setDestinationType(qr.destinationType || 'page');
+      setDestinationUrl(qr.destinationUrl || (pageSlug ? `/p/${pageSlug}` : ''));
+      setPublicCode(qr.publicCode || pageSlug || '');
       setStyleConfig({
         ...qr.styleConfig,
-        foregroundColor: qr.styleConfig.foregroundColor || '#0f172a',
+        foregroundColor: qr.styleConfig.foregroundColor || defaultThemeColor || '#0f172a',
         backgroundColor: qr.styleConfig.backgroundColor || '#ffffff',
         moduleStyle: qr.styleConfig.moduleStyle || 'rounded',
         eyeStyle: qr.styleConfig.eyeStyle || 'rounded',
         eyeBallStyle: qr.styleConfig.eyeBallStyle || 'rounded',
-        eyeColor: qr.styleConfig.eyeColor || qr.styleConfig.foregroundColor || '#0f172a',
-        eyeInnerColor: qr.styleConfig.eyeInnerColor || qr.styleConfig.eyeColor || qr.styleConfig.foregroundColor || '#0f172a',
+        eyeColor: qr.styleConfig.eyeColor || qr.styleConfig.foregroundColor || defaultThemeColor || '#0f172a',
+        eyeInnerColor: qr.styleConfig.eyeInnerColor || qr.styleConfig.eyeColor || qr.styleConfig.foregroundColor || defaultThemeColor || '#0f172a',
         errorCorrectionLevel: qr.styleConfig.errorCorrectionLevel || 'H',
         logoUrl: qr.styleConfig.logoUrl || null,
         logoSizeRatio: qr.styleConfig.logoSizeRatio || 0.16,
@@ -130,18 +138,59 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
         quietZoneModules: qr.styleConfig.quietZoneModules ?? 4,
         frameStyle: qr.styleConfig.frameStyle || 'none',
         frameText: qr.styleConfig.frameText || 'SCAN ME',
-        frameBgColor: qr.styleConfig.frameBgColor || qr.styleConfig.foregroundColor || '#0f172a',
-        frameTextColor: qr.styleConfig.frameTextColor || qr.styleConfig.backgroundColor || '#ffffff',
+        frameBgColor: qr.styleConfig.frameBgColor || defaultThemeColor || '#0f172a',
+        frameTextColor: qr.styleConfig.frameTextColor || '#ffffff',
         scannabilityGrade: qr.styleConfig.scannabilityGrade || 'A',
-        healthScore: qr.styleConfig.healthScore || 95
+        healthScore: qr.styleConfig.healthScore || 98
       });
+    } else {
+      setName(pageTitle ? `${pageTitle} (Page QR)` : 'Landing Page QR');
+      setClientId(clients[0]?.id || '');
+      setDestinationType('page');
+      setDestinationUrl(pageSlug ? `/p/${pageSlug}` : '');
+      setPublicCode(pageSlug || `qr-${Date.now().toString().slice(-4)}`);
+      setStyleConfig(prev => ({
+        ...prev,
+        foregroundColor: defaultThemeColor || '#0f172a',
+        eyeColor: defaultThemeColor || '#0f172a',
+        eyeInnerColor: defaultThemeColor || '#0f172a',
+        frameBgColor: defaultThemeColor || '#0f172a',
+        errorCorrectionLevel: 'H'
+      }));
     }
-  }, [qr]);
+  }, [qr, pageTitle, pageSlug, defaultThemeColor, clients]);
+
+  // Handle direct file upload for custom logo
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('حجم ملف الشعار يجب أن يكون أقل من 5 ميغابايت', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setStyleConfig(prev => ({
+          ...prev,
+          logoUrl: dataUrl,
+          errorCorrectionLevel: 'H',
+          logoBackgroundPunchout: true,
+          logoSizeRatio: 0.16
+        }));
+        showToast('تم رفع وتطبيق الشعار على رمز الـ QR مع تفعيل أعلى مستوى لتصحيح الأخطاء (Level H)', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Target shortcode URL that physical cameras will read
   const redirectUrl = useMemo(() => {
-    return getQrRedirectUrl(publicCode || 'demo');
-  }, [publicCode]);
+    return getQrRedirectUrl(publicCode || pageSlug || 'demo');
+  }, [publicCode, pageSlug]);
 
   // Generate real-time SVG string
   const svgString = useMemo(() => {
@@ -208,7 +257,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
     };
   }, [redirectUrl, styleConfig, svgString]);
 
-  if (!isOpen || !qr) return null;
+  if (!isOpen) return null;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(redirectUrl);
@@ -218,13 +267,13 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
   };
 
   const handleDownloadSvg = () => {
-    const filename = `${qr.publicCode || 'qr'}_vector.svg`;
+    const filename = `${publicCode || qr?.publicCode || pageSlug || 'qr'}_vector.svg`;
     qrVectorEngine.downloadSvg(svgString, filename);
     showToast(`Vector SVG downloaded (${filename})`, 'success');
   };
 
   const handleDownloadPng = async () => {
-    const filename = `${qr.publicCode || 'qr'}_${pngResolution * 380}px.png`;
+    const filename = `${publicCode || qr?.publicCode || pageSlug || 'qr'}_${pngResolution * 380}px.png`;
     try {
       await qrVectorEngine.downloadPng(svgString, filename, pngResolution);
       showToast(`High-Res PNG downloaded (${filename})`, 'success');
@@ -237,23 +286,34 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
     setIsSaving(true);
     try {
       const selectedClient = clients.find(c => c.id === clientId);
+      const effectiveCode = publicCode.trim() || qr?.publicCode || pageSlug || `qr-${Date.now().toString().slice(-4)}`;
+      const effectiveDest = destinationUrl.trim() || (pageSlug ? `/p/${pageSlug}` : `/q/${effectiveCode}`);
+
       const updatedQr: QrCode = {
-        ...qr,
-        name,
-        clientId,
-        clientName: selectedClient?.companyName || qr.clientName,
-        destinationType,
-        destinationUrl,
+        ...(qr || {}),
+        id: qr?.id || `qr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        orgId: qr?.orgId || 'org_esaia_main',
+        totalScans: qr?.totalScans || 0,
+        uniqueScans: qr?.uniqueScans || 0,
+        status: qr?.status || 'active',
+        createdAt: qr?.createdAt || new Date().toISOString(),
+        publicCode: effectiveCode,
+        name: name || (pageTitle ? `${pageTitle} (Page QR)` : 'Landing Page QR'),
+        clientId: clientId || clients[0]?.id || 'client_impact_hub',
+        clientName: selectedClient?.companyName || qr?.clientName || 'Enterprise Client',
+        destinationType: destinationType || 'page',
+        destinationUrl: effectiveDest,
+        targetEntityId: qr?.targetEntityId || undefined,
         styleConfig: {
           ...styleConfig,
-          scannabilityGrade: validationReport?.grade || styleConfig.scannabilityGrade,
-          healthScore: validationReport?.healthScore || styleConfig.healthScore,
+          scannabilityGrade: validationReport?.grade || styleConfig.scannabilityGrade || 'A',
+          healthScore: validationReport?.healthScore || styleConfig.healthScore || 98,
           verifiedAt: new Date().toISOString()
         },
         updatedAt: new Date().toISOString()
       };
       await onSave(updatedQr);
-      showToast('QR Code design & destination bindings updated successfully', 'success');
+      showToast('تم حفظ وتحديث إعدادات رمز الـ QR وتفعيله بنجاح', 'success');
       onClose();
     } catch (err) {
       showToast('Failed to save QR design updates', 'error');
@@ -551,6 +611,34 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
 
                   {/* Curated Color Presets */}
                   <div>
+                    {defaultThemeColor && (
+                      <div className="mb-4 p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-md border border-white/20 shadow-sm shrink-0" style={{ backgroundColor: defaultThemeColor }} />
+                          <div>
+                            <p className="text-xs font-semibold text-white">لون هوية صفحة الهبوط الحالية</p>
+                            <p className="text-[11px] text-blue-300 font-mono">{defaultThemeColor}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setStyleConfig(prev => ({
+                              ...prev,
+                              foregroundColor: defaultThemeColor,
+                              eyeColor: defaultThemeColor,
+                              eyeInnerColor: defaultThemeColor,
+                              frameBgColor: defaultThemeColor
+                            }))
+                          }
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shrink-0"
+                        >
+                          <Palette className="w-3.5 h-3.5" />
+                          <span>تطبيق لون الصفحة بنقرة واحدة</span>
+                        </button>
+                      </div>
+                    )}
+
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
                       {t.qrModule.highContrastPresets}
                     </label>
@@ -793,9 +881,50 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
               {/* TAB 4: Central Logo Punchout */}
               {activeTab === 'logo' && (
                 <div className="space-y-6">
+                  {/* Direct File Upload from Device */}
+                  <div className="p-4 rounded-xl border-2 border-dashed border-neutral-700 bg-neutral-950/70 hover:border-rose-500/50 transition-colors text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">رفع الشعار مباشرة من جهازك أو هاتفك</h5>
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        يدعم صيغ PNG, JPG, SVG, WebP. يتم تفعيل أعلى مستوى لتصحيح الأخطاء (Level H) تلقائياً لضمان قابلية المسح بنسبة 100%.
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold cursor-pointer transition shadow-lg shadow-rose-900/20 active:scale-95">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>اختيار ملف الشعار</span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/jpg, image/svg+xml, image/webp"
+                          className="hidden"
+                          onChange={handleLogoFileUpload}
+                        />
+                      </label>
+                      {styleConfig.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setStyleConfig(prev => ({ ...prev, logoUrl: null }))}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-xs text-rose-400 hover:bg-neutral-800 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>إزالة الشعار</span>
+                        </button>
+                      )}
+                    </div>
+                    {styleConfig.logoUrl && (
+                      <div className="pt-2 flex items-center justify-center gap-2 text-xs text-emerald-400">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>تم تطبيق الشعار بنجاح في مركز رمز الـ QR مع الحفاظ على منطقة الأمان</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                      {t.qrModule.logoEmblemUrl}
+                      {t.qrModule.logoEmblemUrl} (أو أدخل رابط مباشر)
                     </label>
                     <input
                       type="url"

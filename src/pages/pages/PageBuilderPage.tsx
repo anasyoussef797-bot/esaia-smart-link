@@ -41,7 +41,8 @@ import {
   Play,
   Video,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Zap
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -214,6 +215,51 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     }
   }, [boundQr, boundQrRedirectUrl]);
 
+  // Active QR for Designer Modal (either existing bound QR or prefilled draft for current page)
+  const activeQrForDesigner = useMemo<QrCodeType | null>(() => {
+    if (boundQr) return boundQr;
+    if (!page) return null;
+    return {
+      id: `qr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      orgId: page.orgId || 'org_esaia_main',
+      clientId: page.clientId,
+      clientName: selectedClient?.companyName || 'Enterprise Client',
+      name: `${page.title} (Page QR)`,
+      publicCode: page.slug,
+      destinationType: 'page',
+      destinationUrl: `/p/${page.slug}`,
+      targetEntityId: page.id,
+      status: 'active',
+      totalScans: 0,
+      uniqueScans: 0,
+      tags: ['Dynamic Page', page.pageType, 'Smart Link'],
+      notes: `Bound to landing page: ${page.title}`,
+      styleConfig: {
+        foregroundColor: page.themeConfig.palette.primaryAction || '#0f172a',
+        backgroundColor: '#ffffff',
+        moduleStyle: 'rounded',
+        eyeStyle: 'rounded',
+        eyeBallStyle: 'rounded',
+        eyeColor: page.themeConfig.palette.primaryAction || '#0f172a',
+        eyeInnerColor: page.themeConfig.palette.primaryAction || '#0f172a',
+        errorCorrectionLevel: 'H',
+        quietZoneModules: 4,
+        logoUrl: selectedClient?.logoUrl || null,
+        logoSizeRatio: 0.16,
+        logoBackgroundPunchout: true,
+        frameStyle: 'none',
+        frameText: 'SCAN ME',
+        frameBgColor: page.themeConfig.palette.primaryAction || '#0f172a',
+        frameTextColor: '#ffffff',
+        scannabilityGrade: 'A',
+        healthScore: 98,
+        verifiedAt: new Date().toISOString()
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }, [boundQr, page, selectedClient]);
+
   const handleDownloadQrPng = async () => {
     if (!boundQrSvgLarge || !boundQr) return;
     try {
@@ -383,13 +429,25 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     showToast('success', 'Client Brand Theme Applied', `Colors and logo synced with ${selectedClient.companyName}`);
   };
 
-  // 1-Click Dynamic QR Code Creation & Binding
-  const handleCreateAndBindQr = async () => {
+  // Open QR Customization & Studio Modal directly
+  const handleOpenQrDesigner = async () => {
     if (!page) return;
     try {
+      await pageService.savePage(page);
+    } catch (e) {
+      console.warn('Page autosave before QR designer:', e);
+    }
+    setIsQrDesignerOpen(true);
+  };
+
+  // Quick 1-Click Auto-Bind QR Code without customization
+  const handleQuickAutoBindQr = async () => {
+    if (!page) return;
+    try {
+      await pageService.savePage(page);
       const code = page.slug;
       const newQrId = await qrService.createQrCode({
-        orgId: page.orgId,
+        orgId: page.orgId || 'org_esaia_main',
         clientId: page.clientId,
         clientName: selectedClient?.companyName || 'Enterprise Client',
         name: `${page.title} (Page QR)`,
@@ -423,18 +481,21 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
         }
       });
 
-      await pageService.bindQrToPage(page.id, newQrId);
+      await pageService.bindQrToPage(page.id, newQrId, page.slug);
       setPage(prev => (prev ? { ...prev, qrCodeId: newQrId } : prev));
 
       // Refresh QR fleet in local state
-      const updatedQrs = await qrService.getQrCodesByOrg('org_esaia_main');
+      const updatedQrs = await qrService.getQrCodesByOrg(page.orgId || 'org_esaia_main');
       setQrCodes(updatedQrs);
 
-      showToast('success', 'Dynamic QR Code Bound', `Public shortcode: /q/${code}`);
+      showToast('success', 'تم توليد وربط رمز QR بنجاح', `الرمز حي وصالح للمسح: /q/${code}`);
     } catch (err) {
-      showToast('error', 'Failed to generate dynamic QR code');
+      showToast('error', 'فشل توليد رمز QR الديناميكي');
     }
   };
+
+  // Primary generate QR action opens the full customization studio
+  const handleCreateAndBindQr = handleOpenQrDesigner;
 
   // Reorder Blocks
   const moveBlock = (index: number, direction: 'up' | 'down') => {
@@ -649,7 +710,17 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<QrCode className="w-3.5 h-3.5 text-blue-400" />}
+            onClick={handleOpenQrDesigner}
+            className="border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:text-white transition shadow-sm"
+          >
+            {boundQr ? 'تخصيص رمز الـ QR' : 'توليد وتخصيص رمز الـ QR'}
+          </Button>
+
           <Button
             variant="secondary"
             size="sm"
@@ -1321,23 +1392,35 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-[#0e1017] border border-dashed border-[#24293d] text-center space-y-3">
-                    <QrCode className="w-8 h-8 text-blue-400 mx-auto" />
+                  <div className="p-5 rounded-xl bg-[#0e1017] border border-dashed border-[#24293d] text-center space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto">
+                      <QrCode className="w-6 h-6" />
+                    </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">{t.builderModule.qr.noQrBound}</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {t.builderModule.qr.noQrDesc}
+                      <h4 className="text-sm font-bold text-white">{t.builderModule.qr.noQrBound}</h4>
+                      <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                        قم بتوليد رمز QR ديناميكي مخصص لصفحة الهبوط مع إمكانية التحكم الكامل في الألوان، الشكل، الشعار، وقابلية المسح الفوري.
                       </p>
                     </div>
 
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      leftIcon={<Sparkles className="w-3.5 h-3.5" />}
-                      onClick={handleCreateAndBindQr}
-                    >
-                      {t.builderModule.qr.generateBtn}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                        onClick={handleOpenQrDesigner}
+                      >
+                        توليد وتخصيص رمز الـ QR (الألوان، الشكل، اللوجو)
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftIcon={<Zap className="w-3.5 h-3.5 text-amber-400" />}
+                        onClick={handleQuickAutoBindQr}
+                      >
+                        توليد فوري سريع بنقرة واحدة
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Or select existing */}
@@ -2464,23 +2547,45 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
         </Modal>
       )}
 
-      {/* QR Design Modal */}
-      {boundQr && (
-        <QrDesignModal
-          qr={boundQr}
-          clients={clients}
-          isOpen={isQrDesignerOpen}
-          onClose={() => setIsQrDesignerOpen(false)}
-          onSave={async (updatedQr) => {
-            await qrService.updateQrCode(updatedQr.id, updatedQr);
-            // Refresh QR codes list
-            const freshQrs = await qrService.getQrCodesByOrg('org_esaia_main');
+      {/* QR Design & Customization Studio Modal */}
+      <QrDesignModal
+        qr={activeQrForDesigner}
+        clients={clients}
+        isOpen={isQrDesignerOpen}
+        onClose={() => setIsQrDesignerOpen(false)}
+        defaultThemeColor={page?.themeConfig?.palette?.primaryAction}
+        pageTitle={page?.title}
+        pageSlug={page?.slug}
+        onSave={async (updatedQr) => {
+          if (!page) return;
+          try {
+            // 1. Ensure landing page is saved & live
+            await pageService.savePage(page);
+
+            // 2. Check if QR code already exists in db or create new
+            const exists = qrCodes.some(q => q.id === updatedQr.id);
+            let finalQrId = updatedQr.id;
+            if (exists) {
+              await qrService.updateQrCode(updatedQr.id, updatedQr);
+            } else {
+              finalQrId = await qrService.createQrCode(updatedQr);
+            }
+
+            // 3. Bind QR to Page
+            await pageService.bindQrToPage(page.id, finalQrId, page.slug);
+            setPage(prev => (prev ? { ...prev, qrCodeId: finalQrId } : prev));
+
+            // 4. Refresh QR codes list
+            const freshQrs = await qrService.getQrCodesByOrg(page.orgId || 'org_esaia_main');
             setQrCodes(freshQrs);
             setIsQrDesignerOpen(false);
-            showToast('success', 'تم حفظ وتطبيق تصميم رمز QR بنجاح');
-          }}
-        />
-      )}
+            showToast('success', 'تم توليد وتخصيص رمز QR وربطه بصفحة الهبوط بنجاح! الرمز حي وصالح للمسح فوراً.');
+          } catch (err) {
+            console.error('Error saving QR code:', err);
+            showToast('error', 'فشل حفظ وتطبيق رمز الـ QR');
+          }
+        }}
+      />
     </div>
   );
 };

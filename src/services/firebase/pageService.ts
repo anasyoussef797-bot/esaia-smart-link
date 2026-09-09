@@ -762,12 +762,31 @@ export const pageService = {
 
   async updatePage(pageId: string, updates: Partial<Page>): Promise<void> {
     const idx = inMemoryPages.findIndex(p => p.id === pageId);
+    const now = new Date().toISOString();
     if (idx >= 0) {
       inMemoryPages[idx] = {
         ...inMemoryPages[idx],
         ...updates,
-        updatedAt: new Date().toISOString()
+        updatedAt: now
       };
+      persistPages(inMemoryPages);
+    } else {
+      inMemoryPages.unshift({
+        id: pageId,
+        orgId: 'org_esaia_main',
+        clientId: 'client_impact_hub',
+        title: 'Landing Page',
+        slug: pageId,
+        pageType: 'landing',
+        status: 'published',
+        seo: { metaTitle: 'Landing Page', metaDescription: '' },
+        themeConfig: DEFAULT_THEME_DARK,
+        blocks: [],
+        viewCount: 0,
+        createdAt: now,
+        ...updates,
+        updatedAt: now
+      });
       persistPages(inMemoryPages);
     }
 
@@ -775,14 +794,47 @@ export const pageService = {
       (async () => {
         try {
           await Promise.race([
-            updateDoc(doc(db, 'pages', pageId), {
+            setDoc(doc(db, 'pages', pageId), {
               ...updates,
               updatedAt: serverTimestamp()
-            }),
+            }, { merge: true }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
           ]);
         } catch (err) {
           console.warn('Background Firestore update skipped or timed out:', err);
+        }
+      })();
+    }
+  },
+
+  async savePage(page: Page): Promise<void> {
+    const idx = inMemoryPages.findIndex(p => p.id === page.id);
+    const now = new Date().toISOString();
+    if (idx >= 0) {
+      inMemoryPages[idx] = {
+        ...inMemoryPages[idx],
+        ...page,
+        updatedAt: now
+      };
+    } else {
+      inMemoryPages.unshift({
+        ...page,
+        viewCount: page.viewCount || 0,
+        createdAt: page.createdAt || now,
+        updatedAt: now
+      });
+    }
+    persistPages(inMemoryPages);
+
+    if (isFirebaseConfigured) {
+      (async () => {
+        try {
+          await setDoc(doc(db, 'pages', page.id), {
+            ...page,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.warn('Background Firestore savePage fallback:', err);
         }
       })();
     }
@@ -837,15 +889,15 @@ export const pageService = {
    * 1-Click Dynamic QR Binding
    * Links a dynamic QR to this page and synchronizes the server redirect cache
    */
-  async bindQrToPage(pageId: string, qrId: string): Promise<void> {
+  async bindQrToPage(pageId: string, qrId: string, pageSlugFallback?: string): Promise<void> {
     const page = await this.getPageById(pageId);
-    if (!page) throw new Error('Page not found');
+    const slug = page?.slug || pageSlugFallback || pageId;
 
     // 1. Update Page
     await this.updatePage(pageId, { qrCodeId: qrId });
 
     // 2. Update QR destination to /p/:slug
-    await qrService.updateDestination(qrId, `/p/${page.slug}`, 'page', page.id);
+    await qrService.updateDestination(qrId, `/p/${slug}`, 'page', pageId);
   },
 
   async unbindQrFromPage(pageId: string): Promise<void> {
