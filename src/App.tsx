@@ -12,10 +12,8 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
-// Direct import for immediate authentication screen render
-import { LoginPage } from './pages/auth/LoginPage';
-
 // Dynamic Code-Splitting / Lazy-Loaded Route Chunks for Ultra-Fast Initial Load
+const LoginPage = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const OverviewPage = lazy(() => import('./pages/dashboard/OverviewPage').then(m => ({ default: m.OverviewPage })));
 const ClientsPage = lazy(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage })));
 const ClientDetailPage = lazy(() => import('./pages/clients/ClientDetailPage').then(m => ({ default: m.ClientDetailPage })));
@@ -88,7 +86,11 @@ function AppRouter() {
   // 3. Unauthenticated user route check
   const isPublicRoute = currentPath.startsWith('/p/') || currentPath.startsWith('/q/') || currentPath.startsWith('/go/') || currentPath.startsWith('/r/');
   if (!isAuthenticated && !isPublicRoute) {
-    return <LoginPage onLoginSuccess={() => navigate('/admin/overview')} />;
+    return (
+      <Suspense fallback={<LoadingScreen message="Loading Authentication..." />}>
+        <LoginPage onLoginSuccess={() => navigate('/admin/overview')} />
+      </Suspense>
+    );
   }
 
   // 3. Admin Application Router with Role & Permission Guards

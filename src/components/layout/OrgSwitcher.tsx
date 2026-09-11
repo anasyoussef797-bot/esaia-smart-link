@@ -45,7 +45,9 @@ export const OrgSwitcher: React.FC = () => {
         id="org-switcher-trigger"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#141722] [data-theme=light]:bg-white [data-theme=beige]:bg-white hover:bg-[#1a1e2d] [data-theme=light]:hover:bg-slate-50 [data-theme=beige]:hover:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] text-xs text-left rtl:text-right transition-colors cursor-pointer w-full max-w-[220px]"
-        aria-label="Switch organization"
+        aria-label={`${currentOrg?.name || 'Workspace'} - Switch organization`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         <div className="w-6 h-6 rounded-md bg-blue-600/20 [data-theme=light]:bg-blue-100 [data-theme=beige]:bg-blue-100 border border-blue-500/30 [data-theme=light]:border-blue-300 [data-theme=beige]:border-blue-300 flex items-center justify-center text-blue-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-blue-800 shrink-0 font-bold text-[11px] overflow-hidden">
           {currentOrg?.branding?.logoUrl ? (

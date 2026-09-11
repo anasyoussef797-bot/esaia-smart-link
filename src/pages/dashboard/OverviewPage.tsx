@@ -169,7 +169,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-500 px-2 pt-2 border-t border-[#1c2030]">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 px-2 pt-2 border-t border-[#1c2030]">
               <span>Aug 20</span>
               <span className="hidden sm:inline">Aug 25</span>
               <span>Aug 30</span>
@@ -204,7 +204,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
                 </div>
                 <div className="text-right rtl:text-left shrink-0">
                   <p className="text-xs font-bold text-blue-400">{item.scans}</p>
-                  <p className="text-[10px] text-slate-500">{t.actions.details}</p>
+                  <p className="text-[10px] text-slate-400">{t.actions.details}</p>
                 </div>
               </motion.div>
             ))}

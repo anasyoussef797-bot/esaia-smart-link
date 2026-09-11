@@ -27,15 +27,27 @@ export const isFirebaseConfigured = Boolean(
   import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'esaia-saas'
 );
 
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
+// Only initialize live Firebase SDK services if valid production credentials exist
+// This prevents 400 Bad Request network errors to Google Identity Toolkit in demo/preview environments
+let app: FirebaseApp | null = null;
+if (isFirebaseConfigured) {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 }
 
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const storage: FirebaseStorage = getStorage(app);
+export const auth: Auth = (isFirebaseConfigured && app)
+  ? getAuth(app)
+  : ({
+      currentUser: null,
+      onAuthStateChanged: () => () => {},
+      signOut: async () => {},
+    } as unknown as Auth);
+
+export const db: Firestore = (isFirebaseConfigured && app)
+  ? getFirestore(app)
+  : ({} as unknown as Firestore);
+
+export const storage: FirebaseStorage = (isFirebaseConfigured && app)
+  ? getStorage(app)
+  : ({} as unknown as FirebaseStorage);
 
 export default app;

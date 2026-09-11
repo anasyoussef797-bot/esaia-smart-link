@@ -1,0 +1,17 @@
+# ESAIA Enterprise QR & Smart Link Platform
+
+> Production-grade multi-tenant SaaS platform for dynamic QR codes, landing page builders, digital business cards, smart links, and scan analytics.
+
+## Overview
+ESAIA provides enterprise-grade infrastructure for generating, designing, managing, and tracking dynamic QR codes, mobile-first micro-pages, and digital vCards.
+
+## Core Capabilities
+- Dynamic QR Generation with Vector Rendering (SVG, ultra-high-resolution PNG, and print-ready JPEG 300 DPI)
+- Visual Landing Page Builder with drag-and-drop sections
+- Digital Business Cards (vCard 3.0 / 4.0) with contact saving
+- Real-time Edge Redirection & Scan Telemetry
+- Multi-Tenant Workspace & Client Fleet Management
+
+## Links
+- [Platform Homepage](https://esaia-smart-link.vercel.app/)
+- [Admin Workspace](https://esaia-smart-link.vercel.app/admin)

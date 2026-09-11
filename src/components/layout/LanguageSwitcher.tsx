@@ -34,7 +34,9 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({ className }
         id="language-switcher-trigger"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#1a1e2d] border border-transparent hover:border-[#24293d] transition-all text-xs font-medium cursor-pointer"
-        aria-label={t.header.language}
+        aria-label={`${currentLanguageInfo.nativeName} - ${t.header.language}`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
         title={t.header.language}
       >
         <span className="text-sm">{currentLanguageInfo.flag}</span>

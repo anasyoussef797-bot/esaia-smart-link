@@ -1,0 +1,7 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin/settings/export
+
+# Sitemaps
+Sitemap: https://esaia-smart-link.vercel.app/sitemap.xml

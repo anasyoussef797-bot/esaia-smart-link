@@ -50,12 +50,16 @@ export const CardHeader: React.FC<{
   description?: string;
   action?: ReactNode;
   className?: string;
-}> = ({ id, title, description, action, className }) => (
-  <div id={id} className={clsx('flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4', className)}>
-    <div className="min-w-0">
-      <h3 className="text-base font-semibold text-white tracking-tight leading-tight">{title}</h3>
-      {description && <p className="text-xs text-slate-400 mt-1 leading-relaxed">{description}</p>}
+  headingLevel?: 'h2' | 'h3' | 'h4';
+}> = ({ id, title, description, action, className, headingLevel = 'h2' }) => {
+  const HeadingTag = headingLevel;
+  return (
+    <div id={id} className={clsx('flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4', className)}>
+      <div className="min-w-0">
+        <HeadingTag className="text-base font-semibold text-white tracking-tight leading-tight">{title}</HeadingTag>
+        {description && <p className="text-xs text-slate-400 mt-1 leading-relaxed">{description}</p>}
+      </div>
+      {action && <div className="shrink-0 self-start sm:self-auto">{action}</div>}
     </div>
-    {action && <div className="shrink-0 self-start sm:self-auto">{action}</div>}
-  </div>
-);
+  );
+};
