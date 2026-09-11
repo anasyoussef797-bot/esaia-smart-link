@@ -942,6 +942,7 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
         clients={clients}
         onClose={() => setIsCreateOpen(false)}
         onCreated={newQr => setQrs(prev => [newQr, ...prev])}
+        onOpenDesigner={qr => setEditingQr(qr)}
       />
     </div>
   );

@@ -44,9 +44,9 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
       const json = await exportService.exportTenantData(currentOrg?.id || 'org_esaia_main');
       const filename = `esaia_complete_tenant_backup_${currentOrg?.id || 'main'}_${new Date().toISOString().split('T')[0]}.json`;
       exportService.downloadFile(json, filename, 'application/json');
-      showToast('success', 'Full Tenant Backup Complete', `${filename} generated.`);
+      showToast('success', t.dataExportModule?.backupSuccess || 'Full Tenant Backup Complete', `${filename} generated.`);
     } catch (err: any) {
-      showToast('error', 'Export Failed', err.message);
+      showToast('error', t.dataExportModule?.backupFailed || 'Export Failed', err.message);
     } finally {
       setIsExportingFull(false);
     }
@@ -78,9 +78,9 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
       }
 
       exportService.downloadFile(csv, filename, 'text/csv');
-      showToast('success', 'Dataset Exported', `${filename} generated.`);
+      showToast('success', t.dataExportModule?.backupSuccess || 'Dataset Exported', `${filename} generated.`);
     } catch (err: any) {
-      showToast('error', 'Export Failed', err.message);
+      showToast('error', t.dataExportModule?.backupFailed || 'Export Failed', err.message);
     } finally {
       setActiveExportingId(null);
     }
@@ -89,36 +89,36 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
   const exportDatasets = [
     {
       id: 'qrs',
-      title: 'Dynamic QR Fleet Dataset',
-      description: 'All dynamic QR codes, campaign statuses, scan counters, destination URLs, and short link slugs.',
+      title: t.dataExportModule?.qrsTitle || 'Dynamic QR Fleet Dataset',
+      description: t.dataExportModule?.qrsDesc || 'All dynamic QR codes, campaign statuses, scan counters, destination URLs, and short link slugs.',
       icon: <QrCode className="w-5 h-5 text-blue-400" />,
       recordType: 'QRs'
     },
     {
       id: 'clients',
-      title: 'Client CRM Directory',
-      description: 'Enterprise accounts, contact personas, email addresses, phone contacts, industries, and active assets.',
+      title: t.dataExportModule?.clientsTitle || 'Client CRM Directory',
+      description: t.dataExportModule?.clientsDesc || 'Enterprise accounts, contact personas, email addresses, phone contacts, industries, and active assets.',
       icon: <Users className="w-5 h-5 text-emerald-400" />,
       recordType: 'Clients'
     },
     {
       id: 'pages',
-      title: 'Mobile Landing Pages & Menus',
-      description: 'Published landing pages, contactless menus, digital business cards, block layouts, and view metrics.',
+      title: t.dataExportModule?.pagesTitle || 'Mobile Landing Pages & Menus',
+      description: t.dataExportModule?.pagesDesc || 'Published landing pages, contactless menus, digital business cards, block layouts, and view metrics.',
       icon: <Layers className="w-5 h-5 text-purple-400" />,
       recordType: 'Pages'
     },
     {
       id: 'analytics',
-      title: 'Scan Telemetry & Rollups',
-      description: '30-day pre-aggregated daily scan metrics, unique visitors, device platforms, and geographic hotspots.',
+      title: t.dataExportModule?.analyticsTitle || 'Scan Telemetry & Rollups',
+      description: t.dataExportModule?.analyticsDesc || '30-day pre-aggregated daily scan metrics, unique visitors, device platforms, and geographic hotspots.',
       icon: <BarChart3 className="w-5 h-5 text-amber-400" />,
       recordType: 'Telemetry'
     },
     {
       id: 'audit',
-      title: 'Immutable Security Audit Trail',
-      description: 'Tamper-proof event logs, actor email signatures, timestamps, IP hashes, and administrative events.',
+      title: t.dataExportModule?.auditTitle || 'Immutable Security Audit Trail',
+      description: t.dataExportModule?.auditDesc || 'Tamper-proof event logs, actor email signatures, timestamps, IP hashes, and administrative events.',
       icon: <ShieldCheck className="w-5 h-5 text-rose-400" />,
       recordType: 'Audit Events'
     }
@@ -137,16 +137,16 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
                 leftIcon={<ArrowLeft className="w-4 h-4 rtl:rotate-180" />}
                 onClick={() => onNavigate('/admin/settings')}
               >
-                Settings
+                {t.dataExportModule?.backToSettings || t.nav?.settings || 'Settings'}
               </Button>
             )}
             <Badge variant="brand">Zero-Lock-In Guarantee</Badge>
           </div>
           <h1 className="text-xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
-            Data Sovereignty & Enterprise Backup Center
+            {t.dataExportModule?.title || 'Data Sovereignty & Enterprise Backup Center'}
           </h1>
           <p className="text-xs text-slate-400 [data-theme=light]:text-slate-600 [data-theme=beige]:text-[#8c7e73] mt-1">
-            Export 100% of your organization's records into open, standardized formats anytime.
+            {t.dataExportModule?.subtitle || 'Export 100% of your organization\'s records into open, standardized formats anytime.'}
           </p>
         </div>
       </div>
@@ -157,14 +157,13 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2 text-blue-400 font-semibold text-sm">
               <Database className="w-4 h-4" />
-              <span>Comprehensive Organization Snapshot (JSON)</span>
+              <span>{t.dataExportModule?.fullBackupTitle || 'Comprehensive Organization Snapshot (JSON)'}</span>
             </div>
             <h2 className="text-lg font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              1-Click Complete Database Portability Package
+              {t.dataExportModule?.fullBackupTitle || '1-Click Complete Database Portability Package'}
             </h2>
             <p className="text-xs text-slate-300 [data-theme=light]:text-slate-600 [data-theme=beige]:text-[#5e544c] leading-relaxed">
-              Downloads a unified, self-contained JSON archive containing your client directories, dynamic QR codes,
-              landing pages, content blocks, daily telemetry rollups, and tamper-proof security audit trails.
+              {t.dataExportModule?.fullBackupDesc || 'Downloads a unified, self-contained JSON archive containing your client directories, dynamic QR codes, landing pages, content blocks, daily telemetry rollups, and tamper-proof security audit trails.'}
             </p>
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] pt-1">
               <span className="flex items-center gap-1.5">
@@ -190,7 +189,7 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
               leftIcon={<Download className="w-4 h-4" />}
               onClick={handleFullBackup}
             >
-              Export Full Database (.json)
+              {isExportingFull ? (t.dataExportModule?.exporting || 'Exporting...') : (t.dataExportModule?.fullBackupBtn || 'Export Full Database (.json)')}
             </Button>
           </div>
         </div>
@@ -200,7 +199,7 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
-            Granular Structured CSV Datasets
+            {t.dataExportModule?.datasetsTitle || 'Granular Structured CSV Datasets'}
           </h3>
           <span className="text-xs text-slate-400 [data-theme=light]:text-slate-500">
             Ready for Microsoft Excel, Google Sheets, or BI pipelines
@@ -239,7 +238,7 @@ export const DataExportPage: React.FC<{ onNavigate?: (path: string) => void }> =
                     leftIcon={<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />}
                     onClick={() => handleExportCsv(ds.id as any)}
                   >
-                    Export CSV
+                    {t.dataExportModule?.exportCsv || 'Export CSV'}
                   </Button>
                 </div>
               </Card>

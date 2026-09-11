@@ -101,7 +101,7 @@ export const AuditPage: React.FC = () => {
 
   // Distinct action categories
   const actionCategories = [
-    { value: 'all', label: 'All Actions' },
+    { value: 'all', label: t.auditModule?.allActions || 'All Actions' },
     { value: 'user:login', label: 'User Logins' },
     { value: 'user:invite', label: 'User Invitations' },
     { value: 'qr:create', label: 'QR Creations' },
@@ -129,12 +129,14 @@ export const AuditPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
-              {t.auditModule.title}
+              {t.auditModule?.title || 'Security & Administrative Audit Logs'}
             </h1>
-            <Badge variant="success">Append-Only Immutability</Badge>
+            <Badge variant="success">
+              {t.auditModule?.appendOnly || 'Append-Only Immutability'}
+            </Badge>
           </div>
           <p className="text-xs text-slate-400 [data-theme=light]:text-slate-600 [data-theme=beige]:text-[#8c7e73] mt-1">
-            {t.auditModule.subtitle} • Compliant with ISO 27001 & SOC 2 telemetry isolation.
+            {t.auditModule?.subtitle || 'Immutable audit trail for all QR destination updates, role changes, and migrations.'}
           </p>
         </div>
 
@@ -146,7 +148,7 @@ export const AuditPage: React.FC = () => {
             leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
             onClick={loadLogs}
           >
-            Refresh
+            {t.auditModule?.refresh || t.actions.refresh || 'Refresh'}
           </Button>
           <Button
             variant="secondary"
@@ -175,10 +177,10 @@ export const AuditPage: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Security Ledger Status
+              {t.auditModule?.ledgerStatus || 'Security Ledger Status'}
             </p>
             <p className="text-sm font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              100% Cryptographic Integrity
+              {t.auditModule?.cryptoIntegrity || '100% Cryptographic Integrity'}
             </p>
           </div>
         </Card>
@@ -189,10 +191,10 @@ export const AuditPage: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Events Retained
+              {t.auditModule?.eventsRetained || 'Events Retained'}
             </p>
             <p className="text-sm font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              {logs.length} Recorded Activities
+              {logs.length} {t.auditModule?.eventsRetained || 'Recorded Activities'}
             </p>
           </div>
         </Card>
@@ -203,7 +205,7 @@ export const AuditPage: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Tenant Partitioning
+              {t.auditModule?.tenantPartitioning || 'Tenant Partitioning'}
             </p>
             <p className="text-sm font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] font-mono">
               {currentOrg?.id || 'org_esaia_main'}
@@ -218,7 +220,7 @@ export const AuditPage: React.FC = () => {
           <div className="flex-1">
             <Input
               id="audit-search-input"
-              placeholder="Search by actor email, action name, resource ID, or IP..."
+              placeholder={t.auditModule?.searchPlaceholder || 'Search by actor email, action name, resource ID, or IP...'}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -247,8 +249,8 @@ export const AuditPage: React.FC = () => {
               onChange={e => setSelectedStatus(e.target.value)}
               className="px-3 py-2 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#eae4d9] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] text-xs text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d] focus:outline-hidden focus:border-blue-500"
             >
-              <option value="all">All Statuses</option>
-              <option value="success">Success</option>
+              <option value="all">{t.auditModule?.allStatuses || 'All Statuses'}</option>
+              <option value="success">{t.actions.status || 'Success'}</option>
               <option value="warning">Warning</option>
               <option value="failure">Failure</option>
             </select>
@@ -260,14 +262,14 @@ export const AuditPage: React.FC = () => {
               onChange={e => setSelectedTimeRange(e.target.value as any)}
               className="px-3 py-2 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#eae4d9] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] text-xs text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d] focus:outline-hidden focus:border-blue-500"
             >
-              <option value="all">All Time</option>
-              <option value="today">Today (24h)</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
+              <option value="all">{t.auditModule?.allTime || 'All Time'}</option>
+              <option value="today">{t.auditModule?.today || 'Today (24h)'}</option>
+              <option value="7d">{t.auditModule?.last7Days || 'Last 7 Days'}</option>
+              <option value="30d">{t.auditModule?.last30Days || 'Last 30 Days'}</option>
             </select>
 
             <Button type="submit" size="sm" variant="secondary">
-              Filter
+              {t.actions.filter || 'Filter'}
             </Button>
           </div>
         </form>
@@ -278,16 +280,16 @@ export const AuditPage: React.FC = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs font-mono">Fetching Immutable Audit Ledger...</p>
+            <p className="text-xs font-mono">{t.auditModule?.fetchingLedger || 'Fetching Immutable Audit Ledger...'}</p>
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-16 px-4">
             <ShieldCheck className="w-10 h-10 text-slate-500 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              No Audit Records Found
+              {t.auditModule?.noRecordsFound || 'No Audit Records Found'}
             </h3>
             <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 mt-1">
-              No matching activity events match the selected criteria.
+              {t.auditModule?.noRecordsDesc || 'No matching activity events match the selected criteria.'}
             </p>
           </div>
         ) : (
@@ -295,13 +297,13 @@ export const AuditPage: React.FC = () => {
             <table className="w-full text-left rtl:text-right text-xs">
               <thead>
                 <tr className="border-b border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] bg-[#090a0f]/50 [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 text-slate-400 [data-theme=light]:text-slate-500 font-medium">
-                  <th className="py-3 px-4">Action Event</th>
-                  <th className="py-3 px-4">Actor Email</th>
-                  <th className="py-3 px-4">Resource Target</th>
-                  <th className="py-3 px-4">Origin IP</th>
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right rtl:text-left">Inspect</th>
+                  <th className="py-3 px-4">{t.auditModule?.actionEvent || 'Action Event'}</th>
+                  <th className="py-3 px-4">{t.auditModule?.actorEmail || 'Actor Email'}</th>
+                  <th className="py-3 px-4">{t.auditModule?.resourceTarget || 'Resource Target'}</th>
+                  <th className="py-3 px-4">{t.auditModule?.originIp || 'Origin IP'}</th>
+                  <th className="py-3 px-4">{t.auditModule?.timestamp || 'Timestamp'}</th>
+                  <th className="py-3 px-4 text-center">{t.auditModule?.status || 'Status'}</th>
+                  <th className="py-3 px-4 text-right rtl:text-left">{t.auditModule?.inspect || 'Inspect'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1c2030] [data-theme=light]:divide-slate-200 [data-theme=beige]:divide-[#dfd7cb]">
@@ -363,7 +365,7 @@ export const AuditPage: React.FC = () => {
                           leftIcon={<Code className="w-3.5 h-3.5" />}
                           onClick={() => setInspectedLog(log)}
                         >
-                          Details
+                          {t.auditModule?.details || 'Details'}
                         </Button>
                       </td>
                     </tr>
@@ -380,32 +382,40 @@ export const AuditPage: React.FC = () => {
         <Modal
           isOpen={Boolean(inspectedLog)}
           onClose={() => setInspectedLog(null)}
-          title="Audit Record Payload Inspector"
-          description={`Tamper-proof event snapshot for ${inspectedLog.action}`}
+          title={t.auditModule?.modalTitle || 'Audit Record Payload Inspector'}
+          description={`${t.auditModule?.modalDesc || 'Tamper-proof event snapshot for'} ${inspectedLog.action}`}
         >
           <div className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-slate-100 [data-theme=beige]:bg-[#eae4d9] border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]">
               <div>
-                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">EVENT ID</span>
+                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">
+                  {t.auditModule?.eventId || 'EVENT ID'}
+                </span>
                 <span className="font-mono text-slate-200 [data-theme=light]:text-slate-800 font-bold">{inspectedLog.id}</span>
               </div>
               <div>
-                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">ORGANIZATION ID</span>
+                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">
+                  {t.auditModule?.orgId || 'ORGANIZATION ID'}
+                </span>
                 <span className="font-mono text-slate-200 [data-theme=light]:text-slate-800 font-bold">{inspectedLog.orgId}</span>
               </div>
               <div>
-                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">ACTOR EMAIL</span>
+                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">
+                  {t.auditModule?.actorEmail || 'ACTOR EMAIL'}
+                </span>
                 <span className="text-blue-400 font-medium">{inspectedLog.actorEmail}</span>
               </div>
               <div>
-                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">RESOURCE TARGET</span>
+                <span className="text-slate-400 [data-theme=light]:text-slate-500 block text-[10px]">
+                  {t.auditModule?.resourceTarget || 'RESOURCE TARGET'}
+                </span>
                 <span className="font-mono text-slate-200 [data-theme=light]:text-slate-800">{inspectedLog.resourceId}</span>
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-300 [data-theme=light]:text-slate-700 mb-1.5">
-                Structured Metadata Payload (JSON)
+                {t.auditModule?.metadataPayload || 'Structured Metadata Payload (JSON)'}
               </label>
               <pre className="p-3.5 rounded-lg bg-[#090a0f] [data-theme=light]:bg-slate-900 text-emerald-400 font-mono text-[11px] overflow-x-auto max-h-60 border border-[#1c2030]">
                 {JSON.stringify(inspectedLog.metadata || {}, null, 2)}
@@ -414,10 +424,10 @@ export const AuditPage: React.FC = () => {
 
             <div className="flex items-center justify-between pt-3 border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]">
               <span className="text-[11px] text-slate-400 font-mono">
-                Logged at {new Date(inspectedLog.timestamp).toISOString()}
+                {t.auditModule?.loggedAt || 'Logged at'} {new Date(inspectedLog.timestamp).toISOString()}
               </span>
               <Button size="sm" onClick={() => setInspectedLog(null)}>
-                Close Inspector
+                {t.auditModule?.closeInspector || 'Close Inspector'}
               </Button>
             </div>
           </div>

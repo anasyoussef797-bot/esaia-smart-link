@@ -256,14 +256,14 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
-              {t.domainsModule.title}
+              {t.domainsModule?.title || 'Custom Domains & Branded Redirects'}
             </h1>
             <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
               Enterprise CNAME Engine
             </span>
           </div>
           <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-1">
-            {t.domainsModule.subtitle} Connect branded subdomains for custom QR links and white-labeled mobile pages.
+            {t.domainsModule?.subtitle || 'Connect branded subdomains for custom QR links and white-labeled mobile pages.'}
           </p>
         </div>
 
@@ -278,7 +278,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
               loadData();
             }}
           >
-            Refresh
+            {t.domainsModule?.refresh || t.actions?.refresh || 'Refresh'}
           </Button>
 
           {isOrgAdmin() && (
@@ -287,7 +287,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
               leftIcon={<Plus className="w-4 h-4" />}
               onClick={() => setIsAddModalOpen(true)}
             >
-              {t.domainsModule.connectDomain}
+              {t.domainsModule?.connectDomain || 'Connect Custom Domain'}
             </Button>
           )}
         </div>
@@ -301,7 +301,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           </div>
           <div>
             <p className="text-[11px] font-medium text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Configured Domains
+              {t.domainsModule?.configuredDomains || 'Configured Domains'}
             </p>
             <p className="text-lg font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
               {domains.length}
@@ -315,10 +315,10 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           </div>
           <div>
             <p className="text-[11px] font-medium text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Active with SSL
+              {t.domainsModule?.activeWithSsl || 'Active with SSL'}
             </p>
             <p className="text-lg font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              {activeCount} <span className="text-xs font-normal text-emerald-400">Verified</span>
+              {activeCount} <span className="text-xs font-normal text-emerald-400">{t.domainsModule?.sslValid || 'Verified'}</span>
             </p>
           </div>
         </Card>
@@ -329,10 +329,10 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           </div>
           <div>
             <p className="text-[11px] font-medium text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
-              Pending DNS Challenge
+              {t.domainsModule?.pendingDns || 'Pending DNS Challenge'}
             </p>
             <p className="text-lg font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              {pendingCount} <span className="text-xs font-normal text-amber-400">Awaiting Record</span>
+              {pendingCount} <span className="text-xs font-normal text-amber-400">{t.domainsModule?.dnsPending || 'Awaiting Record'}</span>
             </p>
           </div>
         </Card>
@@ -344,10 +344,10 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           <Server className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-semibold text-white [data-theme=light]:text-blue-900 [data-theme=beige]:text-[#231f1d]">
-              Global Cloud Ingress CNAME Target: <code className="font-mono text-blue-400 [data-theme=light]:text-blue-700 bg-black/40 [data-theme=light]:bg-white px-2 py-0.5 rounded ml-1">cname.esaia.app</code>
+              {t.domainsModule?.ingressTarget || 'Global Cloud Ingress CNAME Target:'} <code className="font-mono text-blue-400 [data-theme=light]:text-blue-700 bg-black/40 [data-theme=light]:bg-white px-2 py-0.5 rounded ml-1">cname.esaia.app</code>
             </p>
             <p className="text-[11px] text-slate-400 [data-theme=light]:text-blue-700 [data-theme=beige]:text-[#8c7e73] mt-0.5">
-              Point your CNAME records to this target. Any domain routed here receives automated Let's Encrypt TLS/SSL termination with sub-millisecond edge redirects.
+              {t.domainsModule?.ingressDesc || 'Point your CNAME records to this target. Any domain routed here receives automated Let\'s Encrypt TLS/SSL termination with sub-millisecond edge redirects.'}
             </p>
           </div>
         </div>
@@ -357,7 +357,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           leftIcon={copiedKey === 'global_cname' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           onClick={() => handleCopy('cname.esaia.app', 'global_cname')}
         >
-          {copiedKey === 'global_cname' ? 'Copied' : 'Copy Target'}
+          {copiedKey === 'global_cname' ? (t.linksModule?.copied || 'Copied') : (t.domainsModule?.copyTarget || 'Copy Target')}
         </Button>
       </div>
 
@@ -367,14 +367,14 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
           <Card padding="lg" className="text-center py-12">
             <Globe className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-              No Custom Domains Configured
+              {t.domainsModule?.noDomains || 'No Custom Domains Configured'}
             </h3>
             <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] max-w-md mx-auto mt-1 mb-4">
-              Add your first custom domain (e.g. qr.yourbrand.com) to route all dynamic QR scans through your own branded URL.
+              {t.domainsModule?.noDomainsDesc || 'Add your first custom domain (e.g. qr.yourbrand.com) to route all dynamic QR scans through your own branded URL.'}
             </p>
             {isOrgAdmin() && (
               <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsAddModalOpen(true)}>
-                Connect Custom Domain
+                {t.domainsModule?.connectDomain || 'Connect Custom Domain'}
               </Button>
             )}
           </Card>
@@ -409,18 +409,18 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
 
                       {domain.isPrimary && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                          PRIMARY
+                          {t.domainsModule?.primaryDomain || 'PRIMARY'}
                         </span>
                       )}
 
                       <Badge variant={domain.status === 'active' ? 'success' : domain.status === 'pending_dns' ? 'warning' : 'danger'}>
-                        {domain.status === 'active' ? 'Active & Routing' : domain.status === 'pending_dns' ? 'DNS Pending' : 'Failed'}
+                        {domain.status === 'active' ? (t.domainsModule?.activeAndRouting || 'Active & Routing') : domain.status === 'pending_dns' ? (t.domainsModule?.dnsPending || 'DNS Pending') : (t.domainsModule?.failed || 'Failed')}
                       </Badge>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73]">
                       <span>
-                        Target: <strong className="text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#4d443e]">{domain.targetName || domain.targetType}</strong>
+                        {t.domainsModule?.target || 'Target'}: <strong className="text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#4d443e]">{domain.targetName || domain.targetType}</strong>
                       </span>
                       <span>•</span>
                       <span>
@@ -443,7 +443,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                       ) : (
                         <span className="inline-flex items-center gap-1 text-amber-400">
                           <AlertCircle className="w-3.5 h-3.5" />
-                          <span>Awaiting DNS propagation for SSL issuance</span>
+                          <span>{t.domainsModule?.pendingDns || 'Awaiting DNS propagation for SSL issuance'}</span>
                         </span>
                       )}
                     </div>
@@ -465,7 +465,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                       });
                     }}
                   >
-                    Test Route
+                    {t.qrModule?.testRedirect || 'Test Route'}
                   </Button>
 
                   {/* DNS Settings Inspection */}
@@ -475,7 +475,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                     leftIcon={<KeyRound className="w-3.5 h-3.5" />}
                     onClick={() => setSelectedDomainForDns(domain)}
                   >
-                    {t.domainsModule.dnsSettings}
+                    {t.domainsModule?.dnsSettings || 'DNS Settings'}
                   </Button>
 
                   {/* Verify Action */}
@@ -487,7 +487,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                       leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
                       onClick={() => handleVerifyDns(domain)}
                     >
-                      Verify DNS
+                      {t.domainsModule?.verifyDns || 'Verify DNS'}
                     </Button>
                   )}
 
@@ -500,7 +500,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                       leftIcon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />}
                       onClick={() => handleReissueSsl(domain)}
                     >
-                      Renew SSL
+                      {t.domainsModule?.reissueSsl || 'Renew SSL'}
                     </Button>
                   )}
 
@@ -513,7 +513,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                       leftIcon={<Star className="w-3.5 h-3.5 text-amber-400" />}
                       onClick={() => handleSetPrimary(domain)}
                     >
-                      Make Primary
+                      {t.domainsModule?.setPrimary || 'Make Primary'}
                     </Button>
                   )}
 
@@ -540,19 +540,19 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Connect Branded Custom Domain"
-        description="Map a custom subdomain (e.g. qr.brand.com or menu.restaurant.com) to your ESAIA workspace."
+        title={t.domainsModule?.connectModalTitle || 'Connect Branded Custom Domain'}
+        description={t.domainsModule?.connectModalDesc || 'Map a custom subdomain (e.g. qr.brand.com or menu.restaurant.com) to your ESAIA workspace.'}
         size="md"
       >
         <form onSubmit={handleAddDomain} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-              Domain / Subdomain <span className="text-rose-400">*</span>
+              {t.domainsModule?.domainNameLabel || 'Domain / Subdomain'} <span className="text-rose-400">*</span>
             </label>
             <Input
               value={newDomainName}
               onChange={e => setNewDomainName(e.target.value)}
-              placeholder="e.g. qr.brand.com or link.agency.eg"
+              placeholder={t.domainsModule?.domainNamePlaceholder || 'e.g. qr.brand.com or link.agency.eg'}
               required
             />
             <p className="text-[11px] text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-1">
@@ -562,7 +562,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-              Target Routing Destination
+              {t.domainsModule?.routeTargetLabel || 'Target Routing Destination'}
             </label>
             <Select
               value={newTargetType}
@@ -571,9 +571,9 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                 setNewTargetId('');
               }}
               options={[
-                { value: 'organization', label: 'Organization Fleet Default (All QRs & Smart Links)' },
-                { value: 'page', label: 'Specific Mobile Landing Page / Menu' },
-                { value: 'client', label: 'Specific Client Brand Workspace' }
+                { value: 'organization', label: t.domainsModule?.targetOrgFleet || 'Organization Fleet Default (All QRs & Smart Links)' },
+                { value: 'page', label: t.domainsModule?.targetLandingPage || 'Specific Mobile Landing Page / Menu' },
+                { value: 'client', label: t.domainsModule?.targetClient || 'Specific Client Brand Workspace' }
               ]}
             />
           </div>
@@ -631,7 +631,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
               {t.actions.cancel}
             </Button>
             <Button variant="primary" type="submit" isLoading={isSubmitting}>
-              Add & View DNS Records
+              {t.actions.save || 'Add & View DNS Records'}
             </Button>
           </div>
         </form>
@@ -642,21 +642,21 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
         <Modal
           isOpen={Boolean(selectedDomainForDns)}
           onClose={() => setSelectedDomainForDns(null)}
-          title={`DNS Configuration: ${selectedDomainForDns.domain}`}
-          description="Add these DNS records at your domain registrar (Cloudflare, GoDaddy, Namecheap, Route 53, etc.)."
+          title={`${t.domainsModule?.dnsInspectorTitle || 'DNS Configuration'}: ${selectedDomainForDns.domain}`}
+          description={t.domainsModule?.dnsInspectorDesc || 'Add these DNS records at your domain registrar (Cloudflare, GoDaddy, Namecheap, Route 53, etc.).'}
           size="lg"
         >
           <div className="space-y-4">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] rounded-lg overflow-hidden">
+              <table className="w-full text-left rtl:text-right text-xs border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] rounded-lg overflow-hidden">
                 <thead className="bg-[#12151f] [data-theme=light]:bg-slate-100 [data-theme=beige]:bg-[#eae4d9] text-slate-400 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d]">
                   <tr>
                     <th className="py-2.5 px-3 font-semibold">Type</th>
                     <th className="py-2.5 px-3 font-semibold">Host / Name</th>
                     <th className="py-2.5 px-3 font-semibold">Target / Value</th>
                     <th className="py-2.5 px-3 font-semibold">TTL</th>
-                    <th className="py-2.5 px-3 font-semibold">Status</th>
-                    <th className="py-2.5 px-3 font-semibold text-right">Copy</th>
+                    <th className="py-2.5 px-3 font-semibold">{t.auditModule?.status || 'Status'}</th>
+                    <th className="py-2.5 px-3 font-semibold text-right rtl:text-left">{t.actions.copy || 'Copy'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1c2030] [data-theme=light]:divide-slate-200 [data-theme=beige]:divide-[#dfd7cb] bg-[#090b10] [data-theme=light]:bg-white [data-theme=beige]:bg-[#fbf9f4]">
@@ -682,12 +682,12 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                             </>
                           ) : (
                             <>
-                              <Clock className="w-3.5 h-3.5" /> Pending DNS
+                              <Clock className="w-3.5 h-3.5" /> {t.domainsModule?.dnsPending || 'Pending DNS'}
                             </>
                           )}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-right">
+                      <td className="py-2.5 px-3 text-right rtl:text-left">
                         <button
                           onClick={() => handleCopy(record.value, `rec_${idx}`)}
                           className="p-1 text-slate-400 hover:text-white [data-theme=light]:hover:text-slate-900 rounded hover:bg-slate-800 [data-theme=light]:hover:bg-slate-200 transition"
@@ -715,7 +715,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                 <li>Log in to your DNS management console (e.g. Cloudflare, Route53, Namecheap).</li>
                 <li>Create a <strong>CNAME</strong> record pointing your subdomain to <code className="text-blue-400 font-mono">cname.esaia.app</code>. (Set Proxy to "DNS only" if using Cloudflare).</li>
                 <li>Create a <strong>TXT</strong> record for the challenge token to confirm domain ownership.</li>
-                <li>Click <strong>"Verify DNS Records"</strong> below to complete verification and issue SSL certificates.</li>
+                <li>Click <strong>"{t.domainsModule?.verifyDns || 'Verify DNS Records'}"</strong> below to complete verification and issue SSL certificates.</li>
               </ol>
             </div>
 
@@ -725,7 +725,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={() => setSelectedDomainForDns(null)}>
-                  Close
+                  {t.actions.cancel || 'Close'}
                 </Button>
                 <Button
                   variant="primary"
@@ -733,7 +733,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
                   leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
                   onClick={() => handleVerifyDns(selectedDomainForDns)}
                 >
-                  Verify DNS Records
+                  {t.domainsModule?.verifyDns || 'Verify DNS Records'}
                 </Button>
               </div>
             </div>
@@ -746,7 +746,7 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
         <Modal
           isOpen={Boolean(selectedDomainForDelete)}
           onClose={() => setSelectedDomainForDelete(null)}
-          title="Disconnect Custom Domain"
+          title={t.domainsModule?.deleteDomain || 'Disconnect Custom Domain'}
           description="Are you sure you want to disconnect this domain? Existing QR codes mapped to this domain may stop resolving until re-routed."
           size="sm"
         >
@@ -757,10 +757,10 @@ export const DomainsPage: React.FC<{ onNavigate?: (path: string) => void }> = ({
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button variant="ghost" onClick={() => setSelectedDomainForDelete(null)}>
-                Cancel
+                {t.actions.cancel}
               </Button>
               <Button variant="danger" onClick={handleDeleteDomain}>
-                Disconnect Domain
+                {t.actions.delete || 'Disconnect Domain'}
               </Button>
             </div>
           </div>

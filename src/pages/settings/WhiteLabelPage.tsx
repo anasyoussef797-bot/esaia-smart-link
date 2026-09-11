@@ -53,6 +53,15 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
   const orgBranding = currentOrg?.branding || {};
 
+  const COLOR_PRESETS = [
+    { name: t.whiteLabelModule?.sectionIdentity.presets.sapphire || 'Sapphire Modern', hex: '#2563eb' },
+    { name: t.whiteLabelModule?.sectionIdentity.presets.emerald || 'Emerald Hospitality', hex: '#059669' },
+    { name: t.whiteLabelModule?.sectionIdentity.presets.amber || 'Midnight Amber', hex: '#d97706' },
+    { name: t.whiteLabelModule?.sectionIdentity.presets.violet || 'Imperial Violet', hex: '#7c3aed' },
+    { name: t.whiteLabelModule?.sectionIdentity.presets.crimson || 'Crimson Rose', hex: '#e11d48' },
+    { name: t.whiteLabelModule?.sectionIdentity.presets.obsidian || 'Obsidian Slate', hex: '#334155' }
+  ];
+
   // Form State
   const [platformName, setPlatformName] = useState(orgBranding.platformName || currentOrg?.name || 'ESAIA');
   const [tagline, setTagline] = useState(orgBranding.tagline || 'Enterprise Dynamic QR & Mobile Micro-Sites');
@@ -133,13 +142,13 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
       await updateCurrentOrgBranding(updated);
       showToast({
-        title: 'White-Label Branding Applied',
-        message: 'Your custom logos, colors, domain footers, and email signatures are now active across your organization workspace.',
+        title: t.whiteLabelModule?.savedSuccess || 'White-Label Branding Applied',
+        message: t.whiteLabelModule?.savedSuccess || 'Your custom branding is now active across your organization workspace.',
         type: 'success'
       });
     } catch (err) {
       showToast({
-        title: 'Failed to Save Branding',
+        title: 'Error',
         message: 'Could not update organization branding. Please check permissions.',
         type: 'error'
       });
@@ -170,7 +179,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
     setEmailDisclaimer('CONFIDENTIALITY NOTICE: This transmission is intended solely for the addressee.');
     setCustomCss('');
     showToast({
-      title: 'Reset to Defaults',
+      title: t.whiteLabelModule?.reset || 'Reset',
       message: 'Default branding values restored.',
       type: 'info'
     });
@@ -183,8 +192,8 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
       setIsSendingTest(false);
       setIsTestEmailOpen(false);
       showToast({
-        title: 'Test Email Dispatched',
-        message: `Simulated branded dispatch delivered to ${testRecipient} with your active SMTP signature & headers.`,
+        title: t.whiteLabelModule?.sectionEmail.testSentSuccess || 'Test Email Dispatched',
+        message: `${testRecipient}`,
         type: 'success'
       });
     }, 900);
@@ -197,21 +206,21 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] tracking-tight">
-              White-Label Enterprise Branding
+              {t.whiteLabelModule?.title || 'White-Label Enterprise Branding'}
             </h1>
             <Badge variant="brand" size="sm">
-              ENTERPRISE TIER
+              {t.whiteLabelModule?.enterpriseTier || 'ENTERPRISE TIER'}
             </Badge>
           </div>
           <p className="text-xs text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-1">
-            Customize platform logos, favicons, custom domain footers, and outgoing notification signatures for your agency or enterprise brand.
+            {t.whiteLabelModule?.subtitle || 'Customize platform logos, favicons, custom domain footers, and outgoing notification signatures for your agency or enterprise brand.'}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {onNavigate && (
             <Button variant="outline" size="sm" onClick={() => onNavigate('/admin/settings')}>
-              Back to Settings
+              {t.whiteLabelModule?.backToSettings || 'Back to Settings'}
             </Button>
           )}
 
@@ -221,7 +230,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
             leftIcon={<RotateCcw className="w-4 h-4" />}
             onClick={handleReset}
           >
-            Reset
+            {t.whiteLabelModule?.reset || 'Reset'}
           </Button>
 
           {isOrgAdmin() && (
@@ -233,7 +242,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
               leftIcon={<Save className="w-4 h-4" />}
               onClick={handleSave}
             >
-              Save Changes
+              {isSaving ? (t.whiteLabelModule?.saving || 'Saving...') : (t.whiteLabelModule?.saveChanges || 'Save Changes')}
             </Button>
           )}
         </div>
@@ -245,36 +254,36 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
           {/* Section 1: Platform Identity */}
           <Card padding="md">
             <CardHeader
-              title="Platform Identity & Titles"
-              description="Define the brand name and slogan that clients and team members see instead of default platform labels."
+              title={t.whiteLabelModule?.sectionIdentity.title || 'Platform Identity & Titles'}
+              description={t.whiteLabelModule?.sectionIdentity.description || 'Define the brand name and slogan that clients and team members see instead of default platform labels.'}
             />
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Platform Name / Application Title
+                  {t.whiteLabelModule?.sectionIdentity.platformName || 'Platform Name / Application Title'}
                 </label>
                 <Input
                   value={platformName}
                   onChange={e => setPlatformName(e.target.value)}
-                  placeholder="e.g. Apex Media QR Suite or Impact Hub Portal"
+                  placeholder={t.whiteLabelModule?.sectionIdentity.platformNamePlaceholder || 'e.g. Apex Media QR Suite or Impact Hub Portal'}
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Brand Tagline / Slogan
+                  {t.whiteLabelModule?.sectionIdentity.tagline || 'Brand Tagline / Slogan'}
                 </label>
                 <Input
                   value={tagline}
                   onChange={e => setTagline(e.target.value)}
-                  placeholder="e.g. Enterprise Smart QR & Connected Hospitality"
+                  placeholder={t.whiteLabelModule?.sectionIdentity.taglinePlaceholder || 'e.g. Enterprise Smart QR & Connected Hospitality'}
                 />
               </div>
 
               {/* Accent Color Palette */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-2">
-                  Primary Brand Accent Color
+                  {t.whiteLabelModule?.sectionIdentity.accentColor || 'Primary Brand Accent Color'}
                 </label>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {COLOR_PRESETS.map(preset => (
@@ -314,46 +323,46 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
           {/* Section 2: Visual Brand Asset Uploaders */}
           <Card padding="md">
             <CardHeader
-              title="Brand Logos & Favicon Upload"
-              description="Upload high-resolution vector or raster graphics for light theme, dark theme, and browser tab favicons."
+              title={t.whiteLabelModule?.sectionLogos.title || 'Brand Logos & Favicon Upload'}
+              description={t.whiteLabelModule?.sectionLogos.description || 'Upload high-resolution vector or raster graphics for light theme, dark theme, and browser tab favicons.'}
             />
             <div className="space-y-6">
               {/* Dark Mode Logo Uploader */}
               <BrandAssetUploader
-                label="Dark Theme Logo (Header & Dark Mode)"
-                description="Displayed across dark dashboard headers and dark micro-sites. Usually white or colored text."
+                label={t.whiteLabelModule?.sectionLogos.darkLogoLabel || 'Dark Theme Logo (Header & Dark Mode)'}
+                description={t.whiteLabelModule?.sectionLogos.darkLogoDesc || 'Displayed across dark dashboard headers and dark micro-sites. Usually white or colored text.'}
                 value={logoDarkUrl}
                 onChange={val => {
                   setLogoDarkUrl(val);
                   if (!logoUrl) setLogoUrl(val);
                 }}
-                recommendedSize="400 × 120 px SVG or PNG"
+                recommendedSize={t.whiteLabelModule?.sectionLogos.recommendedLogoSize || '400 × 120 px SVG or PNG'}
               />
 
               <div className="border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]" />
 
               {/* Light Mode Logo Uploader */}
               <BrandAssetUploader
-                label="Light Theme Logo (Public Pages & Light Mode)"
-                description="Displayed across light/beige backgrounds, public bio pages, and mobile redirects."
+                label={t.whiteLabelModule?.sectionLogos.lightLogoLabel || 'Light Theme Logo (Public Pages & Light Mode)'}
+                description={t.whiteLabelModule?.sectionLogos.lightLogoDesc || 'Displayed across light/beige backgrounds, public bio pages, and mobile redirects.'}
                 value={logoLightUrl}
                 onChange={val => {
                   setLogoLightUrl(val);
                   if (!logoUrl) setLogoUrl(val);
                 }}
-                recommendedSize="400 × 120 px SVG or PNG"
+                recommendedSize={t.whiteLabelModule?.sectionLogos.recommendedLogoSize || '400 × 120 px SVG or PNG'}
               />
 
               <div className="border-t border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]" />
 
               {/* Favicon Uploader */}
               <BrandAssetUploader
-                label="Browser Tab Favicon"
-                description="The icon displayed in the browser tab and mobile home-screen bookmarks (.ico, .png, .svg)."
+                label={t.whiteLabelModule?.sectionLogos.faviconLabel || 'Browser Tab Favicon'}
+                description={t.whiteLabelModule?.sectionLogos.faviconDesc || 'The icon displayed in the browser tab and mobile home-screen bookmarks (.ico, .png, .svg).'}
                 value={faviconUrl}
                 onChange={setFaviconUrl}
                 accept=".ico,image/x-icon,image/png,image/svg+xml"
-                recommendedSize="64 × 64 px or 32 × 32 px"
+                recommendedSize={t.whiteLabelModule?.sectionLogos.recommendedFaviconSize || '64 × 64 px or 32 × 32 px'}
                 isFavicon
               />
             </div>
@@ -362,18 +371,18 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
           {/* Section 3: Custom Domain Footers & Attributions */}
           <Card padding="md">
             <CardHeader
-              title="Custom Domain Footers & Attribution"
-              description="Configure public-facing footer copyrights, support contacts, compliance links, and white-label badges."
+              title={t.whiteLabelModule?.sectionFooter.title || 'Custom Domain Footers & Attribution'}
+              description={t.whiteLabelModule?.sectionFooter.description || 'Configure public-facing footer copyrights, support contacts, compliance links, and white-label badges.'}
             />
             <div className="space-y-4">
               {/* Hide Powered By Toggle */}
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb]">
                 <div>
                   <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                    Hide "Powered by ESAIA" Badge
+                    {t.whiteLabelModule?.sectionFooter.hideBadgeTitle || 'Hide "Powered by ESAIA" Badge'}
                   </p>
                   <p className="text-[11px] text-slate-400 [data-theme=light]:text-slate-500 [data-theme=beige]:text-[#8c7e73] mt-0.5">
-                    Completely removes third-party attribution badges on all public landing pages and QR scan redirects.
+                    {t.whiteLabelModule?.sectionFooter.hideBadgeDesc || 'Completely removes third-party attribution badges on all public landing pages and QR scan redirects.'}
                   </p>
                 </div>
                 <input
@@ -387,32 +396,34 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
               {/* Custom Footer Subtitle */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Custom Public Footer Headline (Optional)
+                  {t.whiteLabelModule?.sectionFooter.headlineLabel || 'Custom Public Footer Headline (Optional)'}
                 </label>
                 <Input
                   value={footerText}
                   onChange={e => setFooterText(e.target.value)}
-                  placeholder={`e.g. ${platformName} Verified Enterprise Experience`}
+                  placeholder={t.whiteLabelModule?.sectionFooter.headlinePlaceholder || `e.g. ${platformName} Verified Enterprise Experience`}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">Replaces the default verification text at the bottom of public mobile pages.</p>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  {t.whiteLabelModule?.sectionFooter.headlineHint || 'Replaces the default verification text at the bottom of public mobile pages.'}
+                </p>
               </div>
 
               {/* Footer Copyright */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Footer Copyright Line
+                  {t.whiteLabelModule?.sectionFooter.copyrightLabel || 'Footer Copyright Line'}
                 </label>
                 <Input
                   value={footerCopyright}
                   onChange={e => setFooterCopyright(e.target.value)}
-                  placeholder="e.g. © 2026 Impact Hub Cairo. All rights reserved."
+                  placeholder={t.whiteLabelModule?.sectionFooter.copyrightPlaceholder || 'e.g. © 2026 Impact Hub Cairo. All rights reserved.'}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Support Contact Email
+                    {t.whiteLabelModule?.sectionFooter.supportEmail || 'Support Contact Email'}
                   </label>
                   <Input
                     type="email"
@@ -424,7 +435,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Privacy Policy URL
+                    {t.whiteLabelModule?.sectionFooter.privacyPolicy || 'Privacy Policy URL'}
                   </label>
                   <Input
                     value={privacyPolicyUrl}
@@ -436,7 +447,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Terms of Service URL
+                  {t.whiteLabelModule?.sectionFooter.termsOfService || 'Terms of Service URL'}
                 </label>
                 <Input
                   value={termsOfServiceUrl}
@@ -449,15 +460,17 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d]">
-                    Custom Public CSS (Advanced)
+                    {t.whiteLabelModule?.sectionFooter.customCssLabel || 'Custom Public CSS (Advanced)'}
                   </label>
-                  <span className="text-[10px] text-slate-500 font-mono">Optional</span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {t.whiteLabelModule?.sectionFooter.optional || 'Optional'}
+                  </span>
                 </div>
                 <textarea
                   rows={2}
                   value={customCss}
                   onChange={e => setCustomCss(e.target.value)}
-                  placeholder=":root { --brand-font: 'Poppins', sans-serif; }"
+                  placeholder={t.whiteLabelModule?.sectionFooter.customCssPlaceholder || ":root { --brand-font: 'Poppins', sans-serif; }"}
                   className="w-full text-xs font-mono rounded-lg bg-[#0e1017] [data-theme=light]:bg-white [data-theme=beige]:bg-[#fbf9f4] border border-[#24293d] [data-theme=light]:border-slate-300 [data-theme=beige]:border-[#dfd7cb] p-2.5 text-slate-200 [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] focus:outline-hidden focus:border-blue-500"
                 />
               </div>
@@ -468,8 +481,8 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
           <Card padding="md">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <CardHeader
-                title="Automated Email & SMTP Signatures"
-                description="Customize sender headers and corporate signatures for client invitations, password resets, and automated monthly analytics digests."
+                title={t.whiteLabelModule?.sectionEmail.title || 'Automated Email & SMTP Signatures'}
+                description={t.whiteLabelModule?.sectionEmail.description || 'Customize sender headers and corporate signatures for client invitations, password resets, and automated monthly analytics digests.'}
               />
               <Button
                 variant="outline"
@@ -477,7 +490,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                 leftIcon={<Send className="w-3.5 h-3.5" />}
                 onClick={() => setIsTestEmailOpen(true)}
               >
-                Send Test Email
+                {t.whiteLabelModule?.sectionEmail.sendTestBtn || 'Send Test Email'}
               </Button>
             </div>
 
@@ -485,24 +498,24 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Sender Display Name
+                    {t.whiteLabelModule?.sectionEmail.senderName || 'Sender Display Name'}
                   </label>
                   <Input
                     value={senderName}
                     onChange={e => setSenderName(e.target.value)}
-                    placeholder="e.g. Apex Media Notifications"
+                    placeholder={t.whiteLabelModule?.sectionEmail.senderNamePlaceholder || 'e.g. Apex Media Notifications'}
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    From / Reply-To Email
+                    {t.whiteLabelModule?.sectionEmail.senderEmail || 'From / Reply-To Email'}
                   </label>
                   <Input
                     type="email"
                     value={senderEmail}
                     onChange={e => setSenderEmail(e.target.value)}
-                    placeholder="notifications@qr.yourbrand.com"
+                    placeholder={t.whiteLabelModule?.sectionEmail.senderEmailPlaceholder || 'notifications@qr.yourbrand.com'}
                   />
                 </div>
               </div>
@@ -510,23 +523,23 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Sender Department / Title
+                    {t.whiteLabelModule?.sectionEmail.senderRole || 'Sender Department / Title'}
                   </label>
                   <Input
                     value={senderRole}
                     onChange={e => setSenderRole(e.target.value)}
-                    placeholder="e.g. Digital Fleet & Operations Team"
+                    placeholder={t.whiteLabelModule?.sectionEmail.senderRolePlaceholder || 'e.g. Digital Fleet & Operations Team'}
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                    Contact Phone / WhatsApp
+                    {t.whiteLabelModule?.sectionEmail.senderPhone || 'Contact Phone / WhatsApp'}
                   </label>
                   <Input
                     value={senderPhone}
                     onChange={e => setSenderPhone(e.target.value)}
-                    placeholder="e.g. +20 100 123 4567"
+                    placeholder={t.whiteLabelModule?.sectionEmail.senderPhonePlaceholder || 'e.g. +20 100 123 4567'}
                     leftIcon={<Phone className="w-3.5 h-3.5 text-slate-400" />}
                   />
                 </div>
@@ -534,7 +547,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Email Footer Signature Body
+                  {t.whiteLabelModule?.sectionEmail.signatureBody || 'Email Footer Signature Body'}
                 </label>
                 <textarea
                   rows={3}
@@ -546,7 +559,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 [data-theme=light]:text-slate-700 [data-theme=beige]:text-[#231f1d] mb-1.5">
-                  Legal Confidentiality Disclaimer (Notice)
+                  {t.whiteLabelModule?.sectionEmail.disclaimer || 'Legal Confidentiality Disclaimer (Notice)'}
                 </label>
                 <textarea
                   rows={2}
@@ -567,11 +580,11 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-blue-400" />
                   <h3 className="text-sm font-bold text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
-                    Live Branded Preview
+                    {t.whiteLabelModule?.livePreview.title || 'Live Branded Preview'}
                   </h3>
                 </div>
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  Real-time
+                  {t.whiteLabelModule?.livePreview.realTime || 'Real-time'}
                 </span>
               </div>
 
@@ -586,7 +599,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Portal
+                  {t.whiteLabelModule?.livePreview.portalTab || 'Portal'}
                 </button>
                 <button
                   type="button"
@@ -597,7 +610,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Footer
+                  {t.whiteLabelModule?.livePreview.footerTab || 'Footer'}
                 </button>
                 <button
                   type="button"
@@ -608,7 +621,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Email
+                  {t.whiteLabelModule?.livePreview.emailTab || 'Email'}
                 </button>
                 <button
                   type="button"
@@ -619,7 +632,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
                   }`}
                 >
-                  Favicon
+                  {t.whiteLabelModule?.livePreview.faviconTab || 'Favicon'}
                 </button>
               </div>
 
@@ -684,10 +697,10 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
                       <div className="p-4 rounded-lg bg-[#141722]/50 border border-dashed border-[#24293d] text-center space-y-1">
                         <p className="text-xs text-slate-300 [data-theme=light]:text-slate-700">
-                          Workspace navigation and client bio cards branded under <strong>{platformName}</strong>.
+                          {t.whiteLabelModule?.livePreview.portalNotice || 'Workspace navigation and client bio cards branded under'} <strong>{platformName}</strong>.
                         </p>
                         <p className="text-[10px] text-slate-500">
-                          Accent token active: <code className="font-mono text-blue-400">{accentColor}</code>
+                          {t.whiteLabelModule?.livePreview.accentToken || 'Accent token active:'} <code className="font-mono text-blue-400">{accentColor}</code>
                         </p>
                       </div>
                     </div>
@@ -715,7 +728,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                         ) : (
                           <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-slate-300 [data-theme=light]:text-slate-800">
                             <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>{platformName} Verified Enterprise Experience</span>
+                            <span>{t.whiteLabelModule?.livePreview.verifiedFooter || `${platformName} Verified Enterprise Experience`}</span>
                           </div>
                         )}
 
@@ -725,21 +738,21 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
                         <div className="flex flex-wrap items-center justify-center gap-2.5 text-[10px]" style={{ color: accentColor }}>
                           <a href="#" onClick={e => e.preventDefault()} className="hover:underline">
-                            Privacy Policy
+                            {t.whiteLabelModule?.sectionFooter.privacyPolicy || 'Privacy Policy'}
                           </a>
                           <span>•</span>
                           <a href="#" onClick={e => e.preventDefault()} className="hover:underline">
-                            Terms of Service
+                            {t.whiteLabelModule?.sectionFooter.termsOfService || 'Terms of Service'}
                           </a>
                           <span>•</span>
                           <a href="#" onClick={e => e.preventDefault()} className="hover:underline">
-                            Support ({supportEmail})
+                            {t.whiteLabelModule?.sectionFooter.supportEmail || 'Support'} ({supportEmail})
                           </a>
                         </div>
 
                         {!hidePoweredBy && (
                           <p className="text-[9px] text-slate-500 pt-1 border-t border-[#1c2030] [data-theme=light]:border-slate-200">
-                            Powered by {platformName || 'ESAIA Smart Platform'} · SSL Encrypted
+                            {t.whiteLabelModule?.livePreview.poweredBy || 'Powered by'} {platformName || 'ESAIA Smart Platform'} · {t.whiteLabelModule?.livePreview.sslEncrypted || 'SSL Encrypted'}
                           </p>
                         )}
                       </div>
@@ -751,10 +764,10 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                     <div className="p-3.5 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 text-xs space-y-3 font-sans">
                       <div className="border-b border-[#24293d] [data-theme=light]:border-slate-200 pb-2 space-y-0.5">
                         <p className="text-[11px] text-slate-400">
-                          From: <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
+                          {t.whiteLabelModule?.livePreview.emailFrom || 'From:'} <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
                         </p>
                         <p className="text-[11px] text-slate-400">
-                          Subject: <strong>Dynamic Fleet Performance Report</strong>
+                          {t.whiteLabelModule?.livePreview.emailSubject || 'Subject:'} <strong>{t.whiteLabelModule?.livePreview.emailSubjectValue || 'Dynamic Fleet Performance Report'}</strong>
                         </p>
                       </div>
 
@@ -769,9 +782,8 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                         </div>
                       ) : null}
 
-                      <p className="text-slate-300 [data-theme=light]:text-slate-700 leading-relaxed text-[11px]">
-                        Hello Partner,<br />
-                        Your dynamic QR campaigns recorded <strong>18,420 scans</strong> across Cairo, Giza, and Alexandria with zero bounce errors.
+                      <p className="text-slate-300 [data-theme=light]:text-slate-700 leading-relaxed text-[11px] whitespace-pre-line">
+                        {t.whiteLabelModule?.livePreview.emailGreeting || 'Hello Partner,\nYour dynamic QR campaigns recorded 18,420 scans across regions with zero bounce errors.'}
                       </p>
 
                       <div className="pt-2 border-t border-[#24293d] [data-theme=light]:border-slate-200 space-y-1">
@@ -798,7 +810,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                   {previewTab === 'tab' && (
                     <div className="p-4 rounded-lg bg-[#0e1017] [data-theme=light]:bg-white border border-[#1c2030] [data-theme=light]:border-slate-200 space-y-3 text-center">
                       <p className="text-xs font-semibold text-white [data-theme=light]:text-slate-900">
-                        Browser Tab & Bookmark Simulation
+                        {t.whiteLabelModule?.livePreview.tabTitleSim || 'Browser Tab & Bookmark Simulation'}
                       </p>
                       
                       {/* Browser Tab Chrome Mockup */}
@@ -824,7 +836,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
                       </div>
 
                       <p className="text-[10px] text-slate-400 [data-theme=light]:text-slate-500">
-                        {faviconUrl ? 'Custom favicon injected into document head.' : 'Default platform emblem active.'}
+                        {faviconUrl ? (t.whiteLabelModule?.livePreview.customFaviconNotice || 'Custom favicon injected into document head.') : (t.whiteLabelModule?.livePreview.defaultFaviconNotice || 'Default platform emblem active.')}
                       </p>
                     </div>
                   )}
@@ -833,7 +845,7 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
               {/* Status summary */}
               <div className="flex items-center justify-between text-[11px] text-slate-400 [data-theme=light]:text-slate-500 pt-1">
-                <span>Active Tenant Workspace:</span>
+                <span>{t.whiteLabelModule?.livePreview.activeTenant || 'Active Tenant Workspace:'}</span>
                 <strong className="text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d]">
                   {currentOrg?.name || 'Enterprise'}
                 </strong>
@@ -847,12 +859,12 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
       <Modal
         isOpen={isTestEmailOpen}
         onClose={() => setIsTestEmailOpen(false)}
-        title="Simulate Branded Outgoing Email"
-        description="Verify how your custom sender headers, logos, and signatures render in real mail clients."
+        title={t.whiteLabelModule?.sectionEmail.testModalTitle || 'Simulate Branded Outgoing Email'}
+        description={t.whiteLabelModule?.sectionEmail.testModalDesc || 'Verify how your custom sender headers, logos, and signatures render in real mail clients.'}
       >
         <form onSubmit={handleSendTestEmail} className="space-y-4">
           <Input
-            label="Recipient Test Address"
+            label={t.whiteLabelModule?.sectionEmail.testRecipientLabel || 'Recipient Test Address'}
             type="email"
             value={testRecipient}
             onChange={e => setTestRecipient(e.target.value)}
@@ -862,22 +874,22 @@ export const WhiteLabelPage: React.FC<{ onNavigate?: (path: string) => void }> =
 
           <div className="p-3 rounded-lg bg-[#0e1017] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#eae4d9]/50 border border-[#1c2030] [data-theme=light]:border-slate-200 [data-theme=beige]:border-[#dfd7cb] text-xs space-y-1.5">
             <p className="text-slate-400">
-              From: <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
+              {t.whiteLabelModule?.livePreview.emailFrom || 'From:'} <strong className="text-white [data-theme=light]:text-slate-900">{senderName}</strong> &lt;{senderEmail}&gt;
             </p>
             <p className="text-slate-400">
-              Signature: <span className="font-mono text-blue-400">{senderRole}</span>
+              {t.whiteLabelModule?.sectionEmail.senderRole || 'Role'}: <span className="font-mono text-blue-400">{senderRole}</span>
             </p>
             <p className="text-[11px] text-slate-500 pt-1 border-t border-[#24293d] [data-theme=light]:border-slate-200">
-              Uses mock SMTP relay to simulate production delivery telemetry without incurring actual provider credits.
+              {t.whiteLabelModule?.sectionEmail.simulateRelayInfo || 'Uses mock SMTP relay to simulate production delivery telemetry without incurring actual provider credits.'}
             </p>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-2">
             <Button variant="ghost" type="button" onClick={() => setIsTestEmailOpen(false)}>
-              Cancel
+              {t.actions.cancel || 'Cancel'}
             </Button>
             <Button type="submit" isLoading={isSendingTest} leftIcon={<Send className="w-4 h-4" />}>
-              Send Simulated Email
+              {t.whiteLabelModule?.sectionEmail.sendSimulatedBtn || 'Send Simulated Email'}
             </Button>
           </div>
         </form>

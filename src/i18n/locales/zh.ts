@@ -100,6 +100,7 @@ export const zh: TranslationSchema = {
     selectTheme: '选择主题'
   },
   actions: {
+    ...en.actions,
     create: '创建',
     save: '保存修改',
     cancel: '取消',
@@ -117,6 +118,9 @@ export const zh: TranslationSchema = {
     download: '下载',
     copyLink: '复制链接',
     preview: '实时预览',
-    details: '查看详情'
+    details: '查看详情',
+    refresh: '刷新',
+    copy: '复制',
+    reset: '重置'
   }
 };

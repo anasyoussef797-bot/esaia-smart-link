@@ -384,8 +384,8 @@ export const qrVectorEngine = {
 
       img.onload = () => {
         try {
-          const width = (img.width || 400) * scaleMultiplier;
-          const height = (img.height || 400) * scaleMultiplier;
+          const width = (img.naturalWidth || img.width || 400) * scaleMultiplier;
+          const height = (img.naturalHeight || img.height || 400) * scaleMultiplier;
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
@@ -441,8 +441,8 @@ export const qrVectorEngine = {
 
       img.onload = () => {
         try {
-          const width = (img.width || 400) * scaleMultiplier;
-          const height = (img.height || 400) * scaleMultiplier;
+          const width = (img.naturalWidth || img.width || 400) * scaleMultiplier;
+          const height = (img.naturalHeight || img.height || 400) * scaleMultiplier;
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;

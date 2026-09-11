@@ -162,7 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {navSections.map(section => (
           <div key={section.titleKey} className="space-y-1">
             {!collapsed ? (
-              <p className="px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider select-none">
+              <p className="px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider select-none">
                 {section.title}
               </p>
             ) : (
@@ -251,7 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-[#1c2030] bg-[#090a0f]/60 shrink-0">
         <div className={clsx('flex items-center', collapsed ? 'justify-center' : 'justify-between gap-2')}>
           {!collapsed && (
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 min-w-0">
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 min-w-0">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <span className="truncate">ESAIA v1.0 Live</span>
             </div>

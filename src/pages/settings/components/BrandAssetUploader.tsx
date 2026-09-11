@@ -8,6 +8,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Link2, Check, AlertCircle, Eye } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface BrandAssetUploaderProps {
   label: string;
@@ -28,6 +29,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
   recommendedSize = '512 x 512 px (Max 2MB)',
   isFavicon = false
 }) => {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [activeMode, setActiveMode] = useState<'upload' | 'url'>('upload');
   const [previewBg, setPreviewBg] = useState<'dark' | 'light' | 'beige'>('dark');
@@ -40,7 +42,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
 
     // Max 2MB
     if (file.size > 2 * 1024 * 1024) {
-      setUploadError('File exceeds 2MB limit. Please upload an optimized asset.');
+      setUploadError(t.assetUploader?.fileTooLarge || 'File exceeds 2MB limit. Please upload an optimized asset.');
       return;
     }
 
@@ -61,7 +63,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
       img.src = result;
     };
     reader.onerror = () => {
-      setUploadError('Failed to read image file.');
+      setUploadError(t.assetUploader?.readError || 'Failed to read image file.');
     };
     reader.readAsDataURL(file);
   };
@@ -116,7 +118,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                 : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
             }`}
           >
-            Upload File
+            {t.assetUploader?.uploadFile || 'Upload File'}
           </button>
           <button
             type="button"
@@ -127,7 +129,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                 : 'text-slate-400 hover:text-white [data-theme=light]:text-slate-600 [data-theme=light]:hover:text-slate-900'
             }`}
           >
-            Direct URL
+            {t.assetUploader?.directUrl || 'Direct URL'}
           </button>
         </div>
       </div>
@@ -140,7 +142,9 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
             placeholder="https://cdn.yourbrand.com/assets/logo.svg"
             leftIcon={<Link2 className="w-3.5 h-3.5 text-slate-400" />}
           />
-          <p className="text-[10px] text-slate-500">Recommended: {recommendedSize}</p>
+          <p className="text-[10px] text-slate-500">
+            {t.assetUploader?.recommended || 'Recommended:'} {recommendedSize}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -174,10 +178,10 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-200 [data-theme=light]:text-slate-800 [data-theme=beige]:text-[#231f1d]">
-                  Click to upload or drag & drop
+                  {t.assetUploader?.clickOrDrag || 'Click to upload or drag & drop'}
                 </p>
                 <p className="text-[10px] text-slate-500 [data-theme=light]:text-slate-400 mt-0.5">
-                  Supports SVG, PNG, WebP, JPG, or ICO • {recommendedSize}
+                  {t.assetUploader?.dropzoneHint || 'Supports SVG, PNG, WebP, JPG, or ICO'} • {recommendedSize}
                 </p>
               </div>
             </div>
@@ -217,7 +221,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
 
                   {/* Preview Background Toggles */}
                   <div className="flex items-center gap-1 mt-1 text-[9px]">
-                    <span className="text-slate-500">Preview on:</span>
+                    <span className="text-slate-500">{t.assetUploader?.previewBg || 'Preview on:'}</span>
                     <button
                       type="button"
                       onClick={() => setPreviewBg('dark')}
@@ -225,7 +229,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                         previewBg === 'dark' ? 'bg-slate-800 text-white font-bold' : 'text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      Dark
+                      {t.assetUploader?.darkBg || 'Dark'}
                     </button>
                     <button
                       type="button"
@@ -234,7 +238,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                         previewBg === 'light' ? 'bg-slate-300 text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      Light
+                      {t.assetUploader?.lightBg || 'Light'}
                     </button>
                     <button
                       type="button"
@@ -243,7 +247,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                         previewBg === 'beige' ? 'bg-[#dfd7cb] text-[#231f1d] font-bold' : 'text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      Beige
+                      {t.assetUploader?.beigeBg || 'Beige'}
                     </button>
                   </div>
                 </div>
@@ -256,7 +260,7 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Change
+                  {t.actions.edit || 'Change'}
                 </Button>
                 <Button
                   variant="ghost"
@@ -264,8 +268,8 @@ export const BrandAssetUploader: React.FC<BrandAssetUploaderProps> = ({
                   className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
                   onClick={handleClear}
                 >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Remove
+                  <X className="w-3.5 h-3.5 mr-1 rtl:mr-0 rtl:ml-1" />
+                  {t.assetUploader?.remove || t.actions.delete || 'Remove'}
                 </Button>
               </div>
             </div>
