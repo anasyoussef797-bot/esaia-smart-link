@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Tablet, Monitor, Sparkles, ExternalLink, ArrowRight, ArrowLeft, Play, Video } from 'lucide-react';
+import { X, Smartphone, Tablet, Monitor, Sparkles, ExternalLink, ArrowRight, ArrowLeft, Play, Video, Pencil, Plus } from 'lucide-react';
 import { TemplateItem } from '../../data/templatesData';
 import { useLanguage } from '../../context/LanguageContext';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
@@ -8,12 +8,14 @@ interface TemplatePreviewModalProps {
   template: TemplateItem | null;
   onClose: () => void;
   onUseTemplate: (template: TemplateItem) => void;
+  onEditTemplate?: (template: TemplateItem) => void;
 }
 
 export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
   template,
   onClose,
-  onUseTemplate
+  onUseTemplate,
+  onEditTemplate
 }) => {
   const { isRTL } = useLanguage();
   const [deviceMode, setDeviceMode] = useState<'mobile' | 'tablet'>('mobile');
@@ -72,11 +74,24 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {onEditTemplate && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onEditTemplate(template);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-indigo-600/30 flex items-center gap-1.5 transition-all transform active:scale-95"
+              >
+                <Pencil className="w-3.5 h-3.5 text-amber-300" />
+                <span>{isRTL ? 'تعديل القالب وإضافة كتل' : 'Edit Template & Add Blocks'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => onUseTemplate(template)}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all transform active:scale-95"
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-all transform active:scale-95"
             >
-              <Sparkles className="w-4 h-4 text-indigo-200" />
+              <Sparkles className="w-4 h-4 text-indigo-300" />
               <span>{isRTL ? 'استخدم هذا النموذج' : 'Use this template'}</span>
             </button>
 
@@ -334,20 +349,35 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
         </div>
 
         {/* Bottom CTA Bar */}
-        <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/60">
-          <div className="text-xs text-slate-400">
+        <div className="px-6 py-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-950/60">
+          <div className="text-xs text-slate-400 text-center sm:text-left rtl:sm:text-right">
             {isRTL
-              ? 'يمكنك تعديل وتخصيص كافة البلوكات والنصوص والصور والألوان بعد اختيار النموذج.'
-              : 'All blocks, colors, typography, and images can be fully customized in the Page Builder.'}
+              ? 'يمكنك تعديل وتخصيص كافة البلوكات والنصوص والصور وإضافة كتل جديدة بحرية.'
+              : 'All blocks, text, and photos can be fully customized with new blocks added.'}
           </div>
 
-          <button
-            onClick={() => onUseTemplate(template)}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform active:scale-95"
-          >
-            <span>{isRTL ? 'ابدأ التخصيص الآن' : 'Start Customizing Now'}</span>
-            {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {onEditTemplate && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onEditTemplate(template);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-2 transition-all"
+              >
+                <Pencil className="w-3.5 h-3.5 text-amber-300" />
+                <span>{isRTL ? 'تعديل القالب وإضافة كتل' : 'Edit Template & Add Blocks'}</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => onUseTemplate(template)}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform active:scale-95"
+            >
+              <span>{isRTL ? 'استخدم في منشئ الصفحات' : 'Open in Page Builder'}</span>
+              {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </div>
     </div>

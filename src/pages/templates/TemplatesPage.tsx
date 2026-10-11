@@ -35,6 +35,7 @@ import {
 } from '../../data/templatesData';
 import { TemplatePhoneMockup } from '../../components/templates/TemplatePhoneMockup';
 import { TemplatePreviewModal } from '../../components/templates/TemplatePreviewModal';
+import { TemplateEditorModal } from '../../components/templates/TemplateEditorModal';
 import { AiPageGeneratorModal } from '../../components/templates/AiPageGeneratorModal';
 import { CategoryIcon } from '../../components/templates/CategoryIcon';
 
@@ -52,7 +53,18 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
 
   // Modals state
   const [previewTemplate, setPreviewTemplate] = useState<TemplateItem | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<TemplateItem | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  // Custom User Templates (persisted in localStorage)
+  const [customTemplates, setCustomTemplates] = useState<TemplateItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('esaia_custom_templates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Saved / Bookmarked Templates (persisted in localStorage)
   const [savedTemplateIds, setSavedTemplateIds] = useState<string[]>(() => {
@@ -71,6 +83,101 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
     setTimeout(() => {
       setToastMessage(null);
     }, 4000);
+  };
+
+  // Save or update customized template
+  const handleSaveCustomTemplate = (updatedTemplate: TemplateItem) => {
+    setCustomTemplates(prev => {
+      const existsIndex = prev.findIndex(item => item.id === updatedTemplate.id);
+      let next: TemplateItem[];
+      if (existsIndex >= 0) {
+        next = [...prev];
+        next[existsIndex] = updatedTemplate;
+      } else {
+        next = [updatedTemplate, ...prev];
+      }
+      try {
+        localStorage.setItem('esaia_custom_templates', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+
+    // Automatically bookmark it into My Templates
+    setSavedTemplateIds(prev => {
+      if (!prev.includes(updatedTemplate.id)) {
+        const next = [...prev, updatedTemplate.id];
+        try {
+          localStorage.setItem('esaia_saved_templates', JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      }
+      return prev;
+    });
+
+    setEditingTemplate(null);
+    showToast(isRTL ? 'تم حفظ القالب بنجاح في قسم (نماذجي)!' : 'Template saved successfully in My Templates!');
+  };
+
+  // Open Blank Custom Template Editor
+  const handleOpenBlankCustomEditor = () => {
+    const blankTemplate: TemplateItem = {
+      id: `custom_tpl_${Date.now()}`,
+      title: isRTL ? 'قالب مخصص جديد' : 'New Custom Template',
+      subtitle: isRTL ? 'قالب تم تصميمه وبناء كتل محتواه يدوياً' : 'Handcrafted custom template created in Studio',
+      category: 'personal',
+      categoryName: 'Personal page',
+      categoryNameAr: 'الصفحة الشخصية',
+      type: 'landing',
+      badge: 'CUSTOM',
+      badgeAr: 'مخصص',
+      preview: {
+        themePreset: 'dark',
+        headerBg: '#090a0f',
+        cardBg: '#141722',
+        accentColor: '#3b82f6',
+        textColor: '#ffffff',
+        heroTitle: isRTL ? 'مرحباً بك في موقعنا' : 'Welcome to Our Space',
+        heroSubtitle: isRTL ? 'أضف هنا نبذة تعريفية وروابط التواصل الخاصة بنشاطك.' : 'Connect with our team and discover our offerings.',
+        buttons: [
+          { label: 'Explore Services', labelAr: 'استكشف الخدمات', color: '#3b82f6' }
+        ]
+      },
+      themeConfig: DEFAULT_THEME_DARK,
+      seo: {
+        metaTitle: 'Custom Landing Page',
+        metaDescription: 'Built with ESAIA Template Customizer'
+      },
+      blocks: [
+        {
+          id: `b_hero_${Date.now()}`,
+          type: 'hero',
+          title: 'HERO',
+          isVisible: true,
+          orderIndex: 0,
+          content: {
+            title: isRTL ? 'مرحباً بك في موقعنا' : 'Welcome to Our Space',
+            subtitle: isRTL ? 'أضف هنا نبذة تعريفية وروابط التواصل الخاصة بنشاطك.' : 'Connect with our team and discover our offerings.',
+            badge: 'OFFICIAL',
+            alignment: 'center'
+          }
+        },
+        {
+          id: `b_btn_${Date.now()}`,
+          type: 'button',
+          title: 'BUTTON',
+          isVisible: true,
+          orderIndex: 1,
+          content: {
+            label: isRTL ? 'تواصل معنا الآن' : 'Contact Us Now',
+            url: 'https://esaia.app',
+            variant: 'primary'
+          }
+        }
+      ]
+    };
+    setEditingTemplate(blankTemplate);
   };
 
   const toggleSaveTemplate = (id: string) => {
@@ -162,9 +269,14 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
     }
   };
 
+  // Combine ready-made library with custom user-created templates
+  const allAvailableTemplates = useMemo(() => {
+    return [...customTemplates, ...READY_MADE_TEMPLATES];
+  }, [customTemplates]);
+
   // Filter Templates according to Active Tab, Category, and Search Query
   const filteredTemplates = useMemo(() => {
-    return READY_MADE_TEMPLATES.filter(tpl => {
+    return allAvailableTemplates.filter(tpl => {
       // Tab filter
       if (activeTab === 'featured' && !tpl.isFeatured && selectedCategory === 'all') return false;
       if (activeTab === 'landing' && tpl.type !== 'landing') return false;
@@ -186,16 +298,16 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
 
       return true;
     });
-  }, [activeTab, selectedCategory, searchQuery, savedTemplateIds]);
+  }, [allAvailableTemplates, activeTab, selectedCategory, searchQuery, savedTemplateIds]);
 
   // Count templates per category
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    READY_MADE_TEMPLATES.forEach(tpl => {
+    allAvailableTemplates.forEach(tpl => {
       counts[tpl.category] = (counts[tpl.category] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [allAvailableTemplates]);
 
   // Safe localized labels with high-fidelity RTL / LTR fallbacks
   const labels = useMemo(() => ({
@@ -250,14 +362,24 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
           </p>
         </div>
 
-        {/* Action Button: AI Generator */}
-        <button
-          onClick={() => setIsAiModalOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-95 shrink-0"
-        >
-          <Wand2 className="w-4 h-4 text-amber-300" />
-          <span>{t.templatesModule.generateWithAi || 'Generate with AI'}</span>
-        </button>
+        {/* Action Buttons: New Template Customizer & AI Generator */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={handleOpenBlankCustomEditor}
+            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 font-bold text-xs shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95"
+          >
+            <Plus className="w-4 h-4 text-indigo-400" />
+            <span>{isRTL ? 'تصميم وتخصيص قالب جديد' : 'Design New Template'}</span>
+          </button>
+
+          <button
+            onClick={() => setIsAiModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-95"
+          >
+            <Wand2 className="w-4 h-4 text-amber-300" />
+            <span>{t.templatesModule.generateWithAi || 'Generate with AI'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Taplink-Style Top Navigation Tabs */}
@@ -503,6 +625,7 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
               template={template}
               onPreview={(tpl) => setPreviewTemplate(tpl)}
               onUseTemplate={handleUseTemplate}
+              onEditTemplate={(tpl) => setEditingTemplate(tpl)}
               isSaved={savedTemplateIds.includes(template.id)}
               onToggleSave={toggleSaveTemplate}
             />
@@ -541,6 +664,16 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
       <TemplatePreviewModal
         template={previewTemplate}
         onClose={() => setPreviewTemplate(null)}
+        onUseTemplate={handleUseTemplate}
+        onEditTemplate={(tpl) => setEditingTemplate(tpl)}
+      />
+
+      {/* Full Template Editor & Customizer Modal (Studio) */}
+      <TemplateEditorModal
+        template={editingTemplate}
+        isOpen={Boolean(editingTemplate)}
+        onClose={() => setEditingTemplate(null)}
+        onSaveTemplate={handleSaveCustomTemplate}
         onUseTemplate={handleUseTemplate}
       />
 

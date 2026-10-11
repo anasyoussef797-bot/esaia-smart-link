@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Sparkles, Plus, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Eye, Sparkles, Plus, Bookmark, BookmarkCheck, Pencil } from 'lucide-react';
 import { TemplateItem } from '../../data/templatesData';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -7,6 +7,7 @@ interface TemplatePhoneMockupProps {
   template: TemplateItem;
   onPreview: (template: TemplateItem) => void;
   onUseTemplate: (template: TemplateItem) => void;
+  onEditTemplate?: (template: TemplateItem) => void;
   isSaved?: boolean;
   onToggleSave?: (templateId: string) => void;
 }
@@ -15,6 +16,7 @@ export const TemplatePhoneMockup: React.FC<TemplatePhoneMockupProps> = ({
   template,
   onPreview,
   onUseTemplate,
+  onEditTemplate,
   isSaved = false,
   onToggleSave
 }) => {
@@ -152,21 +154,31 @@ export const TemplatePhoneMockup: React.FC<TemplatePhoneMockupProps> = ({
           </div>
 
           {/* Hover Overlay with Quick Actions */}
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5 p-4 z-30">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2 p-3.5 z-30">
+            {onEditTemplate && (
+              <button
+                onClick={() => onEditTemplate(template)}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all transform active:scale-95"
+              >
+                <Pencil className="w-3.5 h-3.5 text-amber-300" />
+                <span>{isRTL ? 'تعديل وتخصيص القالب' : 'Edit & Customize Template'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => onUseTemplate(template)}
-              className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all transform active:scale-95"
+              className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 flex items-center justify-center gap-1.5 transition-all transform active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
               <span>{isRTL ? 'استخدم هذا النموذج' : 'Use this template'}</span>
             </button>
 
             <button
               onClick={() => onPreview(template)}
-              className="w-full py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 font-semibold text-xs border border-slate-700/60 flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-1.5 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 flex items-center justify-center gap-1.5 transition-colors"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>{isRTL ? 'معاينة حية' : 'Live Preview'}</span>
+              <span>{isRTL ? 'معاينة سريعة' : 'Live Preview'}</span>
             </button>
           </div>
         </div>
@@ -179,13 +191,25 @@ export const TemplatePhoneMockup: React.FC<TemplatePhoneMockupProps> = ({
           <p className="text-[11px] text-slate-400 truncate mt-0.5">{template.subtitle}</p>
         </div>
 
-        <button
-          onClick={() => onUseTemplate(template)}
-          className="p-2 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-all shrink-0 active:scale-90"
-          title={isRTL ? 'تخصيص هذا النموذج' : 'Customize template'}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onEditTemplate && (
+            <button
+              onClick={() => onEditTemplate(template)}
+              className="p-2 rounded-xl bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white transition-all active:scale-90 border border-slate-700/60"
+              title={isRTL ? 'تعديل هذا القالب وإضافة كتل' : 'Edit template & add blocks'}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          <button
+            onClick={() => onUseTemplate(template)}
+            className="p-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white transition-all active:scale-90 shadow-sm"
+            title={isRTL ? 'استخدام في منشئ الصفحات' : 'Open in Page Builder'}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+          </button>
+        </div>
       </div>
     </div>
   );

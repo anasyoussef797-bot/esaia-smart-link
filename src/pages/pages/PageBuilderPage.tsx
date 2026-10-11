@@ -42,7 +42,9 @@ import {
   Video,
   Upload,
   Image as ImageIcon,
-  Zap
+  Zap,
+  Heading as HeadingIcon,
+  AlignLeft
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -85,7 +87,7 @@ interface PageBuilderPageProps {
 
 export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack, onNavigate }) => {
   const { showToast } = useNotification();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const [page, setPage] = useState<Page | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
@@ -633,6 +635,16 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
         title: 'فيديو تعريفي',
         caption: 'شاهد نبذة تعريفية عن أعمالنا وخدماتنا مباشرة هنا.',
         aspectRatio: '16:9'
+      };
+    } else if (type === 'heading') {
+      defaultContent = {
+        text: 'عنوان قسم رئيسي',
+        level: 'h2'
+      };
+    } else if (type === 'paragraph') {
+      defaultContent = {
+        text: 'أدخل هنا نصاً توضيحياً ومعلومات تفصيلية عن نشاطك أو خدماتك لزوار الصفحة.',
+        title: 'معلومات عامة'
       };
     }
 
@@ -1775,6 +1787,156 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                       );
                     }
 
+                    // Heading
+                    if (block.type === 'heading') {
+                      return (
+                        <div key={block.id} className="pt-1.5 pb-0.5">
+                          <h4
+                            className={`font-black ${c.level === 'h1' ? 'text-sm' : c.level === 'h3' ? 'text-[11px]' : 'text-xs'}`}
+                            style={{ color: p.textPrimary }}
+                          >
+                            {c.text}
+                          </h4>
+                        </div>
+                      );
+                    }
+
+                    // Paragraph
+                    if (block.type === 'paragraph') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2.5 rounded-xl border text-[11px] leading-relaxed"
+                          style={{ backgroundColor: p.cardBackground, borderColor: p.border, color: p.textSecondary }}
+                        >
+                          {c.text}
+                        </div>
+                      );
+                    }
+
+                    // Phone Call Button
+                    if (block.type === 'phone_button') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2.5 rounded-lg text-[10px] font-semibold text-center bg-blue-600 text-white shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Phone className="w-3 h-3" />
+                          <span>{c.buttonText || c.phoneNumber || 'Call Now'}</span>
+                        </div>
+                      );
+                    }
+
+                    // Social Links
+                    if (block.type === 'social_links') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2 rounded-xl border flex items-center justify-center gap-2 flex-wrap"
+                          style={{ backgroundColor: p.cardBackground, borderColor: p.border }}
+                        >
+                          {(c.links || []).map((link: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider text-white"
+                              style={{ backgroundColor: p.primaryAction }}
+                            >
+                              {link.platform}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+
+                    // Menu Category
+                    if (block.type === 'menu_category') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2 rounded-lg border text-left rtl:text-right"
+                          style={{ backgroundColor: `${p.primaryAction}10`, borderColor: `${p.primaryAction}30` }}
+                        >
+                          <h5 className="text-[11px] font-black" style={{ color: p.primaryAction }}>
+                            {c.name}
+                          </h5>
+                          {c.description && (
+                            <p className="text-[9px] opacity-75" style={{ color: p.textSecondary }}>
+                              {c.description}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Business Hours
+                    if (block.type === 'business_hours') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2.5 rounded-xl border text-center space-y-1"
+                          style={{ backgroundColor: p.cardBackground, borderColor: p.border }}
+                        >
+                          <div className="flex items-center justify-center gap-1 text-[11px] font-bold" style={{ color: p.textPrimary }}>
+                            <Clock className="w-3 h-3 text-teal-400" />
+                            <span>{c.title || 'Business Hours'}</span>
+                          </div>
+                          {c.note && (
+                            <p className="text-[9px] opacity-70" style={{ color: p.textSecondary }}>
+                              {c.note}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Map Location
+                    if (block.type === 'map_location') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2.5 rounded-xl border flex items-center gap-2"
+                          style={{ backgroundColor: p.cardBackground, borderColor: p.border }}
+                        >
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryAction}20`, color: p.primaryAction }}>
+                            <MapPin className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-[11px] font-bold truncate" style={{ color: p.textPrimary }}>
+                              {c.locationTitle || 'Location'}
+                            </h5>
+                            <p className="text-[9px] truncate" style={{ color: p.textSecondary }}>
+                              {c.address}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Contact Form
+                    if (block.type === 'contact_form') {
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-3 rounded-xl border space-y-2"
+                          style={{ backgroundColor: p.cardBackground, borderColor: p.border }}
+                        >
+                          <div className="flex items-center gap-1 text-[11px] font-bold" style={{ color: p.textPrimary }}>
+                            <Send className="w-3 h-3 text-emerald-400" />
+                            <span>{c.heading || 'Inquiry Form'}</span>
+                          </div>
+                          <div className="h-6 rounded bg-[#090a0f] border border-[#24293d] opacity-50 text-[9px] flex items-center px-2">
+                            <span>Your Name...</span>
+                          </div>
+                          <div
+                            className="py-1 rounded text-center text-[10px] font-bold text-white shadow-xs"
+                            style={{ backgroundColor: p.primaryAction }}
+                          >
+                            {c.submitButtonText || 'Submit'}
+                          </div>
+                        </div>
+                      );
+                    }
+
                     // Default block fallback representation
                     return (
                       <div
@@ -1811,7 +1973,7 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAddBlock('hero')}
-                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
+                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left rtl:text-right transition-all"
               >
                 <Sparkles className="w-4 h-4 text-blue-400 mb-1" />
                 <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.hero}</div>
@@ -1820,11 +1982,29 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
 
               <button
                 onClick={() => handleAddBlock('button')}
-                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left transition-all"
+                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-blue-500 text-left rtl:text-right transition-all"
               >
                 <ExternalLink className="w-4 h-4 text-indigo-400 mb-1" />
                 <div className="text-xs font-bold text-white">{t.builderModule.blocks.types.button}</div>
                 <div className="text-[10px] text-slate-400">{t.builderModule.blocks.types.buttonDesc}</div>
+              </button>
+
+              <button
+                onClick={() => handleAddBlock('heading')}
+                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-purple-500 text-left rtl:text-right transition-all"
+              >
+                <HeadingIcon className="w-4 h-4 text-purple-400 mb-1" />
+                <div className="text-xs font-bold text-white">{isRTL ? 'عنوان رئيسي / فرعي' : 'Heading'}</div>
+                <div className="text-[10px] text-slate-400">{isRTL ? 'عناوين بارزة لتنظيم وتنسيق الصفحة' : 'Section heading text'}</div>
+              </button>
+
+              <button
+                onClick={() => handleAddBlock('paragraph')}
+                className="p-3 rounded-xl bg-[#0e1017] border border-[#24293d] hover:border-emerald-500 text-left rtl:text-right transition-all"
+              >
+                <AlignLeft className="w-4 h-4 text-emerald-400 mb-1" />
+                <div className="text-xs font-bold text-white">{isRTL ? 'نص وفقرة توضيحية' : 'Paragraph'}</div>
+                <div className="text-[10px] text-slate-400">{isRTL ? 'شروحات ونصوص مفصلة لزوارك' : 'Detailed descriptive paragraph'}</div>
               </button>
             </div>
           </div>
@@ -2489,6 +2669,287 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                   </div>
                 )}
               </>
+            )}
+
+            {/* HEADING BLOCK FIELDS */}
+            {editingBlock.type === 'heading' && (
+              <>
+                <Input
+                  id="eb-heading-text"
+                  label={isRTL ? 'نص العنوان (Heading Text)' : 'Heading Text'}
+                  value={editingBlock.content.text || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, text: e.target.value }
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300">{isRTL ? 'مستوى وحجم العنوان' : 'Heading Level'}</label>
+                  <select
+                    value={editingBlock.content.level || 'h2'}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, level: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="h1">H1 - {isRTL ? 'عنوان رئيسي ضخم' : 'Large Heading (H1)'}</option>
+                    <option value="h2">H2 - {isRTL ? 'عنوان قسم متوسط' : 'Medium Heading (H2)'}</option>
+                    <option value="h3">H3 - {isRTL ? 'عنوان فرعي صغير' : 'Subheading (H3)'}</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* PARAGRAPH BLOCK FIELDS */}
+            {editingBlock.type === 'paragraph' && (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300">{isRTL ? 'النص التفصيلي (Paragraph Text)' : 'Paragraph Content'}</label>
+                  <textarea
+                    rows={4}
+                    value={editingBlock.content.text || ''}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, text: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                    placeholder={isRTL ? 'أدخل هنا نص الفقرة التوضيحية...' : 'Enter your descriptive text here...'}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* PHONE BUTTON BLOCK FIELDS */}
+            {editingBlock.type === 'phone_button' && (
+              <>
+                <Input
+                  id="eb-phone-num"
+                  label={isRTL ? 'رقم الهاتف للاتصال' : 'Phone Number'}
+                  value={editingBlock.content.phoneNumber || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, phoneNumber: e.target.value }
+                    })
+                  }
+                  placeholder="+201001234567"
+                />
+                <Input
+                  id="eb-phone-btn-text"
+                  label={isRTL ? 'نص الزر' : 'Button Text'}
+                  value={editingBlock.content.buttonText || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, buttonText: e.target.value }
+                    })
+                  }
+                />
+                <Input
+                  id="eb-phone-subtext"
+                  label={isRTL ? 'نص توضيحي صغير أسفل الزر' : 'Subtext'}
+                  value={editingBlock.content.subtext || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, subtext: e.target.value }
+                    })
+                  }
+                />
+              </>
+            )}
+
+            {/* SOCIAL LINKS BLOCK FIELDS */}
+            {editingBlock.type === 'social_links' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-300">
+                    {isRTL ? 'روابط شبكات التواصل الاجتماعي' : 'Social Channels'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentLinks = editingBlock.content.links || [];
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: {
+                          ...editingBlock.content,
+                          links: [...currentLinks, { platform: 'instagram', url: 'https://instagram.com' }]
+                        }
+                      });
+                    }}
+                    className="text-[11px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isRTL ? 'إضافة شبكة' : 'Add Channel'}</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {(editingBlock.content.links || []).map((link: any, lIdx: number) => (
+                    <div key={lIdx} className="p-2.5 rounded-xl bg-[#090a0f] border border-[#24293d] flex items-center gap-2">
+                      <select
+                        value={link.platform}
+                        onChange={e => {
+                          const updated = [...editingBlock.content.links];
+                          updated[lIdx] = { ...updated[lIdx], platform: e.target.value };
+                          setEditingBlock({
+                            ...editingBlock,
+                            content: { ...editingBlock.content, links: updated }
+                          });
+                        }}
+                        className="px-2 py-1.5 text-xs rounded-lg bg-[#141722] border border-[#24293d] text-white shrink-0"
+                      >
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">X / Twitter</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="website">Website</option>
+                      </select>
+
+                      <input
+                        type="url"
+                        value={link.url}
+                        onChange={e => {
+                          const updated = [...editingBlock.content.links];
+                          updated[lIdx] = { ...updated[lIdx], url: e.target.value };
+                          setEditingBlock({
+                            ...editingBlock,
+                            content: { ...editingBlock.content, links: updated }
+                          });
+                        }}
+                        placeholder="https://..."
+                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-[#141722] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editingBlock.content.links.filter((_: any, idx: number) => idx !== lIdx);
+                          setEditingBlock({
+                            ...editingBlock,
+                            content: { ...editingBlock.content, links: updated }
+                          });
+                        }}
+                        className="p-1 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MENU CATEGORY BLOCK FIELDS */}
+            {editingBlock.type === 'menu_category' && (
+              <>
+                <Input
+                  id="eb-mcat-name"
+                  label={t.builderModule.blocks.fields.categoryName}
+                  value={editingBlock.content.name || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, name: e.target.value }
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300">{t.builderModule.blocks.fields.description}</label>
+                  <textarea
+                    rows={2}
+                    value={editingBlock.content.description || ''}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, description: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* BUSINESS HOURS BLOCK FIELDS */}
+            {editingBlock.type === 'business_hours' && (
+              <div className="space-y-3">
+                <Input
+                  id="eb-bh-title"
+                  label={isRTL ? 'عنوان القسم' : 'Title'}
+                  value={editingBlock.content.title || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, title: e.target.value }
+                    })
+                  }
+                />
+                <Input
+                  id="eb-bh-note"
+                  label={isRTL ? 'ملاحظة إضافية (مثل: العطلات الرسمية)' : 'Additional Note'}
+                  value={editingBlock.content.note || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, note: e.target.value }
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            {/* CONTACT FORM BLOCK FIELDS */}
+            {editingBlock.type === 'contact_form' && (
+              <div className="space-y-3">
+                <Input
+                  id="eb-cf-heading"
+                  label={isRTL ? 'عنوان النموذج' : 'Heading'}
+                  value={editingBlock.content.heading || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, heading: e.target.value }
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-300">{isRTL ? 'نبذة توضيحية أعلى النموذج' : 'Subtext'}</label>
+                  <textarea
+                    rows={2}
+                    value={editingBlock.content.subtext || ''}
+                    onChange={e =>
+                      setEditingBlock({
+                        ...editingBlock,
+                        content: { ...editingBlock.content, subtext: e.target.value }
+                      })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[#0e1017] border border-[#24293d] text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <Input
+                  id="eb-cf-btn"
+                  label={isRTL ? 'نص زر الإرسال' : 'Submit Button Text'}
+                  value={editingBlock.content.submitButtonText || ''}
+                  onChange={e =>
+                    setEditingBlock({
+                      ...editingBlock,
+                      content: { ...editingBlock.content, submitButtonText: e.target.value }
+                    })
+                  }
+                />
+              </div>
             )}
 
             <div className="flex justify-end gap-2 pt-4">
