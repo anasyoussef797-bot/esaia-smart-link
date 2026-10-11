@@ -18,9 +18,9 @@ export interface QrSvgRenderOptions {
 const DEFAULT_QR_STYLE: QrStyleConfig = {
   foregroundColor: '#0f172a',
   backgroundColor: '#ffffff',
-  moduleStyle: 'rounded',
-  eyeStyle: 'rounded',
-  eyeBallStyle: 'rounded',
+  moduleStyle: 'square',
+  eyeStyle: 'square',
+  eyeBallStyle: 'square',
   eyeColor: '#0f172a',
   eyeInnerColor: '#0f172a',
   errorCorrectionLevel: 'H',
@@ -172,65 +172,38 @@ export const qrVectorEngine = {
       }
     }
 
-    // 2. Render Custom Eye Finder Patterns (3 corners: TL, TR, BL)
+    // 2. Render Standards-Compliant ISO/IEC Finder Patterns (3 corners: TL, TR, BL)
     const renderEye = (cornerX: number, cornerY: number) => {
       const x = qrOffsetX + (cornerX + margin) * moduleSize;
       const y = qrOffsetY + (cornerY + margin) * moduleSize;
       const eyeWidth = 7 * moduleSize;
-      const strokeWidth = moduleSize;
       const innerWidth = 3 * moduleSize;
+      const midWidth = 5 * moduleSize;
+      const midX = x + moduleSize;
+      const midY = y + moduleSize;
       const innerX = x + 2 * moduleSize;
       const innerY = y + 2 * moduleSize;
 
       const eyeColor = style.eyeColor || (hasGradient ? style.gradient!.startColor : style.foregroundColor);
       const innerColor = style.eyeInnerColor || style.eyeColor || (hasGradient ? style.gradient!.endColor : style.foregroundColor);
+      const bgColor = style.backgroundColor || '#ffffff';
 
       const eyeFrameStyle = style.eyeStyle || 'square';
       const eyeBallStyle = style.eyeBallStyle || (eyeFrameStyle === 'circle' ? 'circle' : eyeFrameStyle === 'rounded' ? 'rounded' : 'square');
 
-      let outerSvg = '';
-      if (eyeFrameStyle === 'circle') {
-        const outerR = eyeWidth / 2 - strokeWidth / 2;
-        const cx = x + eyeWidth / 2;
-        const cy = y + eyeWidth / 2;
-        outerSvg = `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="${eyeColor}" stroke-width="${strokeWidth}" />`;
-      } else if (eyeFrameStyle === 'rounded') {
-        const rx = moduleSize * 1.8;
-        outerSvg = `<rect x="${x + strokeWidth / 2}" y="${y + strokeWidth / 2}" width="${eyeWidth - strokeWidth}" height="${eyeWidth - strokeWidth}" rx="${rx}" fill="none" stroke="${eyeColor}" stroke-width="${strokeWidth}" />`;
-      } else if (eyeFrameStyle === 'leaf') {
-        // Asymmetrical leaf outer frame
-        const rx = moduleSize * 2.2;
-        outerSvg = `<rect x="${x + strokeWidth / 2}" y="${y + strokeWidth / 2}" width="${eyeWidth - strokeWidth}" height="${eyeWidth - strokeWidth}" rx="${rx}" fill="none" stroke="${eyeColor}" stroke-width="${strokeWidth}" style="border-top-right-radius: 0; border-bottom-left-radius: 0;" />`;
-      } else if (eyeFrameStyle === 'diamond') {
-        const half = eyeWidth / 2;
-        const cx = x + half;
-        const cy = y + half;
-        outerSvg = `<polygon points="${cx},${y + strokeWidth / 2} ${x + eyeWidth - strokeWidth / 2},${cy} ${cx},${y + eyeWidth - strokeWidth / 2} ${x + strokeWidth / 2},${cy}" fill="none" stroke="${eyeColor}" stroke-width="${strokeWidth}" />`;
-      } else {
-        // Square
-        outerSvg = `<rect x="${x + strokeWidth / 2}" y="${y + strokeWidth / 2}" width="${eyeWidth - strokeWidth}" height="${eyeWidth - strokeWidth}" fill="none" stroke="${eyeColor}" stroke-width="${strokeWidth}" />`;
-      }
+      // Subtle safe corner rounding (within optical decoding tolerances)
+      const outerRx = eyeFrameStyle === 'circle' ? eyeWidth / 2 : eyeFrameStyle === 'rounded' ? moduleSize * 0.6 : 0;
+      const midRx = eyeFrameStyle === 'circle' ? midWidth / 2 : eyeFrameStyle === 'rounded' ? moduleSize * 0.4 : 0;
+      const innerRx = eyeBallStyle === 'circle' ? innerWidth / 2 : eyeBallStyle === 'rounded' ? moduleSize * 0.3 : 0;
 
-      let innerSvg = '';
-      if (eyeBallStyle === 'circle') {
-        const r = innerWidth / 2;
-        const cx = innerX + r;
-        const cy = innerY + r;
-        innerSvg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${innerColor}" />`;
-      } else if (eyeBallStyle === 'rounded') {
-        const rx = moduleSize * 0.9;
-        innerSvg = `<rect x="${innerX}" y="${innerY}" width="${innerWidth}" height="${innerWidth}" rx="${rx}" fill="${innerColor}" />`;
-      } else if (eyeBallStyle === 'diamond') {
-        const half = innerWidth / 2;
-        const cx = innerX + half;
-        const cy = innerY + half;
-        innerSvg = `<polygon points="${cx},${innerY} ${innerX + innerWidth},${cy} ${cx},${innerY + innerWidth} ${innerX},${cy}" fill="${innerColor}" />`;
-      } else {
-        // Square
-        innerSvg = `<rect x="${innerX}" y="${innerY}" width="${innerWidth}" height="${innerWidth}" fill="${innerColor}" />`;
-      }
+      // Layer 1: Outer 7x7 dark box
+      const outerSvg = `<rect x="${x}" y="${y}" width="${eyeWidth}" height="${eyeWidth}" rx="${outerRx}" fill="${eyeColor}" />`;
+      // Layer 2: Middle 5x5 light ring (quiet separator)
+      const midSvg = `<rect x="${midX}" y="${midY}" width="${midWidth}" height="${midWidth}" rx="${midRx}" fill="${bgColor}" />`;
+      // Layer 3: Inner 3x3 dark core
+      const innerSvg = `<rect x="${innerX}" y="${innerY}" width="${innerWidth}" height="${innerWidth}" rx="${innerRx}" fill="${innerColor}" />`;
 
-      return `${outerSvg}\n${innerSvg}`;
+      return `${outerSvg}\n${midSvg}\n${innerSvg}`;
     };
 
     const eyesSvg = `
@@ -489,6 +462,47 @@ export const qrVectorEngine = {
 
       img.src = url;
     });
+  },
+
+  /**
+   * Generates official live API link via qrserver.com
+   * Reference: https://api.qrserver.com/v1/create-qr-code/
+   */
+  getApiQrServerUrl(
+    value: string,
+    size = 400,
+    format: 'png' | 'svg' = 'png',
+    foregroundColor = '#0f172a',
+    backgroundColor = '#ffffff'
+  ): string {
+    const cleanData = encodeURIComponent(value || 'https://esaia.app');
+    const color = foregroundColor.replace('#', '').trim() || '0f172a';
+    const bgcolor = backgroundColor.replace('#', '').trim() || 'ffffff';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${cleanData}&color=${color}&bgcolor=${bgcolor}&format=${format}&qzone=4`;
+  },
+
+  /**
+   * Downloads a camera-ready QR code directly from qrserver.com API
+   */
+  async downloadFromQrServerApi(
+    value: string,
+    filename = 'qr-code-api.png',
+    size = 600,
+    foregroundColor = '#0f172a',
+    backgroundColor = '#ffffff'
+  ): Promise<void> {
+    const url = this.getApiQrServerUrl(value, size, 'png', foregroundColor, backgroundColor);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch QR code from API');
+    const blob = await response.blob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
   }
 };
 

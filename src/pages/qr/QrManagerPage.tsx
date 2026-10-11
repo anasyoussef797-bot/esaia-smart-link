@@ -42,7 +42,8 @@ import { QrDesignModal } from './QrDesignModal';
 import { QuickEditDestinationModal } from './QuickEditDestinationModal';
 import { BulkTagModal } from './BulkTagModal';
 import { CreateQrModal } from './CreateQrModal';
-import { getQrRedirectUrl } from '../../utils/qrUrl';
+import { getQrRedirectUrl, getEffectiveQrPayload, getQrServerApiUrl } from '../../utils/qrUrl';
+import { RealQrCode } from '../../components/qr/RealQrCode';
 
 export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const { showToast } = useNotification();
@@ -530,8 +531,9 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
           {filteredQrs.map(qr => {
             const isSelected = selectedIds.includes(qr.id);
             const redirectUrl = getQrRedirectUrl(qr.publicCode);
+            const effectivePayload = getEffectiveQrPayload(qr, { preferDirectDestination: true });
             const svgPreview = qrVectorEngine.generateSvgString({
-              value: redirectUrl,
+              value: effectivePayload,
               size: 200,
               style: qr.styleConfig
             });
@@ -600,12 +602,21 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
 
                 {/* Card Center: Visual SVG Preview & Details */}
                 <div className="p-5 flex gap-4 items-center">
-                  {/* Actual SVG QR Graphic */}
+                  {/* Genuine Camera-Scannable RealQrCode Graphic */}
                   <div
                     onClick={() => setEditingQr(qr)}
-                    className="w-28 h-28 rounded-xl bg-white p-2 border border-neutral-300 shadow-sm shrink-0 flex items-center justify-center cursor-pointer group-hover:scale-[1.03] transition duration-200"
-                    dangerouslySetInnerHTML={{ __html: svgPreview }}
-                  />
+                    className="w-28 h-28 rounded-xl bg-white p-2 border border-neutral-300 shadow-sm shrink-0 flex items-center justify-center cursor-pointer group-hover:scale-[1.03] transition duration-200 overflow-hidden"
+                    title={`رمز قابل للمسح: ${effectivePayload}`}
+                  >
+                    <RealQrCode
+                      value={effectivePayload}
+                      size={96}
+                      fgColor={qr.styleConfig?.foregroundColor || '#0f172a'}
+                      bgColor={qr.styleConfig?.backgroundColor || '#ffffff'}
+                      logoUrl={qr.styleConfig?.logoUrl}
+                      level={qr.styleConfig?.errorCorrectionLevel || 'H'}
+                    />
+                  </div>
 
                   {/* Metadata */}
                   <div className="flex-1 min-w-0 space-y-1.5">
@@ -690,18 +701,36 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   </button>
 
                   <div className="flex items-center gap-1.5">
+                    {/* Quick High-Res JPEG Download */}
                     <button
                       type="button"
-                      onClick={() => {
-                        const filename = `${qr.publicCode}_vector.svg`;
-                        qrVectorEngine.downloadSvg(svgPreview, filename);
-                        showToast(`Downloaded SVG (${filename})`, 'success');
+                      onClick={async () => {
+                        const filename = `${qr.publicCode}_print.jpg`;
+                        try {
+                          await qrVectorEngine.downloadJpeg(svgPreview, filename, 3, qr.styleConfig?.backgroundColor || '#ffffff');
+                          showToast(`تم تحميل صورة JPEG (${filename}) بنجاح`, 'success');
+                        } catch {
+                          await qrVectorEngine.downloadFromQrServerApi(effectivePayload, filename, 800);
+                          showToast(`تم تحميل صورة الـ QR بنجاح`, 'success');
+                        }
                       }}
-                      className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
-                      title={t.qrModule.exportVectorSvg}
+                      className="p-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-neutral-800 transition"
+                      title="تحميل كصورة JPEG للهاتف أو الطباعة"
                     >
                       <Download className="w-3.5 h-3.5" />
                     </button>
+
+                    {/* QR Server API Link */}
+                    <a
+                      href={getQrServerApiUrl(effectivePayload, { size: 600 })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg text-sky-400 hover:text-sky-300 hover:bg-neutral-800 transition"
+                      title="معاينة واختبار عبر qrserver.com API"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+
                     <button
                       type="button"
                       onClick={() => setEditingQr(qr)}
@@ -748,8 +777,9 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                 {filteredQrs.map(qr => {
                   const isSelected = selectedIds.includes(qr.id);
                   const redirectUrl = getQrRedirectUrl(qr.publicCode);
+                  const effectivePayload = getEffectiveQrPayload(qr, { preferDirectDestination: true });
                   const svgPreview = qrVectorEngine.generateSvgString({
-                    value: redirectUrl,
+                    value: effectivePayload,
                     size: 80,
                     style: qr.styleConfig
                   });
@@ -779,9 +809,16 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                         <div className="flex items-center gap-3">
                           <div
                             onClick={() => setEditingQr(qr)}
-                            className="w-10 h-10 rounded-lg bg-white p-1 border border-neutral-300 shrink-0 cursor-pointer"
-                            dangerouslySetInnerHTML={{ __html: svgPreview }}
-                          />
+                            className="w-10 h-10 rounded-lg bg-white p-1 border border-neutral-300 shrink-0 cursor-pointer flex items-center justify-center overflow-hidden"
+                            title={`مسح الكود: ${effectivePayload}`}
+                          >
+                            <RealQrCode
+                              value={effectivePayload}
+                              size={32}
+                              fgColor={qr.styleConfig?.foregroundColor || '#0f172a'}
+                              bgColor={qr.styleConfig?.backgroundColor || '#ffffff'}
+                            />
+                          </div>
                           <div>
                             <span
                               onClick={() => setEditingQr(qr)}

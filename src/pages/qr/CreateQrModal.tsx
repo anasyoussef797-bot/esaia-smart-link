@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { QrCode, Plus, Check, RefreshCw, Sparkles, Link2, Download, CheckCircle2, Copy, Sliders } from 'lucide-react';
+import { QrCode, Plus, Check, RefreshCw, Sparkles, Link2, Download, CheckCircle2, Copy, Sliders, ExternalLink } from 'lucide-react';
 import { Client } from '../../types/client';
 import { QrCode as QrCodeType, QrDestinationType, QrModuleStyle } from '../../types/qr';
 import { LandingPage } from '../../types/page';
@@ -14,7 +14,8 @@ import { pageService } from '../../services/firebase/pageService';
 import { qrVectorEngine } from '../../services/qr/qrVectorEngine';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getAppBaseUrl, getQrRedirectUrl } from '../../utils/qrUrl';
+import { getAppBaseUrl, getQrRedirectUrl, getEffectiveQrPayload, getQrServerApiUrl } from '../../utils/qrUrl';
+import { RealQrCode } from '../../components/qr/RealQrCode';
 
 interface CreateQrModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [encodeDirectUrl, setEncodeDirectUrl] = useState(true);
   const [createdQr, setCreatedQr] = useState<QrCodeType | null>(null);
   const [availablePages, setAvailablePages] = useState<LandingPage[]>([]);
 
@@ -56,14 +58,19 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
     return getQrRedirectUrl(createdQr.publicCode);
   }, [createdQr]);
 
+  const effectivePayload = useMemo(() => {
+    if (!createdQr) return '';
+    return getEffectiveQrPayload(createdQr, { preferDirectDestination: encodeDirectUrl });
+  }, [createdQr, encodeDirectUrl]);
+
   const svgString = useMemo(() => {
     if (!createdQr) return '';
     return qrVectorEngine.generateSvgString({
-      value: getQrRedirectUrl(createdQr.publicCode),
+      value: effectivePayload,
       size: 380,
       style: createdQr.styleConfig
     });
-  }, [createdQr]);
+  }, [createdQr, effectivePayload]);
 
   if (!isOpen) return null;
 
@@ -76,8 +83,9 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
   };
 
   const handleCopyLink = () => {
-    if (!redirectUrl) return;
-    navigator.clipboard.writeText(redirectUrl);
+    const textToCopy = effectivePayload || redirectUrl;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     showToast(t.qrModule.copyDynamicLink, 'success');
     setTimeout(() => setCopied(false), 2000);
@@ -96,7 +104,19 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
       );
       showToast(t.qrModule.downloadJpegBtn + ' - تم التحميل بنجاح', 'success');
     } catch (err) {
-      showToast('فشل تحميل صورة JPEG', 'error');
+      // Direct API fallback via qrserver.com
+      try {
+        await qrVectorEngine.downloadFromQrServerApi(
+          effectivePayload,
+          `${createdQr.publicCode || 'qr-code'}_api.png`,
+          800,
+          createdQr.styleConfig?.foregroundColor || '#0f172a',
+          createdQr.styleConfig?.backgroundColor || '#ffffff'
+        );
+        showToast('تم التحميل بنجاح عبر محرك API', 'success');
+      } catch {
+        showToast('فشل تحميل صورة JPEG', 'error');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -212,12 +232,17 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
 
         {createdQr ? (
           <div className="p-6 space-y-5 text-center">
-            {/* Crisp Rendered Vector QR Graphic */}
+            {/* Genuine Scannable Vector QR Graphic Powered by RealQrCode */}
             <div className="flex justify-center">
               <div className="p-4 rounded-2xl bg-white border border-neutral-200 shadow-2xl inline-flex items-center justify-center">
-                <div
-                  dangerouslySetInnerHTML={{ __html: svgString }}
-                  className="w-48 h-48 flex items-center justify-center"
+                <RealQrCode
+                  value={effectivePayload}
+                  size={192}
+                  fgColor={createdQr.styleConfig?.foregroundColor || '#0f172a'}
+                  bgColor={createdQr.styleConfig?.backgroundColor || '#ffffff'}
+                  logoUrl={createdQr.styleConfig?.logoUrl}
+                  level="H"
+                  className="rounded-lg overflow-hidden"
                 />
               </div>
             </div>
@@ -228,20 +253,58 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
               <p className="text-xs text-neutral-400">{createdQr.clientName}</p>
             </div>
 
-            {/* Shortcode URL Box with Copy */}
-            <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-left text-xs">
-              <div className="truncate mr-2">
-                <span className="text-[10px] text-neutral-500 block">{t.qrModule.shortcodeTarget}</span>
-                <span className="font-mono text-emerald-400 truncate block">{redirectUrl}</span>
+            {/* Scannable Payload Mode Switch & Target Box */}
+            <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2.5 text-right rtl:text-right">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-400 font-semibold">محتوى المسح (Payload):</span>
+                <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setEncodeDirectUrl(true)}
+                    className={`px-2.5 py-1 rounded-md transition font-medium ${
+                      encodeDirectUrl ? 'bg-emerald-600 text-white shadow' : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    رابط الوجهة المباشر
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEncodeDirectUrl(false)}
+                    className={`px-2.5 py-1 rounded-md transition font-medium ${
+                      !encodeDirectUrl ? 'bg-rose-600 text-white shadow' : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    رابط التحويل (/q/)
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition shrink-0"
-                title={t.qrModule.copyDynamicLink}
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
+
+              <div className="flex items-center justify-between gap-2 bg-neutral-900/90 p-2.5 rounded-lg border border-neutral-800 text-xs">
+                <div className="truncate text-left dir-ltr flex-1 min-w-0">
+                  <span className="font-mono text-emerald-400 truncate block text-[11px]" title={effectivePayload}>
+                    {effectivePayload}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
+                    title="نسخ الرابط المرمز"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  <a
+                    href={getQrServerApiUrl(effectivePayload, { size: 600 })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sky-400 hover:text-sky-300 transition"
+                    title="فحص واختبار عبر qrserver.com API"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
             </div>
 
             {/* Prominent Primary JPEG Download Button */}

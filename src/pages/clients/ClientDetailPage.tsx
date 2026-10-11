@@ -39,6 +39,8 @@ import { clientService } from '../../services/firebase/clientService';
 import { Client } from '../../types/client';
 import { QrCode } from '../../types/qr';
 import { Page } from '../../types/page';
+import { RealQrCode } from '../../components/qr/RealQrCode';
+import { getEffectiveQrPayload } from '../../utils/qrUrl';
 
 interface ClientDetailPageProps {
   clientId: string;
@@ -671,13 +673,18 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border overflow-hidden p-0.5 bg-white shadow-sm"
                           style={{
-                            backgroundColor: qr.design?.backgroundColor || '#ffffff',
                             borderColor: primaryColor
                           }}
+                          title={`مسح الكود: ${qr.destinationUrl}`}
                         >
-                          <QrIcon className="w-5 h-5" style={{ color: qr.design?.dotsColor || primaryColor }} />
+                          <RealQrCode
+                            value={getEffectiveQrPayload(qr, { preferDirectDestination: true })}
+                            size={38}
+                            fgColor={qr.styleConfig?.foregroundColor || qr.design?.dotsColor || primaryColor}
+                            bgColor={qr.styleConfig?.backgroundColor || '#ffffff'}
+                          />
                         </div>
                         <div>
                           <h4 className="font-bold text-sm text-white [data-theme=light]:text-slate-900 [data-theme=beige]:text-[#231f1d] truncate">

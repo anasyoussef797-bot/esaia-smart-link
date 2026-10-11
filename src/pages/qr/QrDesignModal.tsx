@@ -33,7 +33,7 @@ import { qrValidationService } from '../../services/qr/qrValidationService';
 import { pageService } from '../../services/firebase/pageService';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getQrRedirectUrl } from '../../utils/qrUrl';
+import { getQrRedirectUrl, getEffectiveQrPayload, getQrServerApiUrl } from '../../utils/qrUrl';
 
 interface QrDesignModalProps {
   qr: QrCode | null;
@@ -187,16 +187,26 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
     reader.readAsDataURL(file);
   };
 
+  const [encodeDirectUrl, setEncodeDirectUrl] = useState(true);
+
   // Target shortcode URL that physical cameras will read
   const redirectUrl = useMemo(() => {
     return getQrRedirectUrl(publicCode || pageSlug || 'demo');
   }, [publicCode, pageSlug]);
 
+  // Target scannable payload that physical cameras will read
+  const scannablePayload = useMemo(() => {
+    return getEffectiveQrPayload(
+      { destinationUrl, publicCode: publicCode || pageSlug, destinationType },
+      { preferDirectDestination: encodeDirectUrl }
+    );
+  }, [destinationUrl, publicCode, pageSlug, destinationType, encodeDirectUrl]);
+
   // Generate real-time SVG string
   const svgString = useMemo(() => {
     try {
       return qrVectorEngine.generateSvgString({
-        value: redirectUrl,
+        value: scannablePayload,
         size: 380,
         style: styleConfig
       });
@@ -204,7 +214,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
       console.error('QR SVG Render error:', err);
       return '';
     }
-  }, [redirectUrl, styleConfig]);
+  }, [scannablePayload, styleConfig]);
 
   // Run 7-Stage Scannability Validation Pipeline whenever style or destination changes
   useEffect(() => {
@@ -229,7 +239,7 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             }
             URL.revokeObjectURL(url);
 
-            const report = await qrValidationService.validateQrDesign(redirectUrl, styleConfig, canvas);
+            const report = await qrValidationService.validateQrDesign(scannablePayload, styleConfig, canvas);
             if (!isCancelled) {
               setValidationReport(report);
               setStyleConfig(prev => ({
@@ -241,11 +251,11 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
           };
           img.src = url;
         } catch (e) {
-          const report = await qrValidationService.validateQrDesign(redirectUrl, styleConfig, null);
+          const report = await qrValidationService.validateQrDesign(scannablePayload, styleConfig, null);
           if (!isCancelled) setValidationReport(report);
         }
       } else {
-        const report = await qrValidationService.validateQrDesign(redirectUrl, styleConfig, null);
+        const report = await qrValidationService.validateQrDesign(scannablePayload, styleConfig, null);
         if (!isCancelled) setValidationReport(report);
       }
     };
@@ -1282,21 +1292,62 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
 
             {/* Quick Test & Download Actions */}
             <div className="w-full mt-6 space-y-3">
-              <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between">
-                <div className="truncate mr-2">
-                  <span className="text-[11px] text-neutral-400 block">
-                    {t.qrModule.shortcodeTarget}
-                  </span>
-                  <span className="text-xs font-mono text-white truncate block">{redirectUrl}</span>
+              <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 space-y-2 text-right rtl:text-right">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-400 font-semibold">محتوى المسح (Payload):</span>
+                  <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-lg border border-neutral-800 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setEncodeDirectUrl(true)}
+                      className={`px-2 py-0.5 rounded transition ${
+                        encodeDirectUrl ? 'bg-emerald-600 text-white font-bold' : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      رابط الوجهة المباشر
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEncodeDirectUrl(false)}
+                      className={`px-2 py-0.5 rounded transition ${
+                        !encodeDirectUrl ? 'bg-rose-600 text-white font-bold' : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      الرابط المختصر (/q/)
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
-                  title={t.qrModule.copyDynamicLink}
-                >
-                  {copiedUrl ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
+
+                <div className="flex items-center justify-between bg-neutral-950 p-2 rounded-lg border border-neutral-800 text-xs">
+                  <div className="truncate mr-2 dir-ltr text-left flex-1 min-w-0">
+                    <span className="font-mono text-emerald-400 truncate block text-[11px]" title={scannablePayload}>
+                      {scannablePayload}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(scannablePayload);
+                        setCopiedUrl(true);
+                        showToast('تم نسخ الرابط المرمّز', 'success');
+                        setTimeout(() => setCopiedUrl(false), 2000);
+                      }}
+                      className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
+                      title="نسخ الرابط المرمّز"
+                    >
+                      {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                    <a
+                      href={getQrServerApiUrl(scannablePayload, { size: 600 })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sky-400 transition"
+                      title="معاينة واختبار عبر qrserver.com API"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
               </div>
 
               {/* Download Buttons for Phone, Sharing & Physical Print */}
