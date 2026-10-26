@@ -83,20 +83,17 @@ service cloud.firestore {
       allow delete: if isOrgAdmin(resource.data.orgId);
     }
 
-    // Dynamic QR Codes
+    // Dynamic QR Codes (Publicly resolvable for phone scans and dynamic redirects)
     match /qrCodes/{qrId} {
-      // Direct fast lookup allowed for active public codes
-      allow get: if resource.data.status == 'active' || isOrgMember(resource.data.orgId);
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isOrgMember(request.resource.data.orgId);
       allow update: if isOrgMember(resource.data.orgId);
       allow delete: if isOrgAdmin(resource.data.orgId);
     }
 
-    // Landing Pages & Bio Cards
+    // Landing Pages & Bio Cards (Publicly accessible for visitors scanning QR codes)
     match /pages/{pageId} {
-      allow get: if resource.data.status == 'published' || isOrgMember(resource.data.orgId);
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isOrgMember(request.resource.data.orgId);
       allow update: if isOrgMember(resource.data.orgId);
       allow delete: if isOrgAdmin(resource.data.orgId);

@@ -12,9 +12,10 @@ import { Loader2, ArrowRight, ExternalLink, AlertTriangle, Clock, RefreshCw } fr
 
 interface PublicQrRedirectProps {
   code: string;
+  onNavigate?: (path: string) => void;
 }
 
-export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
+export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code, onNavigate }) => {
   const [status, setStatus] = useState<'resolving' | 'redirecting' | 'paused' | 'expired' | 'not_found'>('resolving');
   const [resolvedUrl, setResolvedUrl] = useState<string>('');
   const [qrDetails, setQrDetails] = useState<QrCode | null>(null);
@@ -22,11 +23,36 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
 
   useEffect(() => {
     let isMounted = true;
-    const cleanCode = (code || '').trim().replace(/^\/+/, '').replace(/^q\//, '').replace(/\/+$/, '');
+    const cleanCode = (code || '')
+      .trim()
+      .split('?')[0]
+      .split('#')[0]
+      .replace(/^\/+/, '')
+      .replace(/^(q|go|r)\//, '')
+      .replace(/\/+$/, '');
+
+    const initiateBrowserRedirect = (target: string) => {
+      if (!isMounted || !target) return;
+      setResolvedUrl(target);
+      setStatus('redirecting');
+
+      // If internal SPA destination (/p/... or /admin/...), use SPA client routing to eliminate reload latency
+      if (onNavigate && target.startsWith('/') && !target.startsWith('//')) {
+        onNavigate(target);
+        return;
+      }
+
+      // External destination: execute immediate browser redirect
+      try {
+        window.location.replace(target);
+      } catch {
+        window.location.href = target;
+      }
+    };
 
     async function resolveDestination() {
       try {
-        // 1. Check QR service for registered QR fleet
+        // 1. Check QR service for registered QR fleet in Firestore & memory
         const qr = await qrService.getQrByPublicCode(cleanCode);
 
         if (qr && isMounted) {
@@ -44,10 +70,24 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
             return;
           }
 
-          // Format target destination URL
-          let target = qr.destinationUrl || '/';
-          if (qr.destinationType === 'page' && !target.startsWith('http') && !target.startsWith('/p/')) {
-            target = `/p/${target}`;
+          // Format target destination URL accurately
+          let target = (qr.destinationUrl || '/').trim();
+          if (qr.destinationType === 'page' || qr.targetEntityId) {
+            if (!target.startsWith('http') && !target.startsWith('/p/')) {
+              target = `/p/${target}`;
+            }
+          } else if (qr.destinationType === 'whatsapp') {
+            if (!target.startsWith('http')) {
+              target = `https://wa.me/${target.replace(/[^0-9]/g, '')}`;
+            }
+          } else if (qr.destinationType === 'phone') {
+            if (!target.startsWith('tel:')) {
+              target = `tel:${target}`;
+            }
+          } else if (qr.destinationType === 'email') {
+            if (!target.startsWith('mailto:')) {
+              target = `mailto:${target}`;
+            }
           }
 
           // Record scan event asynchronously (non-blocking)
@@ -57,21 +97,15 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
             // Ignore telemetry recording failure
           }
 
-          setResolvedUrl(target);
-          setStatus('redirecting');
-
-          // Instant redirection
-          window.location.replace(target);
+          initiateBrowserRedirect(target);
           return;
         }
 
-        // 2. What if cleanCode is actually a direct Landing Page slug? (e.g. food_sakura_omakase-fv3c)
+        // 2. Direct Landing Page slug check (e.g. food_sakura_omakase-fv3c)
         const matchedPage = await pageService.getPageBySlug(cleanCode);
         if (matchedPage && isMounted) {
           const target = `/p/${matchedPage.slug}`;
-          setResolvedUrl(target);
-          setStatus('redirecting');
-          window.location.replace(target);
+          initiateBrowserRedirect(target);
           return;
         }
 
@@ -81,9 +115,7 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
           if (res.ok) {
             const data = await res.json();
             if (data?.destinationUrl && isMounted) {
-              setResolvedUrl(data.destinationUrl);
-              setStatus('redirecting');
-              window.location.replace(data.destinationUrl);
+              initiateBrowserRedirect(data.destinationUrl);
               return;
             }
           }
@@ -96,12 +128,14 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
           const pagesRaw = localStorage.getItem('esaia_pages_store');
           if (pagesRaw) {
             const pages = JSON.parse(pagesRaw);
-            const found = pages.find((p: any) => p.slug === cleanCode || p.id === cleanCode || p.qrCodeId === cleanCode);
+            const found = pages.find((p: any) => 
+              p.slug?.toLowerCase() === cleanCode.toLowerCase() || 
+              p.id === cleanCode || 
+              p.qrCodeId === cleanCode
+            );
             if (found && isMounted) {
               const target = `/p/${found.slug}`;
-              setResolvedUrl(target);
-              setStatus('redirecting');
-              window.location.replace(target);
+              initiateBrowserRedirect(target);
               return;
             }
           }
@@ -125,7 +159,7 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
     return () => {
       isMounted = false;
     };
-  }, [code]);
+  }, [code, onNavigate]);
 
   // Countdown timer for user feedback
   useEffect(() => {
@@ -235,6 +269,12 @@ export const PublicQrRedirect: React.FC<PublicQrRedirectProps> = ({ code }) => {
           <div className="pt-3">
             <a
               href={resolvedUrl}
+              onClick={(e) => {
+                if (onNavigate && resolvedUrl.startsWith('/') && !resolvedUrl.startsWith('//')) {
+                  e.preventDefault();
+                  onNavigate(resolvedUrl);
+                }
+              }}
               className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50"
             >
               <span>اضغط هنا إذا لم يتم التحويل تلقائياً</span>

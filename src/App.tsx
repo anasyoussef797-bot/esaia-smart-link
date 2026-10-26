@@ -65,10 +65,10 @@ function AppRouter() {
 
   // 1. Check for Public Dynamic QR Code Redirect Route: /q/:code, /go/:code, /r/:code
   if (currentPath.startsWith('/q/') || currentPath.startsWith('/go/') || currentPath.startsWith('/r/')) {
-    const code = currentPath.replace(/^\/(q|go|r)\//, '').replace(/\/+$/, '');
+    const code = currentPath.split('?')[0].split('#')[0].replace(/^\/(q|go|r)\//, '').replace(/\/+$/, '');
     return (
       <Suspense fallback={<LoadingScreen message="Redirecting to destination..." />}>
-        <PublicQrRedirect code={code} />
+        <PublicQrRedirect code={code} onNavigate={navigate} />
       </Suspense>
     );
   }

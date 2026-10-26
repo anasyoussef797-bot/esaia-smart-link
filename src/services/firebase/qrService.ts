@@ -351,10 +351,71 @@ export const qrService = {
   },
 
   async getQrCodeBySlug(publicCode: string): Promise<QrCode | null> {
-    let found = inMemoryQrs.find(q => q.publicCode === publicCode || q.id === publicCode);
+    const cleanCode = (publicCode || '').trim();
+    if (!cleanCode) return null;
+    const lowerCode = cleanCode.toLowerCase();
+
+    const colPath = 'qrCodes';
+
+    // 1. Authoritative Firestore query when Firebase is configured
+    if (isFirebaseConfigured) {
+      try {
+        // Query by publicCode field
+        let q = query(collection(db, colPath), where('publicCode', '==', cleanCode));
+        let snap = await Promise.race([
+          getDocs(q),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+        ]);
+
+        // If not found and cleanCode has mixed case, also try lowercase
+        if ((!snap || snap.empty) && cleanCode !== lowerCode) {
+          q = query(collection(db, colPath), where('publicCode', '==', lowerCode));
+          snap = await Promise.race([
+            getDocs(q),
+            new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
+          ]);
+        }
+
+        if (snap && !snap.empty) {
+          const d = snap.docs[0];
+          const qr = { id: d.id, ...(d.data() as any) } as QrCode;
+          // Keep in-memory cache synchronized with live Firestore document
+          const idx = inMemoryQrs.findIndex(m => m.id === qr.id || m.publicCode?.toLowerCase() === lowerCode);
+          if (idx >= 0) inMemoryQrs[idx] = qr;
+          else inMemoryQrs.unshift(qr);
+          persistQrs(inMemoryQrs);
+          this.syncRedirectCache(qr);
+          return qr;
+        }
+
+        // Direct document lookup by ID in Firestore
+        const docSnap = await Promise.race([
+          getDoc(doc(db, colPath, cleanCode)),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+        ]);
+        if (docSnap && docSnap.exists()) {
+          const qr = { id: docSnap.id, ...(docSnap.data() as any) } as QrCode;
+          const idx = inMemoryQrs.findIndex(m => m.id === qr.id);
+          if (idx >= 0) inMemoryQrs[idx] = qr;
+          else inMemoryQrs.unshift(qr);
+          persistQrs(inMemoryQrs);
+          this.syncRedirectCache(qr);
+          return qr;
+        }
+      } catch (err) {
+        console.warn('Firestore QR lookup skipped or timed out, using cache fallback:', err);
+      }
+    }
+
+    // 2. Check in-memory store (case-insensitive)
+    let found = inMemoryQrs.find(
+      q => q.publicCode?.toLowerCase() === lowerCode || q.id?.toLowerCase() === lowerCode
+    );
     if (!found) {
       const freshFleet = loadInitialQrs();
-      found = freshFleet.find(q => q.publicCode === publicCode || q.id === publicCode);
+      found = freshFleet.find(
+        q => q.publicCode?.toLowerCase() === lowerCode || q.id?.toLowerCase() === lowerCode
+      );
       if (found) {
         inMemoryQrs = freshFleet;
         return found;
@@ -362,42 +423,83 @@ export const qrService = {
     }
     if (found) return found;
 
-    const colPath = 'qrCodes';
-    if (isFirebaseConfigured) {
-      try {
-        const q = query(collection(db, colPath), where('publicCode', '==', publicCode));
-        const snap = await Promise.race([
-          getDocs(q),
-          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
-        ]);
-        if (snap && !snap.empty) {
-          const d = snap.docs[0];
-          return { id: d.id, ...(d.data() as any) } as QrCode;
+    // 3. Fallback: Query fast server-side redirect resolver endpoint
+    try {
+      const res = await fetch(`/api/qr/resolve/${encodeURIComponent(cleanCode)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.found && data?.destinationUrl) {
+          const resolvedQr: QrCode = {
+            id: `qr_${data.publicCode || cleanCode}`,
+            orgId: 'org_esaia_main',
+            clientId: 'client_impact_hub',
+            name: data.publicCode || cleanCode,
+            publicCode: data.publicCode || cleanCode,
+            destinationType: data.destinationType || 'url',
+            destinationUrl: data.destinationUrl,
+            status: data.status || 'active',
+            totalScans: 0,
+            uniqueScans: 0,
+            tags: ['Dynamic QR'],
+            styleConfig: inMemoryQrs[0]?.styleConfig || {
+              foregroundColor: '#0f172a',
+              backgroundColor: '#ffffff',
+              moduleStyle: 'rounded',
+              eyeStyle: 'rounded',
+              eyeBallStyle: 'rounded',
+              eyeColor: '#0f172a',
+              eyeInnerColor: '#0f172a',
+              errorCorrectionLevel: 'H',
+              quietZoneModules: 4,
+              logoUrl: null,
+              logoSizeRatio: 0.16,
+              logoBackgroundPunchout: true,
+              frameStyle: 'none',
+              frameText: 'SCAN ME',
+              frameBgColor: '#0f172a',
+              frameTextColor: '#ffffff',
+              scannabilityGrade: 'A',
+              healthScore: 98
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          inMemoryQrs.unshift(resolvedQr);
+          persistQrs(inMemoryQrs);
+          return resolvedQr;
         }
-      } catch (err) {
-        // Fallback to in-memory
       }
+    } catch (e) {
+      // Server fetch error
     }
+
     return null;
   },
 
   async getQrCodeById(qrId: string): Promise<QrCode | null> {
-    const found = inMemoryQrs.find(q => q.id === qrId);
-    if (found) return found;
+    if (!qrId) return null;
 
     if (isFirebaseConfigured) {
       try {
         const snap = await Promise.race([
           getDoc(doc(db, 'qrCodes', qrId)),
-          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2000))
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 2500))
         ]);
         if (snap && snap.exists()) {
-          return { id: snap.id, ...(snap.data() as any) } as QrCode;
+          const qr = { id: snap.id, ...(snap.data() as any) } as QrCode;
+          const idx = inMemoryQrs.findIndex(m => m.id === qr.id);
+          if (idx >= 0) inMemoryQrs[idx] = qr;
+          else inMemoryQrs.unshift(qr);
+          persistQrs(inMemoryQrs);
+          return qr;
         }
       } catch (err) {
         // Fallback
       }
     }
+
+    const found = inMemoryQrs.find(q => q.id === qrId);
+    if (found) return found;
     return null;
   },
 
