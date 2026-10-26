@@ -185,7 +185,7 @@ app.post('/api/domains/verify-dns', async (req: Request, res: Response) => {
   }
 });
 
-// In-memory memory cache for ultra-fast QR lookup (TTL: 60s)
+// In-memory memory cache for ultra-fast QR lookup
 const qrMemoryCache = new Map<string, {
   destinationUrl: string;
   status: string;
@@ -202,6 +202,247 @@ const qrMemoryCache = new Map<string, {
   ['nile-loyalty', { destinationUrl: '/p/nile-menu-2026', status: 'active', expiresAt: null, targetEntityId: 'page_nile_menu', destinationType: 'page', cachedAt: Date.now() }]
 ]);
 
+// Shared Server-Side Landing Page Registry
+// Accessible by physical mobile phone cameras and desktop browsers seamlessly
+const serverPages = new Map<string, any>();
+
+// Preload initial demo pages into server-side cache
+serverPages.set('hub-welcome', {
+  id: 'page_hub_welcome',
+  orgId: 'org_esaia_main',
+  clientId: 'client_impact_hub',
+  qrCodeId: 'qr_hub_wifi',
+  title: 'Impact Hub Cairo - Welcome Portal',
+  slug: 'hub-welcome',
+  pageType: 'landing',
+  status: 'published',
+  themeConfig: {
+    preset: 'dark',
+    palette: {
+      background: '#090a0f',
+      cardBackground: '#141722',
+      textPrimary: '#ffffff',
+      textSecondary: '#94a3b8',
+      primaryAction: '#e11d48',
+      primaryActionText: '#ffffff',
+      accent: '#f43f5e',
+      border: '#24293d'
+    }
+  },
+  blocks: [
+    {
+      id: 'b_hero_1',
+      type: 'hero',
+      title: 'Welcome to Impact Hub Cairo',
+      isVisible: true,
+      orderIndex: 0,
+      content: {
+        title: 'Impact Hub Cairo',
+        subtitle: 'Innovation ecosystem, premium coworking & venture incubator in Garden City.',
+        badge: 'Official Member & Visitor Portal',
+        coverUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&auto=format&fit=crop&q=80',
+        avatarUrl: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150&auto=format&fit=crop&q=80',
+        alignment: 'center'
+      }
+    },
+    {
+      id: 'b_btn_wifi',
+      type: 'button',
+      title: 'WiFi Connection',
+      isVisible: true,
+      orderIndex: 1,
+      content: {
+        label: 'Connect to Member High-Speed WiFi',
+        subtext: 'Instant 500Mbps WPA3 encrypted connection',
+        url: 'https://cairo.impacthub.net/wifi',
+        variant: 'primary',
+        icon: 'Wifi'
+      }
+    },
+    {
+      id: 'b_btn_whatsapp',
+      type: 'whatsapp_button',
+      title: 'Reception Chat',
+      isVisible: true,
+      orderIndex: 2,
+      content: {
+        phoneNumber: '+201001234567',
+        buttonText: 'Chat with Community Reception',
+        prefilledMessage: 'Hi Impact Hub Team! I am at the hub and have a quick inquiry.'
+      }
+    }
+  ]
+});
+serverPages.set('page_hub_welcome', serverPages.get('hub-welcome'));
+
+serverPages.set('nile-menu-2026', {
+  id: 'page_nile_menu',
+  orgId: 'org_esaia_main',
+  clientId: 'client_nile_roastery',
+  qrCodeId: 'qr_nile_loyalty',
+  title: 'Nile Artisan Roastery - Summer 2026 Specialty Menu',
+  slug: 'nile-menu-2026',
+  pageType: 'menu',
+  status: 'published',
+  themeConfig: {
+    preset: 'beige',
+    palette: {
+      background: '#fcfbf7',
+      cardBackground: '#ffffff',
+      textPrimary: '#1c1917',
+      textSecondary: '#78716c',
+      primaryAction: '#92400e',
+      primaryActionText: '#ffffff',
+      accent: '#d97706',
+      border: '#e7e5e4'
+    }
+  },
+  blocks: [
+    {
+      id: 'b_hero_nile',
+      type: 'hero',
+      title: 'Nile Artisan Roastery',
+      isVisible: true,
+      orderIndex: 0,
+      content: {
+        title: 'Nile Artisan Roastery',
+        subtitle: 'Single-origin Ethiopian Yirgacheffe, Geisha pour-overs & fresh French pastries.',
+        badge: 'Specialty Coffee & Pastry Bar',
+        coverUrl: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1000&auto=format&fit=crop&q=80',
+        avatarUrl: 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=150&auto=format&fit=crop&q=80',
+        alignment: 'center'
+      }
+    }
+  ]
+});
+serverPages.set('page_nile_menu', serverPages.get('nile-menu-2026'));
+
+serverPages.set('apex-tariq-vcard', {
+  id: 'page_apex_tariq',
+  orgId: 'org_esaia_main',
+  clientId: 'client_apex_capital',
+  title: 'Tariq Al-Masri - Managing Partner vCard',
+  slug: 'apex-tariq-vcard',
+  pageType: 'business_card',
+  status: 'published',
+  themeConfig: {
+    preset: 'dark',
+    palette: {
+      background: '#0a0d14',
+      cardBackground: '#131926',
+      textPrimary: '#ffffff',
+      textSecondary: '#94a3b8',
+      primaryAction: '#2563eb',
+      primaryActionText: '#ffffff',
+      accent: '#60a5fa',
+      border: '#1e293b'
+    }
+  },
+  blocks: [
+    {
+      id: 'b_vcard_header',
+      type: 'vcard_header',
+      title: 'Executive Profile',
+      isVisible: true,
+      orderIndex: 0,
+      content: {
+        fullName: 'Tariq Al-Masri',
+        jobTitle: 'Managing Partner',
+        company: 'Apex Capital Partners',
+        department: 'Private Equity & MENA Growth Fund',
+        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+        phone: '+971 50 123 9988',
+        email: 'tariq@apexcap.ae',
+        website: 'https://apexcap.ae'
+      }
+    }
+  ]
+});
+serverPages.set('page_apex_tariq', serverPages.get('apex-tariq-vcard'));
+
+// API: Save or Update a Landing Page to shared server-side storage
+app.post('/api/pages/save', (req: Request, res: Response) => {
+  const page = req.body;
+  if (!page || (!page.slug && !page.id)) {
+    res.status(400).json({ error: 'Page must have slug or id' });
+    return;
+  }
+  const cleanSlug = (page.slug || page.id).trim().toLowerCase();
+  serverPages.set(cleanSlug, page);
+  if (page.slug) {
+    serverPages.set(page.slug, page);
+  }
+  if (page.id) {
+    serverPages.set(page.id, page);
+  }
+
+  // Also automatically register or update dynamic QR redirect in qrMemoryCache
+  qrMemoryCache.set(cleanSlug, {
+    destinationUrl: `/p/${page.slug || cleanSlug}`,
+    status: page.status || 'active',
+    expiresAt: null,
+    targetEntityId: page.id || null,
+    destinationType: 'page',
+    cachedAt: Date.now()
+  });
+
+  if (page.qrCodeId) {
+    qrMemoryCache.set(page.qrCodeId, {
+      destinationUrl: `/p/${page.slug || cleanSlug}`,
+      status: page.status || 'active',
+      expiresAt: null,
+      targetEntityId: page.id || null,
+      destinationType: 'page',
+      cachedAt: Date.now()
+    });
+  }
+
+  res.json({ success: true, slug: cleanSlug, id: page.id });
+});
+
+// API: Get Landing Page by slug (for cross-device phone scans)
+app.get('/api/pages/by-slug/:slug', (req: Request, res: Response) => {
+  const slug = req.params.slug?.trim()?.toLowerCase();
+  if (!slug) {
+    res.status(400).json({ found: false, error: 'Missing slug' });
+    return;
+  }
+  let page = serverPages.get(slug);
+  if (!page) {
+    for (const [, p] of serverPages.entries()) {
+      if (p.slug?.toLowerCase() === slug || p.id === slug) {
+        page = p;
+        break;
+      }
+    }
+  }
+  if (page) {
+    res.json({ found: true, page });
+    return;
+  }
+  res.status(404).json({ found: false, error: 'Page not found' });
+});
+
+// API: Get Landing Page by id
+app.get('/api/pages/by-id/:id', (req: Request, res: Response) => {
+  const id = req.params.id?.trim();
+  const page = serverPages.get(id);
+  if (page) {
+    res.json({ found: true, page });
+    return;
+  }
+  res.status(404).json({ found: false, error: 'Page not found' });
+});
+
+// API: Get all Landing Pages in server registry
+app.get('/api/pages/all', (req: Request, res: Response) => {
+  const uniquePages = new Map<string, any>();
+  for (const page of serverPages.values()) {
+    if (page.id) uniquePages.set(page.id, page);
+  }
+  res.json({ success: true, pages: Array.from(uniquePages.values()) });
+});
+
 // API: Update or invalidate server-side redirect cache immediately
 app.post('/api/qr/update-cache', (req: Request, res: Response) => {
   const { publicCode, destinationUrl, destinationType, status, expiresAt, targetEntityId } = req.body;
@@ -209,7 +450,8 @@ app.post('/api/qr/update-cache', (req: Request, res: Response) => {
     res.status(400).json({ error: 'Missing publicCode' });
     return;
   }
-  qrMemoryCache.set(publicCode, {
+  const cleanCode = publicCode.trim();
+  qrMemoryCache.set(cleanCode, {
     destinationUrl: destinationUrl || '/',
     status: status || 'active',
     expiresAt: expiresAt || null,
@@ -217,7 +459,15 @@ app.post('/api/qr/update-cache', (req: Request, res: Response) => {
     destinationType: destinationType || 'url',
     cachedAt: Date.now()
   });
-  res.json({ success: true, publicCode, destinationUrl, status: status || 'active' });
+  qrMemoryCache.set(cleanCode.toLowerCase(), {
+    destinationUrl: destinationUrl || '/',
+    status: status || 'active',
+    expiresAt: expiresAt || null,
+    targetEntityId: targetEntityId || null,
+    destinationType: destinationType || 'url',
+    cachedAt: Date.now()
+  });
+  res.json({ success: true, publicCode: cleanCode, destinationUrl, status: status || 'active' });
 });
 
 // API: Check fast resolver endpoint
@@ -227,7 +477,17 @@ app.get('/api/qr/resolve/:slug', (req: Request, res: Response) => {
     res.status(400).json({ found: false, error: 'Missing slug' });
     return;
   }
-  const qr = qrMemoryCache.get(slug);
+  const lowerSlug = slug.toLowerCase();
+  let qr = qrMemoryCache.get(slug) || qrMemoryCache.get(lowerSlug);
+  if (!qr) {
+    for (const [key, val] of qrMemoryCache.entries()) {
+      if (key.toLowerCase() === lowerSlug) {
+        qr = val;
+        break;
+      }
+    }
+  }
+
   if (qr) {
     let dest = qr.destinationUrl;
     if (qr.destinationType === 'page' && !dest.startsWith('http') && !dest.startsWith('/p/')) {
@@ -242,6 +502,20 @@ app.get('/api/qr/resolve/:slug', (req: Request, res: Response) => {
     });
     return;
   }
+
+  // Also check serverPages directly
+  const page = serverPages.get(lowerSlug) || serverPages.get(slug);
+  if (page) {
+    res.json({
+      found: true,
+      publicCode: slug,
+      destinationUrl: `/p/${page.slug || slug}`,
+      destinationType: 'page',
+      status: page.status || 'active'
+    });
+    return;
+  }
+
   res.status(404).json({ found: false, error: 'QR not found in fast cache' });
 });
 
@@ -256,8 +530,18 @@ app.get('/q/:slug', async (req: Request, res: Response, next: NextFunction): Pro
   }
 
   try {
+    const lowerSlug = slug.toLowerCase();
+
     // 1. Check in-memory fast cache first (< 1ms)
-    let qr = qrMemoryCache.get(slug);
+    let qr = qrMemoryCache.get(slug) || qrMemoryCache.get(lowerSlug);
+    if (!qr) {
+      for (const [key, val] of qrMemoryCache.entries()) {
+        if (key.toLowerCase() === lowerSlug) {
+          qr = val;
+          break;
+        }
+      }
+    }
 
     if (qr) {
       // Keep cached entry fresh
@@ -298,12 +582,29 @@ app.get('/q/:slug', async (req: Request, res: Response, next: NextFunction): Pro
 
       // Return Immediate 302 Redirect
       let destination = qr.destinationUrl || '/';
-      if (qr.destinationType === 'page' && !destination.startsWith('http') && !destination.startsWith('/p/')) {
+      if ((qr.destinationType === 'page' || qr.targetEntityId) && !destination.startsWith('http') && !destination.startsWith('/p/')) {
         destination = `/p/${destination}`;
       }
 
       res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
       res.redirect(302, destination);
+      return;
+    }
+
+    // 2. Check if slug matches any Landing Page directly in serverPages
+    let matchedPage = serverPages.get(lowerSlug) || serverPages.get(slug);
+    if (!matchedPage) {
+      for (const [, page] of serverPages.entries()) {
+        if (page.slug?.toLowerCase() === lowerSlug || page.id === slug) {
+          matchedPage = page;
+          break;
+        }
+      }
+    }
+
+    if (matchedPage) {
+      res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.redirect(302, `/p/${matchedPage.slug || lowerSlug}`);
       return;
     }
 

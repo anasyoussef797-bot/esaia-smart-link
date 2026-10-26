@@ -676,6 +676,24 @@ export const pageService = {
     const found = inMemoryPages.find(p => p.slug.toLowerCase() === cleanSlug);
     if (found) return found;
 
+    // 2. Fetch from shared server cache (essential for phones scanning QR codes across devices!)
+    try {
+      const res = await fetch(`/api/pages/by-slug/${encodeURIComponent(cleanSlug)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.found && data?.page) {
+          const page = data.page as Page;
+          const idx = inMemoryPages.findIndex(p => p.id === page.id || p.slug.toLowerCase() === cleanSlug);
+          if (idx >= 0) inMemoryPages[idx] = page;
+          else inMemoryPages.unshift(page);
+          persistPages(inMemoryPages);
+          return page;
+        }
+      }
+    } catch (e) {
+      // Server fetch error fallback
+    }
+
     const colPath = 'pages';
     if (isFirebaseConfigured) {
       try {
@@ -703,6 +721,20 @@ export const pageService = {
     // 1. Instant local lookup
     const found = inMemoryPages.find(p => p.id === pageId);
     if (found) return found;
+
+    // 2. Fetch from shared server cache
+    try {
+      const res = await fetch(`/api/pages/by-id/${encodeURIComponent(pageId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.found && data?.page) {
+          const page = data.page as Page;
+          inMemoryPages.unshift(page);
+          persistPages(inMemoryPages);
+          return page;
+        }
+      }
+    } catch (e) {}
 
     if (isFirebaseConfigured) {
       try {
@@ -738,6 +770,15 @@ export const pageService = {
     inMemoryPages.unshift(fullPage);
     persistPages(inMemoryPages);
 
+    // Sync to Server-Side cache so physical mobile phones can access it when scanning QR code
+    try {
+      fetch('/api/pages/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fullPage)
+      }).catch(() => {});
+    } catch {}
+
     if (isFirebaseConfigured) {
       // Background non-blocking sync with timeout
       (async () => {
@@ -763,15 +804,17 @@ export const pageService = {
   async updatePage(pageId: string, updates: Partial<Page>): Promise<void> {
     const idx = inMemoryPages.findIndex(p => p.id === pageId);
     const now = new Date().toISOString();
+    let updatedPageObj: Page;
     if (idx >= 0) {
-      inMemoryPages[idx] = {
+      updatedPageObj = {
         ...inMemoryPages[idx],
         ...updates,
         updatedAt: now
       };
+      inMemoryPages[idx] = updatedPageObj;
       persistPages(inMemoryPages);
     } else {
-      inMemoryPages.unshift({
+      updatedPageObj = {
         id: pageId,
         orgId: 'org_esaia_main',
         clientId: 'client_impact_hub',
@@ -786,9 +829,19 @@ export const pageService = {
         createdAt: now,
         ...updates,
         updatedAt: now
-      });
+      };
+      inMemoryPages.unshift(updatedPageObj);
       persistPages(inMemoryPages);
     }
+
+    // Sync to Server-Side cache
+    try {
+      fetch('/api/pages/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPageObj)
+      }).catch(() => {});
+    } catch {}
 
     if (isFirebaseConfigured) {
       (async () => {
@@ -825,6 +878,15 @@ export const pageService = {
       });
     }
     persistPages(inMemoryPages);
+
+    // Sync to Server-Side cache immediately
+    try {
+      fetch('/api/pages/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(page)
+      }).catch(() => {});
+    } catch {}
 
     if (isFirebaseConfigured) {
       (async () => {
@@ -912,3 +974,18 @@ export const pageService = {
     }
   }
 };
+
+// Auto-synchronize persisted local pages to server on startup so mobile devices can access them immediately
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    try {
+      inMemoryPages.forEach(p => {
+        fetch('/api/pages/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(p)
+        }).catch(() => {});
+      });
+    } catch {}
+  }, 1000);
+}

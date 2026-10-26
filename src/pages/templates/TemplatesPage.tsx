@@ -669,13 +669,16 @@ export const TemplatesPage: React.FC<{ onNavigate: (path: string) => void }> = (
       />
 
       {/* Full Template Editor & Customizer Modal (Studio) */}
-      <TemplateEditorModal
-        template={editingTemplate}
-        isOpen={Boolean(editingTemplate)}
-        onClose={() => setEditingTemplate(null)}
-        onSaveTemplate={handleSaveCustomTemplate}
-        onUseTemplate={handleUseTemplate}
-      />
+      {editingTemplate && (
+        <TemplateEditorModal
+          key={editingTemplate.id}
+          template={editingTemplate}
+          isOpen={true}
+          onClose={() => setEditingTemplate(null)}
+          onSaveTemplate={handleSaveCustomTemplate}
+          onUseTemplate={handleUseTemplate}
+        />
+      )}
 
       {/* AI Page Generation Modal */}
       <AiPageGeneratorModal

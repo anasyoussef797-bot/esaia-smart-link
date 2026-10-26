@@ -8,7 +8,7 @@
  * - Launching directly into the live Page Builder with all modifications preserved
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Sparkles,
@@ -41,12 +41,15 @@ import {
   Heading as HeadingIcon,
   AlignLeft,
   Image,
-  Share2
+  Share2,
+  Pencil
 } from 'lucide-react';
 import { TemplateItem, CATEGORY_DEFINITIONS, TemplateCategory } from '../../data/templatesData';
 import { PageBlock, BlockType, PageThemeConfig } from '../../types/page';
 import { useLanguage } from '../../context/LanguageContext';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
+import { ButtonDetailsEditor } from '../common/ButtonDetailsEditor';
+import { renderButtonIcon } from '../common/IconHelper';
 
 interface TemplateEditorModalProps {
   template: TemplateItem | null;
@@ -87,7 +90,7 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
   const [draft, setDraft] = useState<TemplateItem | null>(() => template ? JSON.parse(JSON.stringify(template)) : null);
   const [activeTab, setActiveTab] = useState<'blocks' | 'theme' | 'meta'>('blocks');
   const [deviceMode, setDeviceMode] = useState<'mobile' | 'tablet'>('mobile');
-  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(() => template?.blocks[0]?.id || null);
   const [isAddBlockDrawerOpen, setIsAddBlockDrawerOpen] = useState(false);
 
   // Sync when template prop changes
@@ -371,10 +374,6 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
       };
     });
   };
-
-  const selectedBlock = useMemo(() => {
-    return draft.blocks.find(b => b.id === editingBlockId) || null;
-  }, [draft.blocks, editingBlockId]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
@@ -660,7 +659,19 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                           </div>
 
                           {/* Quick Controls */}
-                          <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => setEditingBlockId(isSelected ? null : block.id)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                                isSelected
+                                  ? 'bg-indigo-600 text-white shadow-xs'
+                                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                              }`}
+                            >
+                              <Pencil className="w-3 h-3" />
+                              <span>{isSelected ? (isRTL ? 'إغلاق التعديل' : 'Close') : (isRTL ? 'تعديل الكتلة' : 'Edit')}</span>
+                            </button>
+
                             {/* Reorder Up */}
                             <button
                               disabled={idx === 0}
@@ -800,60 +811,11 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 
                             {/* BUTTON BLOCK FORM */}
                             {block.type === 'button' && (
-                              <div className="space-y-3">
-                                <div>
-                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
-                                    {isRTL ? 'نص الزر (Button Label)' : 'Button Label'}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={block.content.label || ''}
-                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, label: e.target.value })}
-                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
-                                    {isRTL ? 'الرابط المستهدف (Destination URL)' : 'Target URL'}
-                                  </label>
-                                  <input
-                                    type="url"
-                                    value={block.content.url || ''}
-                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, url: e.target.value })}
-                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
-                                  />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="text-xs font-semibold text-slate-300 block mb-1">
-                                      {isRTL ? 'شكل الزر (Variant)' : 'Style Variant'}
-                                    </label>
-                                    <select
-                                      value={block.content.variant || 'primary'}
-                                      onChange={e => handleUpdateBlockContent(block.id, { ...block.content, variant: e.target.value })}
-                                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
-                                    >
-                                      <option value="primary">{isRTL ? 'ممتلئ (Primary)' : 'Primary Filled'}</option>
-                                      <option value="outline">{isRTL ? 'حد خارجي (Outline)' : 'Outline'}</option>
-                                      <option value="secondary">{isRTL ? 'ثانوي هادئ' : 'Secondary'}</option>
-                                    </select>
-                                  </div>
-
-                                  <div>
-                                    <label className="text-xs font-semibold text-slate-300 block mb-1">
-                                      {isRTL ? 'نص توضيحي صغير أسفل الزر' : 'Subtext'}
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={block.content.subtext || ''}
-                                      onChange={e => handleUpdateBlockContent(block.id, { ...block.content, subtext: e.target.value })}
-                                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
+                              <ButtonDetailsEditor
+                                content={block.content as any}
+                                onChange={updated => handleUpdateBlockContent(block.id, updated)}
+                                isRTL={isRTL}
+                              />
                             )}
 
                             {/* HEADING BLOCK FORM */}
@@ -1111,6 +1073,287 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                                   </label>
                                   <input
                                     type="text"
+                                    value={block.content.description || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, description: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* SOCIAL LINKS BLOCK FORM */}
+                            {block.type === 'social_links' && (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-semibold text-slate-300">
+                                    {isRTL ? 'قنوات وروابط التواصل الاجتماعي' : 'Social Channels & Profiles'}
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const currentLinks = block.content.links || [];
+                                      handleUpdateBlockContent(block.id, {
+                                        ...block.content,
+                                        links: [...currentLinks, { platform: 'instagram', url: 'https://instagram.com' }]
+                                      });
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold flex items-center gap-1"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    <span>{isRTL ? 'إضافة قناة' : 'Add Channel'}</span>
+                                  </button>
+                                </div>
+
+                                <div className="space-y-2">
+                                  {(block.content.links || []).map((link: any, lIdx: number) => (
+                                    <div key={lIdx} className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800">
+                                      <select
+                                        value={link.platform}
+                                        onChange={e => {
+                                          const updated = [...(block.content.links || [])];
+                                          updated[lIdx] = { ...updated[lIdx], platform: e.target.value };
+                                          handleUpdateBlockContent(block.id, { ...block.content, links: updated });
+                                        }}
+                                        className="px-2.5 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-700 text-white"
+                                      >
+                                        <option value="instagram">Instagram</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="twitter">X / Twitter</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="youtube">YouTube</option>
+                                        <option value="whatsapp">WhatsApp</option>
+                                        <option value="tiktok">TikTok</option>
+                                        <option value="telegram">Telegram</option>
+                                        <option value="website">Website</option>
+                                      </select>
+
+                                      <input
+                                        type="url"
+                                        value={link.url || ''}
+                                        onChange={e => {
+                                          const updated = [...(block.content.links || [])];
+                                          updated[lIdx] = { ...updated[lIdx], url: e.target.value };
+                                          handleUpdateBlockContent(block.id, { ...block.content, links: updated });
+                                        }}
+                                        placeholder="https://..."
+                                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                      />
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updated = (block.content.links || []).filter((_: any, idx: number) => idx !== lIdx);
+                                          handleUpdateBlockContent(block.id, { ...block.content, links: updated });
+                                        }}
+                                        className="p-1 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* BUSINESS HOURS BLOCK FORM */}
+                            {block.type === 'business_hours' && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'عنوان مواعيد العمل' : 'Hours Title'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.title || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, title: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-xs font-semibold text-slate-300 block">
+                                    {isRTL ? 'الأيام والمواعيد' : 'Days & Schedule'}
+                                  </label>
+                                  {(block.content.days || []).map((d: any, dIdx: number) => (
+                                    <div key={dIdx} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <input
+                                          type="text"
+                                          value={d.day}
+                                          onChange={e => {
+                                            const updated = [...(block.content.days || [])];
+                                            updated[dIdx] = { ...updated[dIdx], day: e.target.value };
+                                            handleUpdateBlockContent(block.id, { ...block.content, days: updated });
+                                          }}
+                                          className="text-xs font-bold bg-transparent text-white border-0 focus:outline-none"
+                                        />
+                                        <label className="text-[10px] text-slate-400 flex items-center gap-1 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={d.isClosed || false}
+                                            onChange={e => {
+                                              const updated = [...(block.content.days || [])];
+                                              updated[dIdx] = { ...updated[dIdx], isClosed: e.target.checked };
+                                              handleUpdateBlockContent(block.id, { ...block.content, days: updated });
+                                            }}
+                                            className="rounded bg-slate-950 border-slate-700 text-indigo-600"
+                                          />
+                                          <span>{isRTL ? 'مغلق (عطلة)' : 'Closed'}</span>
+                                        </label>
+                                      </div>
+
+                                      {!d.isClosed && (
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 block mb-0.5">{isRTL ? 'من' : 'From'}</span>
+                                            <input
+                                              type="text"
+                                              value={d.open}
+                                              onChange={e => {
+                                                const updated = [...(block.content.days || [])];
+                                                updated[dIdx] = { ...updated[dIdx], open: e.target.value };
+                                                handleUpdateBlockContent(block.id, { ...block.content, days: updated });
+                                              }}
+                                              className="w-full px-2 py-1 text-xs rounded-lg bg-slate-950 border border-slate-700 text-white"
+                                            />
+                                          </div>
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 block mb-0.5">{isRTL ? 'إلى' : 'To'}</span>
+                                            <input
+                                              type="text"
+                                              value={d.close}
+                                              onChange={e => {
+                                                const updated = [...(block.content.days || [])];
+                                                updated[dIdx] = { ...updated[dIdx], close: e.target.value };
+                                                handleUpdateBlockContent(block.id, { ...block.content, days: updated });
+                                              }}
+                                              className="w-full px-2 py-1 text-xs rounded-lg bg-slate-950 border border-slate-700 text-white"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'ملاحظة إضافية' : 'Extra Note'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.note || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, note: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* MAP LOCATION BLOCK FORM */}
+                            {block.type === 'map_location' && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'عنوان الموقع الجغرافي' : 'Location Title'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.locationTitle || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, locationTitle: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'العنوان التفصيلي (Physical Address)' : 'Physical Address'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.address || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, address: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'رابط خرائط جوجل (Google Maps Link)' : 'Google Maps Directions URL'}
+                                  </label>
+                                  <input
+                                    type="url"
+                                    value={block.content.directionsUrl || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, directionsUrl: e.target.value })}
+                                    placeholder="https://maps.google.com/..."
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* CONTACT FORM BLOCK FORM */}
+                            {block.type === 'contact_form' && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'عنوان نموذج المراسلة' : 'Form Heading'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.heading || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, heading: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'النص التوضيحي للنموذج' : 'Form Subtitle'}
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    value={block.content.subtext || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, subtext: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'نص زر الإرسال' : 'Submit Button Text'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.submitButtonText || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, submitButtonText: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* MENU CATEGORY BLOCK FORM */}
+                            {block.type === 'menu_category' && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'اسم تصنيف القائمة' : 'Category Name'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.content.name || ''}
+                                    onChange={e => handleUpdateBlockContent(block.id, { ...block.content, name: e.target.value })}
+                                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    {isRTL ? 'وصف التصنيف' : 'Category Description'}
+                                  </label>
+                                  <textarea
+                                    rows={2}
                                     value={block.content.description || ''}
                                     onChange={e => handleUpdateBlockContent(block.id, { ...block.content, description: e.target.value })}
                                     className="w-full px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
@@ -1403,21 +1646,34 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 
                     // Button
                     if (block.type === 'button') {
+                      const btnColor = c.color || palette.primaryAction;
                       const isOutline = c.variant === 'outline';
+                      const isGlass = c.variant === 'glass';
+                      const isGradient = c.variant === 'gradient';
+                      const radiusClass = c.borderRadius === 'pill' ? 'rounded-full' : c.borderRadius === 'md' ? 'rounded-lg' : 'rounded-2xl';
+
                       return (
                         <div
                           key={block.id}
-                          className="py-2.5 px-3 rounded-xl text-center font-bold text-xs shadow-xs transition-transform transform active:scale-98 cursor-pointer select-none"
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`py-3 px-3.5 ${radiusClass} text-center font-bold text-xs shadow-sm transition-all transform active:scale-98 cursor-pointer select-none flex items-center justify-center gap-2 ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400 ring-offset-2 ring-offset-slate-900' : ''
+                          }`}
                           style={{
-                            backgroundColor: isOutline ? 'transparent' : palette.primaryAction,
-                            color: isOutline ? palette.primaryAction : '#ffffff',
-                            border: isOutline ? `1.5px solid ${palette.primaryAction}` : undefined
+                            backgroundColor: isOutline ? 'transparent' : isGlass ? 'rgba(255,255,255,0.1)' : btnColor,
+                            color: isOutline ? btnColor : c.textColor || '#ffffff',
+                            border: isOutline ? `1.5px solid ${btnColor}` : isGlass ? '1px solid rgba(255,255,255,0.2)' : undefined,
+                            background: isGradient ? `linear-gradient(135deg, ${btnColor}, #8b5cf6)` : undefined
                           }}
                         >
-                          <span>{c.label}</span>
-                          {c.subtext && (
-                            <div className="text-[9px] font-normal opacity-80 mt-0.5">{c.subtext}</div>
-                          )}
+                          {c.iconPosition !== 'end' && renderButtonIcon(c.icon, 'w-4 h-4 shrink-0')}
+                          <div className="truncate text-center">
+                            <span>{c.label || 'Action Button'}</span>
+                            {c.subtext && (
+                              <div className="text-[9px] font-normal opacity-80 mt-0.5">{c.subtext}</div>
+                            )}
+                          </div>
+                          {c.iconPosition === 'end' && renderButtonIcon(c.icon, 'w-4 h-4 shrink-0')}
                         </div>
                       );
                     }
@@ -1553,7 +1809,10 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                       return (
                         <div
                           key={block.id}
-                          className="p-2.5 rounded-xl border flex items-center justify-between gap-2"
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-all ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400' : ''
+                          }`}
                           style={{ backgroundColor: palette.cardBackground, borderColor: palette.border }}
                         >
                           <div className="min-w-0">
@@ -1567,6 +1826,135 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                           <span className="text-[10px] font-bold shrink-0" style={{ color: palette.primaryAction }}>
                             {c.currency} {c.price}
                           </span>
+                        </div>
+                      );
+                    }
+
+                    // Social Links
+                    if (block.type === 'social_links') {
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`flex items-center justify-center gap-2.5 flex-wrap py-2 cursor-pointer transition-all ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400 rounded-xl p-2' : ''
+                          }`}
+                        >
+                          {(c.links || []).map((l: any, i: number) => (
+                            <div
+                              key={i}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shadow-xs transition-transform hover:scale-110"
+                              style={{ backgroundColor: palette.primaryAction }}
+                            >
+                              {renderButtonIcon(l.platform, 'w-4 h-4')}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+
+                    // Business Hours
+                    if (block.type === 'business_hours') {
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`p-3 rounded-2xl border text-xs space-y-1.5 cursor-pointer ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400' : ''
+                          }`}
+                          style={{ backgroundColor: palette.cardBackground, borderColor: palette.border }}
+                        >
+                          <div className="flex items-center gap-2 font-bold" style={{ color: palette.textPrimary }}>
+                            <Clock className="w-4 h-4" style={{ color: palette.primaryAction }} />
+                            <span>{c.title || 'Business Hours'}</span>
+                          </div>
+                          {(c.days || []).slice(0, 3).map((d: any, i: number) => (
+                            <div key={i} className="flex justify-between text-[10px]" style={{ color: palette.textSecondary }}>
+                              <span>{d.day}</span>
+                              <span className="font-semibold">{d.isClosed ? 'Closed' : `${d.open} - ${d.close}`}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+
+                    // Map Location
+                    if (block.type === 'map_location') {
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`p-3 rounded-2xl border text-xs flex items-center justify-between gap-2 cursor-pointer ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400' : ''
+                          }`}
+                          style={{ backgroundColor: palette.cardBackground, borderColor: palette.border }}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-white" style={{ backgroundColor: palette.primaryAction }}>
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="font-bold block truncate" style={{ color: palette.textPrimary }}>
+                                {c.locationTitle || 'Our Location'}
+                              </span>
+                              <span className="text-[10px] block truncate opacity-75" style={{ color: palette.textSecondary }}>
+                                {c.address || 'Cairo, Egypt'}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-1 rounded-lg text-white shrink-0" style={{ backgroundColor: palette.primaryAction }}>
+                            Maps
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    // Contact Form
+                    if (block.type === 'contact_form') {
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`p-3.5 rounded-2xl border text-xs space-y-2 cursor-pointer ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400' : ''
+                          }`}
+                          style={{ backgroundColor: palette.cardBackground, borderColor: palette.border }}
+                        >
+                          <div className="flex items-center gap-2 font-bold" style={{ color: palette.textPrimary }}>
+                            <Send className="w-4 h-4" style={{ color: palette.primaryAction }} />
+                            <span>{c.heading || 'Contact Us'}</span>
+                          </div>
+                          <div className="h-6 rounded-lg bg-slate-900/60 border border-slate-800 text-[10px] px-2 flex items-center text-slate-500">
+                            Name & Phone...
+                          </div>
+                          <div
+                            className="py-1.5 rounded-lg text-[10px] font-bold text-center text-white"
+                            style={{ backgroundColor: palette.primaryAction }}
+                          >
+                            {c.submitButtonText || 'Submit Inquiry'}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Menu Category
+                    if (block.type === 'menu_category') {
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={() => setEditingBlockId(block.id)}
+                          className={`pt-2 pb-1 cursor-pointer ${
+                            editingBlockId === block.id ? 'ring-2 ring-indigo-400 rounded-xl p-2' : ''
+                          }`}
+                        >
+                          <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: palette.primaryAction }}>
+                            {c.name}
+                          </h4>
+                          {c.description && (
+                            <p className="text-[9px] opacity-75" style={{ color: palette.textSecondary }}>
+                              {c.description}
+                            </p>
+                          )}
                         </div>
                       );
                     }

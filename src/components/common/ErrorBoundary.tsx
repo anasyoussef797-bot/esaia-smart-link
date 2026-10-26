@@ -6,6 +6,7 @@
 
 import React, { ErrorInfo, ReactNode } from 'react';
 import { ServerErrorPage } from '../../pages/errors/ServerErrorPage';
+import { LanguageProvider } from '../../context/LanguageContext';
 
 export interface ErrorBoundaryProps {
   children?: ReactNode;
@@ -54,13 +55,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#090b10] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#f4efe6]">
-          <ServerErrorPage
-            error={this.state.error}
-            errorInfo={this.state.errorInfo}
-            onReset={this.handleReset}
-          />
-        </div>
+        <LanguageProvider>
+          <div className="min-h-screen w-full flex items-center justify-center bg-[#090b10] [data-theme=light]:bg-slate-50 [data-theme=beige]:bg-[#f4efe6]">
+            <ServerErrorPage
+              error={this.state.error}
+              errorInfo={this.state.errorInfo}
+              onReset={this.handleReset}
+            />
+          </div>
+        </LanguageProvider>
       );
     }
 

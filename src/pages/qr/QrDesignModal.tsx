@@ -242,11 +242,6 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
             const report = await qrValidationService.validateQrDesign(scannablePayload, styleConfig, canvas);
             if (!isCancelled) {
               setValidationReport(report);
-              setStyleConfig(prev => ({
-                ...prev,
-                scannabilityGrade: report.grade,
-                healthScore: report.healthScore
-              }));
             }
           };
           img.src = url;
@@ -260,12 +255,12 @@ export const QrDesignModal: React.FC<QrDesignModalProps> = ({
       }
     };
 
-    const timer = setTimeout(runValidation, 150);
+    const timer = setTimeout(runValidation, 300);
     return () => {
       isCancelled = true;
       clearTimeout(timer);
     };
-  }, [redirectUrl, styleConfig, svgString]);
+  }, [redirectUrl, scannablePayload, svgString]);
 
   if (!isOpen) return null;
 

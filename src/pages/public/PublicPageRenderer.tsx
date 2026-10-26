@@ -40,6 +40,7 @@ import { pageService, DEFAULT_THEME_DARK, DEFAULT_THEME_LIGHT, DEFAULT_THEME_BEI
 import { downloadVCard } from '../../utils/vcard';
 import { extractYouTubeId, getYouTubeEmbedUrl, isYouTubeUrl } from '../../utils/youtube';
 import { InlineYouTubeVideo } from '../../components/ui/InlineYouTubeVideo';
+import { renderButtonIcon } from '../../components/common/IconHelper';
 
 export interface PublicPageRendererProps {
   slug: string;
@@ -618,22 +619,30 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
                 );
               }
 
+              const btnColor = content.color || p.primaryAction;
               const isOutline = content.variant === 'outline';
+              const isGlass = content.variant === 'glass';
+              const isGradient = content.variant === 'gradient';
+              const radiusClass = content.borderRadius === 'pill' ? 'rounded-full' : content.borderRadius === 'md' ? 'rounded-lg' : 'rounded-2xl';
+
               return (
                 <div key={block.id}>
                   <a
                     href={content.url || '#'}
-                    target={content.newTab !== false ? '_blank' : '_self'}
+                    target={content.openInNewTab !== false && content.newTab !== false ? '_blank' : '_self'}
                     rel="noreferrer"
-                    className="w-full p-3.5 rounded-xl flex items-center justify-between gap-3 font-semibold text-xs tracking-wide transition-all shadow-sm active:scale-[0.98] border"
+                    className={`w-full p-3.5 ${radiusClass} flex items-center justify-between gap-3 font-semibold text-xs tracking-wide transition-all shadow-sm active:scale-[0.98] border`}
                     style={{
-                      backgroundColor: isOutline ? 'transparent' : p.primaryAction,
-                      borderColor: isOutline ? p.border : p.primaryAction,
-                      color: isOutline ? p.textPrimary : p.primaryActionText || '#ffffff'
+                      backgroundColor: isOutline ? 'transparent' : isGlass ? 'rgba(255,255,255,0.1)' : btnColor,
+                      borderColor: isOutline ? btnColor : isGlass ? 'rgba(255,255,255,0.2)' : btnColor,
+                      color: isOutline ? btnColor : content.textColor || p.primaryActionText || '#ffffff',
+                      background: isGradient ? `linear-gradient(135deg, ${btnColor}, #8b5cf6)` : undefined
                     }}
                   >
-                    <div className="flex items-center gap-2.5 text-left">
-                      <ExternalLink className="w-4 h-4 shrink-0" />
+                    <div className="flex items-center gap-2.5 text-left rtl:text-right">
+                      {content.iconPosition !== 'end' && (
+                        renderButtonIcon(content.icon, 'w-4 h-4 shrink-0') || <ExternalLink className="w-4 h-4 shrink-0" />
+                      )}
                       <div>
                         <div className="font-semibold">{content.label}</div>
                         {content.subtext && (
@@ -641,7 +650,11 @@ export const PublicPageRenderer: React.FC<PublicPageRendererProps> = ({ slug }) 
                         )}
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 shrink-0 opacity-70" />
+                    {content.iconPosition === 'end' ? (
+                      renderButtonIcon(content.icon, 'w-4 h-4 shrink-0')
+                    ) : (
+                      <ChevronRight className="w-4 h-4 shrink-0 opacity-70 rtl:rotate-180" />
+                    )}
                   </a>
                 </div>
               );

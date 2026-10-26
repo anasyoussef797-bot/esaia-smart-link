@@ -33,7 +33,19 @@ export const ServerErrorPage: React.FC<ServerErrorPageProps> = ({
   errorInfo,
   onReset
 }) => {
-  const { isRTL, language } = useLanguage();
+  let isRTL = true;
+  let language = 'ar';
+  try {
+    const langContext = useLanguage();
+    if (langContext) {
+      isRTL = langContext.isRTL;
+      language = langContext.language;
+    }
+  } catch {
+    // Safe fallback when rendered outside LanguageProvider
+    isRTL = true;
+    language = 'ar';
+  }
   const [copied, setCopied] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 

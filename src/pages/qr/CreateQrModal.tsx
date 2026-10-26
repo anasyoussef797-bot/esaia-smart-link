@@ -65,11 +65,16 @@ export const CreateQrModal: React.FC<CreateQrModalProps> = ({
 
   const svgString = useMemo(() => {
     if (!createdQr) return '';
-    return qrVectorEngine.generateSvgString({
-      value: effectivePayload,
-      size: 380,
-      style: createdQr.styleConfig
-    });
+    try {
+      return qrVectorEngine.generateSvgString({
+        value: effectivePayload,
+        size: 380,
+        style: createdQr.styleConfig
+      });
+    } catch (e) {
+      console.warn('SVG generation error fallback:', e);
+      return '';
+    }
   }, [createdQr, effectivePayload]);
 
   if (!isOpen) return null;

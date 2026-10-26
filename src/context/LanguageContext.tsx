@@ -97,7 +97,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 export const useLanguage = (): LanguageContextValue => {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    const defaultLang = 'ar';
+    const langInfo = SUPPORTED_LANGUAGES.find(l => l.code === defaultLang) || SUPPORTED_LANGUAGES[0];
+    return {
+      language: defaultLang,
+      setLanguage: () => {},
+      t: (translations as any)[defaultLang] || (translations as any).ar || translations.en,
+      isRTL: true,
+      isRtl: true,
+      supportedLanguages: SUPPORTED_LANGUAGES,
+      currentLanguageInfo: langInfo
+    };
   }
   return context;
 };

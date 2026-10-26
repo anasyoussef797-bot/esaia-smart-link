@@ -78,6 +78,8 @@ import { InlineYouTubeVideo } from '../../components/ui/InlineYouTubeVideo';
 import { qrVectorEngine } from '../../services/qr/qrVectorEngine';
 import { getQrRedirectUrl } from '../../utils/qrUrl';
 import { QrDesignModal } from '../qr/QrDesignModal';
+import { ButtonDetailsEditor } from '../../components/common/ButtonDetailsEditor';
+import { renderButtonIcon } from '../../components/common/IconHelper';
 
 interface PageBuilderPageProps {
   pageId: string;
@@ -180,16 +182,75 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     return clients.find(c => c.id === page.clientId) || null;
   }, [clients, page]);
 
-  // Bound QR Code
-  const boundQr = useMemo(() => {
-    if (!page?.qrCodeId) return null;
-    return qrCodes.find(q => q.id === page.qrCodeId) || null;
-  }, [qrCodes, page]);
+  // Active QR for Designer Modal & Page Binding (existing bound QR or instant auto-generated for current page)
+  const pageQrCodeId = page?.qrCodeId;
+  const pageSlug = page?.slug;
+  const pageTitle = page?.title;
+  const pagePrimaryAction = page?.themeConfig?.palette?.primaryAction;
+  const pageClientId = page?.clientId;
+  const pageOrgId = page?.orgId;
+  const pageType = page?.pageType;
+  const targetPageId = page?.id;
 
-  // Bound QR direct redirect URL
+  const activeQrForDesigner = useMemo<QrCodeType | null>(() => {
+    if (!targetPageId || !pageSlug) return null;
+    const existing = pageQrCodeId ? qrCodes.find(q => q.id === pageQrCodeId) : null;
+    if (existing) return existing;
+    const existingBySlug = qrCodes.find(q => q.publicCode === pageSlug);
+    if (existingBySlug) return existingBySlug;
+
+    return {
+      id: `qr_${pageSlug}`,
+      orgId: pageOrgId || 'org_esaia_main',
+      clientId: pageClientId,
+      clientName: selectedClient?.companyName || 'Enterprise Client',
+      name: `${pageTitle || 'Landing Page'} (Page QR)`,
+      publicCode: pageSlug,
+      destinationType: 'page',
+      destinationUrl: `/p/${pageSlug}`,
+      targetEntityId: targetPageId,
+      status: 'active',
+      totalScans: 0,
+      uniqueScans: 0,
+      tags: ['Dynamic Page', pageType || 'landing', 'Smart Link'],
+      notes: `Bound to landing page: ${pageTitle}`,
+      styleConfig: {
+        foregroundColor: pagePrimaryAction || '#0f172a',
+        backgroundColor: '#ffffff',
+        moduleStyle: 'rounded',
+        eyeStyle: 'rounded',
+        eyeBallStyle: 'rounded',
+        eyeColor: pagePrimaryAction || '#0f172a',
+        eyeInnerColor: pagePrimaryAction || '#0f172a',
+        errorCorrectionLevel: 'H',
+        quietZoneModules: 4,
+        logoUrl: selectedClient?.logoUrl || null,
+        logoSizeRatio: 0.16,
+        logoBackgroundPunchout: true,
+        frameStyle: 'none',
+        frameText: 'SCAN ME',
+        frameBgColor: pagePrimaryAction || '#0f172a',
+        frameTextColor: '#ffffff',
+        scannabilityGrade: 'A',
+        healthScore: 98,
+        verifiedAt: '2026-01-01T00:00:00.000Z'
+      },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z'
+    };
+  }, [targetPageId, pageSlug, pageQrCodeId, pageTitle, pagePrimaryAction, pageClientId, pageOrgId, pageType, qrCodes, selectedClient]);
+
+  // Bound QR Code (guaranteed available so physical cameras can scan immediately)
+  const boundQr = useMemo(() => {
+    return activeQrForDesigner;
+  }, [activeQrForDesigner]);
+
+  // Bound QR direct redirect URL (/q/:slug or /p/:slug)
   const boundQrRedirectUrl = useMemo(() => {
-    return boundQr ? getQrRedirectUrl(boundQr.publicCode) : '';
-  }, [boundQr]);
+    if (boundQr?.publicCode) return getQrRedirectUrl(boundQr.publicCode);
+    if (pageSlug) return getQrRedirectUrl(pageSlug);
+    return '';
+  }, [boundQr?.publicCode, pageSlug]);
 
   const boundQrSvgSmall = useMemo(() => {
     if (!boundQr || !boundQrRedirectUrl) return '';
@@ -202,10 +263,11 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     } catch {
       return '';
     }
-  }, [boundQr, boundQrRedirectUrl]);
+  }, [boundQrRedirectUrl, boundQr?.styleConfig]);
 
+  // Only generate 320px heavy SVG when inspect modal is open or requested
   const boundQrSvgLarge = useMemo(() => {
-    if (!boundQr || !boundQrRedirectUrl) return '';
+    if (!boundQr || !boundQrRedirectUrl || !isQrInspectOpen) return '';
     try {
       return qrVectorEngine.generateSvgString({
         value: boundQrRedirectUrl,
@@ -215,57 +277,27 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
     } catch {
       return '';
     }
-  }, [boundQr, boundQrRedirectUrl]);
+  }, [boundQrRedirectUrl, boundQr?.styleConfig, isQrInspectOpen]);
 
-  // Active QR for Designer Modal (either existing bound QR or prefilled draft for current page)
-  const activeQrForDesigner = useMemo<QrCodeType | null>(() => {
-    if (boundQr) return boundQr;
-    if (!page) return null;
-    return {
-      id: `qr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      orgId: page.orgId || 'org_esaia_main',
-      clientId: page.clientId,
-      clientName: selectedClient?.companyName || 'Enterprise Client',
-      name: `${page.title} (Page QR)`,
-      publicCode: page.slug,
-      destinationType: 'page',
-      destinationUrl: `/p/${page.slug}`,
-      targetEntityId: page.id,
-      status: 'active',
-      totalScans: 0,
-      uniqueScans: 0,
-      tags: ['Dynamic Page', page.pageType, 'Smart Link'],
-      notes: `Bound to landing page: ${page.title}`,
-      styleConfig: {
-        foregroundColor: page.themeConfig.palette.primaryAction || '#0f172a',
-        backgroundColor: '#ffffff',
-        moduleStyle: 'rounded',
-        eyeStyle: 'rounded',
-        eyeBallStyle: 'rounded',
-        eyeColor: page.themeConfig.palette.primaryAction || '#0f172a',
-        eyeInnerColor: page.themeConfig.palette.primaryAction || '#0f172a',
-        errorCorrectionLevel: 'H',
-        quietZoneModules: 4,
-        logoUrl: selectedClient?.logoUrl || null,
-        logoSizeRatio: 0.16,
-        logoBackgroundPunchout: true,
-        frameStyle: 'none',
-        frameText: 'SCAN ME',
-        frameBgColor: page.themeConfig.palette.primaryAction || '#0f172a',
-        frameTextColor: '#ffffff',
-        scannabilityGrade: 'A',
-        healthScore: 98,
-        verifiedAt: new Date().toISOString()
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  }, [boundQr, page, selectedClient]);
+  const getLargeSvgForExport = () => {
+    if (boundQrSvgLarge) return boundQrSvgLarge;
+    if (!boundQr || !boundQrRedirectUrl) return '';
+    try {
+      return qrVectorEngine.generateSvgString({
+        value: boundQrRedirectUrl,
+        size: 380,
+        styleConfig: boundQr.styleConfig
+      });
+    } catch {
+      return '';
+    }
+  };
 
   const handleDownloadQrPng = async () => {
-    if (!boundQrSvgLarge || !boundQr) return;
+    const svg = getLargeSvgForExport();
+    if (!svg || !boundQr) return;
     try {
-      await qrVectorEngine.downloadPng(boundQrSvgLarge, `qr-${boundQr.publicCode}.png`, 4);
+      await qrVectorEngine.downloadPng(svg, `qr-${boundQr.publicCode}.png`, 4);
       showToast('success', 'تم تحميل رمز QR بدقة فائقة (PNG)');
     } catch {
       showToast('error', 'فشل تحميل صورة PNG');
@@ -273,10 +305,11 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
   };
 
   const handleDownloadQrJpeg = async () => {
-    if (!boundQrSvgLarge || !boundQr) return;
+    const svg = getLargeSvgForExport();
+    if (!svg || !boundQr) return;
     try {
       await qrVectorEngine.downloadJpeg(
-        boundQrSvgLarge,
+        svg,
         `qr-${boundQr.publicCode}.jpg`,
         4,
         boundQr.styleConfig?.backgroundColor || '#ffffff'
@@ -288,9 +321,10 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
   };
 
   const handleDownloadQrSvg = () => {
-    if (!boundQrSvgLarge || !boundQr) return;
+    const svg = getLargeSvgForExport();
+    if (!svg || !boundQr) return;
     try {
-      qrVectorEngine.downloadSvg(boundQrSvgLarge, `qr-${boundQr.publicCode}.svg`);
+      qrVectorEngine.downloadSvg(svg, `qr-${boundQr.publicCode}.svg`);
       showToast('success', 'تم تحميل رمز QR كملف متجه (SVG)');
     } catch {
       showToast('error', 'فشل تحميل ملف SVG');
@@ -1745,13 +1779,30 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
                         );
                       }
 
+                      const btnColor = c.color || p.primaryAction;
+                      const isOutline = c.variant === 'outline';
+                      const isGlass = c.variant === 'glass';
+                      const isGradient = c.variant === 'gradient';
+                      const radiusClass = c.borderRadius === 'pill' ? 'rounded-full' : c.borderRadius === 'md' ? 'rounded-lg' : 'rounded-xl';
+
                       return (
                         <div
                           key={block.id}
-                          className="p-2.5 rounded-lg text-[10px] font-semibold text-center shadow-sm cursor-pointer"
-                          style={{ backgroundColor: p.primaryAction, color: p.primaryActionText || '#ffffff' }}
+                          onClick={() => setEditingBlock(block)}
+                          className={`p-2.5 ${radiusClass} text-[10px] font-semibold text-center shadow-xs cursor-pointer flex items-center justify-center gap-1.5 transition-transform active:scale-98`}
+                          style={{
+                            backgroundColor: isOutline ? 'transparent' : isGlass ? 'rgba(255,255,255,0.1)' : btnColor,
+                            color: isOutline ? btnColor : c.textColor || p.primaryActionText || '#ffffff',
+                            border: isOutline ? `1.5px solid ${btnColor}` : isGlass ? '1px solid rgba(255,255,255,0.2)' : undefined,
+                            background: isGradient ? `linear-gradient(135deg, ${btnColor}, #8b5cf6)` : undefined
+                          }}
                         >
-                          {c.label}
+                          {c.iconPosition !== 'end' && renderButtonIcon(c.icon, 'w-3.5 h-3.5 shrink-0')}
+                          <div className="truncate">
+                            <span>{c.label}</span>
+                            {c.subtext && <div className="text-[8px] opacity-80 font-normal">{c.subtext}</div>}
+                          </div>
+                          {c.iconPosition === 'end' && renderButtonIcon(c.icon, 'w-3.5 h-3.5 shrink-0')}
                         </div>
                       );
                     }
@@ -2317,43 +2368,18 @@ export const PageBuilderPage: React.FC<PageBuilderPageProps> = ({ pageId, onBack
               </>
             )}
 
-            {/* BUTTON BLOCK FIELDS */}
+            {/* BUTTON BLOCK FIELDS - Comprehensive Link Function, Icon Picker, Colors */}
             {editingBlock.type === 'button' && (
-              <>
-                <Input
-                  id="eb-btn-label"
-                  label={t.builderModule.blocks.fields.buttonLabel}
-                  value={editingBlock.content.label || ''}
-                  onChange={e =>
-                    setEditingBlock({
-                      ...editingBlock,
-                      content: { ...editingBlock.content, label: e.target.value }
-                    })
-                  }
-                />
-                <Input
-                  id="eb-btn-sub"
-                  label={t.builderModule.blocks.fields.subtext}
-                  value={editingBlock.content.subtext || ''}
-                  onChange={e =>
-                    setEditingBlock({
-                      ...editingBlock,
-                      content: { ...editingBlock.content, subtext: e.target.value }
-                    })
-                  }
-                />
-                <Input
-                  id="eb-btn-url"
-                  label={t.builderModule.blocks.fields.targetUrl}
-                  value={editingBlock.content.url || ''}
-                  onChange={e =>
-                    setEditingBlock({
-                      ...editingBlock,
-                      content: { ...editingBlock.content, url: e.target.value }
-                    })
-                  }
-                />
-              </>
+              <ButtonDetailsEditor
+                content={editingBlock.content as any}
+                onChange={updatedContent =>
+                  setEditingBlock({
+                    ...editingBlock,
+                    content: updatedContent
+                  })
+                }
+                isRTL={isRTL}
+              />
             )}
 
             {/* WHATSAPP BLOCK FIELDS */}

@@ -532,12 +532,6 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
             const isSelected = selectedIds.includes(qr.id);
             const redirectUrl = getQrRedirectUrl(qr.publicCode);
             const effectivePayload = getEffectiveQrPayload(qr, { preferDirectDestination: true });
-            const svgPreview = qrVectorEngine.generateSvgString({
-              value: effectivePayload,
-              size: 200,
-              style: qr.styleConfig
-            });
-
             const health = qr.styleConfig?.healthScore || 95;
             const grade = qr.styleConfig?.scannabilityGrade || 'A';
 
@@ -707,6 +701,11 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                       onClick={async () => {
                         const filename = `${qr.publicCode}_print.jpg`;
                         try {
+                          const svgPreview = qrVectorEngine.generateSvgString({
+                            value: effectivePayload,
+                            size: 400,
+                            style: qr.styleConfig
+                          });
                           await qrVectorEngine.downloadJpeg(svgPreview, filename, 3, qr.styleConfig?.backgroundColor || '#ffffff');
                           showToast(`تم تحميل صورة JPEG (${filename}) بنجاح`, 'success');
                         } catch {
@@ -778,11 +777,6 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                   const isSelected = selectedIds.includes(qr.id);
                   const redirectUrl = getQrRedirectUrl(qr.publicCode);
                   const effectivePayload = getEffectiveQrPayload(qr, { preferDirectDestination: true });
-                  const svgPreview = qrVectorEngine.generateSvgString({
-                    value: effectivePayload,
-                    size: 80,
-                    style: qr.styleConfig
-                  });
                   const health = qr.styleConfig?.healthScore || 95;
                   const grade = qr.styleConfig?.scannabilityGrade || 'A';
 
@@ -902,6 +896,11 @@ export const QrManagerPage: React.FC<{ onNavigate: (path: string) => void }> = (
                           <button
                             onClick={() => {
                               const filename = `${qr.publicCode}_vector.svg`;
+                              const svgPreview = qrVectorEngine.generateSvgString({
+                                value: effectivePayload,
+                                size: 400,
+                                style: qr.styleConfig
+                              });
                               qrVectorEngine.downloadSvg(svgPreview, filename);
                             }}
                             className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"

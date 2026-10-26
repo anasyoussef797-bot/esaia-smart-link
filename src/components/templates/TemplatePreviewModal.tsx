@@ -3,6 +3,7 @@ import { X, Smartphone, Tablet, Monitor, Sparkles, ExternalLink, ArrowRight, Arr
 import { TemplateItem } from '../../data/templatesData';
 import { useLanguage } from '../../context/LanguageContext';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
+import { renderButtonIcon } from '../common/IconHelper';
 
 interface TemplatePreviewModalProps {
   template: TemplateItem | null;
@@ -173,18 +174,30 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
               <div className="space-y-3 pt-2">
                 {blocks.map((block) => {
                   if (block.type === 'button') {
-                    const isOutline = block.content.variant === 'outline';
+                    const c = block.content;
+                    const btnColor = c.color || theme.palette.primaryAction;
+                    const isOutline = c.variant === 'outline';
+                    const isGlass = c.variant === 'glass';
+                    const isGradient = c.variant === 'gradient';
+                    const radiusClass = c.borderRadius === 'pill' ? 'rounded-full' : c.borderRadius === 'md' ? 'rounded-lg' : 'rounded-xl';
+
                     return (
                       <div
                         key={block.id}
-                        className="py-3 px-4 rounded-xl text-center font-bold text-xs shadow-xs transition-transform transform active:scale-98 cursor-pointer select-none"
+                        className={`py-3 px-4 ${radiusClass} text-center font-bold text-xs shadow-xs transition-transform transform active:scale-98 cursor-pointer select-none flex items-center justify-center gap-2`}
                         style={{
-                          backgroundColor: isOutline ? 'transparent' : theme.palette.primaryAction,
-                          color: isOutline ? theme.palette.primaryAction : theme.palette.primaryActionText,
-                          border: isOutline ? `1.5px solid ${theme.palette.primaryAction}` : undefined
+                          backgroundColor: isOutline ? 'transparent' : isGlass ? 'rgba(255,255,255,0.1)' : btnColor,
+                          color: isOutline ? btnColor : c.textColor || theme.palette.primaryActionText || '#ffffff',
+                          border: isOutline ? `1.5px solid ${btnColor}` : isGlass ? '1px solid rgba(255,255,255,0.2)' : undefined,
+                          background: isGradient ? `linear-gradient(135deg, ${btnColor}, #8b5cf6)` : undefined
                         }}
                       >
-                        {block.content.label}
+                        {c.iconPosition !== 'end' && renderButtonIcon(c.icon, 'w-4 h-4 shrink-0')}
+                        <div className="truncate text-center">
+                          <span>{c.label}</span>
+                          {c.subtext && <div className="text-[9px] font-normal opacity-80 mt-0.5">{c.subtext}</div>}
+                        </div>
+                        {c.iconPosition === 'end' && renderButtonIcon(c.icon, 'w-4 h-4 shrink-0')}
                       </div>
                     );
                   }

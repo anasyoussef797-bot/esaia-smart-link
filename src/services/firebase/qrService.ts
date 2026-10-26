@@ -600,3 +600,14 @@ export const qrService = {
   }
 };
 
+// Auto-synchronize persisted local QR codes to server redirect cache on startup
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    try {
+      inMemoryQrs.forEach(q => {
+        qrService.syncRedirectCache(q).catch(() => {});
+      });
+    } catch {}
+  }, 1200);
+}
+
